@@ -184,9 +184,9 @@ Fixed modelling decisions (change only with a PRD-level reason):
 - Yard series starts at the inbound vessel's original ETA floored to the
   hour; exactly horizon_hours points (hours 0..71); presence rule is
   arrival <= t < departure; occupancy clamped at zero.
-- Crane surge allowance: 12 rushed containers per plan
-  (CRANE_SURGE_ALLOWANCE_CONTAINERS); extra crane cost = 1.0 crane hour
-  per rushed container.
+- Crane surge allowance: 40 rushed containers per plan
+  (CRANE_SURGE_ALLOWANCE_CONTAINERS, roughly one crane-shift of extra
+  moves); extra crane cost = 1.0 crane hour per rushed container.
 - Group PlanActions map to containers by priority rank in plan-action
   order, each consuming container_count containers; leftovers keep default
   behavior (SAFE/AT_RISK depart at onward ETD, MISSED dwell full horizon).
@@ -198,8 +198,10 @@ Fixed modelling decisions (change only with a PRD-level reason):
 - Priority ranking ignores emphasis (emphasis steers agents upstream, not
   deterministic ordering) - keeps outputs replay-stable.
 - Feasibility rejects: sailing over-capacity or unknown target sailing,
-  planned-yard reefer shortages, rush count above surge allowance, any
-  AT_RISK/MISSED group left without an action.
+  rushed powered reefers above a block's free plugs (reefer_plugs minus
+  initial_reefers_on_power; yard-wide plug pressure from waiting cargo is
+  surfaced by the yard forecast, not as a plan rejection), rush count
+  above surge allowance, any AT_RISK/MISSED group left without an action.
 - Ids: sequential per type WO-/RC-/CN- with 3-digit counters; receipts
   RCPT-<action_id>; validation accepts only exact plan-derived actions and
   rejects unknown ids, tampered content, and duplicates.
@@ -245,7 +247,11 @@ parallel Impact + Yard (same parallel_group) -> reconcile or DISPUTE_OPENED
 HUMAN_DECISION and enforced on plans) -> alternative-sailing lookup (times
 out when toggled; cached fallback labeled stale; confidence -> MEDIUM) ->
 Recovery proposes 3 plans -> deterministic validation rejects infeasible ->
-revision cycle (at least one visible in trace) -> APPROVAL_REQUIRED (pause)
+revision cycle (at least one visible in trace; ScriptedBrain.revise_plan
+repairs surge, plug, sailing-capacity, and coverage rejections, but
+AGGRESSIVE_RUSH never concedes rush volume, stays infeasible in the golden
+world, and is carried into compare_plans as infeasible - the run fails only
+if all three plans end infeasible) -> APPROVAL_REQUIRED (pause)
 -> APPROVED: Execution builds actions -> validate_actions -> dispatch
 receipts -> RUN_COMPLETED; REJECTED: complete with zero actions.
 

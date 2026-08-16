@@ -70,6 +70,16 @@ _TEMPLATES: dict[WorkflowStep, tuple[str, list[str]]] = {
 }
 
 _CAP_PATTERN = re.compile(r"rush at most (\d+)", re.IGNORECASE)
+_SURGE_PATTERN = re.compile(r"crane surge allowance\s+of\s+(\d+)", re.IGNORECASE)
+_PLUG_PATTERN = re.compile(r"needs (\d+) reefer plugs but (?:has|only) (\d+)", re.IGNORECASE)
+
+# Rush priority when the crane surge budget is scarce: protect pharmaceutical
+# reefers first, then time-critical manufacturing, then general dry cargo.
+_RUSH_PRIORITY: tuple[CargoType, ...] = (
+    CargoType.PHARMA_REEFER,
+    CargoType.TIME_CRITICAL_MANUFACTURING,
+    CargoType.GENERAL_DRY,
+)
 
 
 @dataclass(frozen=True)
@@ -177,34 +187,130 @@ class ScriptedBrain:
     def revise_plan(
         self, plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
     ) -> RecoveryPlan:
-        cap = _constraint_cap(" ".join(rejection_reasons))
+        """Deterministically repair every rejection type the engine emits.
+
+        The plan is rebuilt group by group from the briefing so that no
+        affected group is left without an action:
+        - the total rushed count is capped to the crane surge allowance,
+          allocating rush slots to the highest-priority cargo first (except
+          for AGGRESSIVE_RUSH, whose premise of on-demand handling capacity
+          means it never scales its rush volume down and may stay infeasible);
+        - rushed powered reefers are additionally capped to the available
+          reefer plugs (or an explicit "rush at most N" constraint);
+        - everything not rushed is rebooked onto alternative sailings serving
+          the same onward vessel with per-sailing capacity tracking;
+        - a group with no rush slots and no remaining rebooking capacity is
+          explicitly held rather than dropped from the plan.
+        """
+        reasons_text = " ".join(rejection_reasons)
+
+        ordered_keys: list[tuple[str, CargoType]] = []
+        demand: dict[tuple[str, CargoType], int] = {}
+        for cargo in _RUSH_PRIORITY:
+            for group in _threatened(briefing, cargo):
+                key = (group.onward_vessel, group.cargo_type)
+                if key not in demand:
+                    ordered_keys.append(key)
+                    demand[key] = 0
+                demand[key] += group.container_count
+
+        currently_rushed: dict[tuple[str, CargoType], int] = {}
+        for action in plan.actions:
+            if action.action is RecoveryActionType.RUSH:
+                key = (action.onward_vessel, action.cargo_type)
+                currently_rushed[key] = currently_rushed.get(key, 0) + action.container_count
+        desired = {key: min(currently_rushed.get(key, 0), demand[key]) for key in ordered_keys}
+
+        surge = _SURGE_PATTERN.search(reasons_text)
+        if surge is not None and plan.archetype is not PlanArchetype.AGGRESSIVE_RUSH:
+            rush_budget = int(surge.group(1))
+        else:
+            # AGGRESSIVE_RUSH is premised on extra handling capacity being
+            # available on demand (PRD 9.8); it repairs plug, sailing, and
+            # coverage rejections but never concedes total rush volume. If the
+            # crane surge allowance still rejects it, it ends infeasible and
+            # the fixed-order comparison drops it (PRD 9.9) - by design the
+            # hybrid, which does scale down to the allowance, is recommended.
+            rush_budget = sum(desired.values())
+
+        pharma_desired = sum(
+            count for (_, cargo), count in desired.items() if cargo is CargoType.PHARMA_REEFER
+        )
+        reefer_budget = pharma_desired
+        cap = _constraint_cap(reasons_text)
         if cap is None:
             cap = _constraint_cap(briefing.confirmed_constraint)
-        targets = {
-            sailing.replaces_onward_vessel: sailing.vessel_name
-            for sailing in briefing.sailings.sailings
-        }
+        if cap is not None:
+            reefer_budget = min(reefer_budget, cap)
+        plug_excesses = [
+            int(required) - int(available)
+            for required, available in _PLUG_PATTERN.findall(reasons_text)
+        ]
+        if plug_excesses:
+            reefer_budget = min(reefer_budget, max(0, pharma_desired - sum(plug_excesses)))
+
+        rush_allocation: dict[tuple[str, CargoType], int] = {}
+        rush_remaining = rush_budget
+        reefer_remaining = reefer_budget
+        for key in ordered_keys:  # ordered by cargo priority, so dry drops first
+            _, cargo = key
+            want = desired[key]
+            if cargo is CargoType.PHARMA_REEFER:
+                want = min(want, reefer_remaining)
+            take = min(want, rush_remaining)
+            rush_allocation[key] = take
+            rush_remaining -= take
+            if cargo is CargoType.PHARMA_REEFER:
+                reefer_remaining -= take
+
+        sailings_for: dict[str, list[str]] = {}
+        capacity_left: dict[str, int] = {}
+        for sailing in briefing.sailings.sailings:
+            sailings_for.setdefault(sailing.replaces_onward_vessel, []).append(sailing.vessel_name)
+            capacity_left[sailing.vessel_name] = sailing.available_capacity
+
         revised: list[PlanAction] = []
-        budget = cap
-        for action in plan.actions:
-            rushes_reefers = (
-                action.action == RecoveryActionType.RUSH
-                and action.cargo_type == CargoType.PHARMA_REEFER
-            )
-            if not rushes_reefers:
-                revised.append(action)
-                continue
-            group = _Group(action.onward_vessel, action.cargo_type, action.container_count)
-            if budget is None:
-                revised.append(_rebook(group, targets))
-                continue
-            keep = min(action.container_count, budget)
-            budget -= keep
-            if keep:
-                revised.append(_rush(group, keep))
-            overflow = action.container_count - keep
-            if overflow:
-                revised.append(_rebook(group, targets, overflow))
+        for key in ordered_keys:
+            vessel, cargo = key
+            rushed = rush_allocation[key]
+            if rushed:
+                revised.append(_rush(_Group(vessel, cargo, demand[key]), rushed))
+            leftover = demand[key] - rushed
+            rebooked = 0
+            for sailing_name in sailings_for.get(vessel, []):
+                if leftover <= 0:
+                    break
+                room = capacity_left[sailing_name]
+                if room <= 0:
+                    continue
+                moved = min(room, leftover)
+                capacity_left[sailing_name] -= moved
+                revised.append(
+                    PlanAction(
+                        action=RecoveryActionType.REBOOK,
+                        onward_vessel=vessel,
+                        cargo_type=cargo,
+                        container_count=moved,
+                        target_sailing=sailing_name,
+                        rationale=(f"Rebook {moved} containers from {vessel} to {sailing_name}."),
+                    )
+                )
+                leftover -= moved
+                rebooked += moved
+            if rushed == 0 and rebooked == 0:
+                revised.append(
+                    PlanAction(
+                        action=RecoveryActionType.HOLD,
+                        onward_vessel=vessel,
+                        cargo_type=cargo,
+                        container_count=leftover,
+                        target_sailing=None,
+                        rationale=(
+                            f"Hold {leftover} containers for {vessel}: no rush or "
+                            "rebooking capacity remains."
+                        ),
+                    )
+                )
         return plan.model_copy(
             update={
                 "actions": revised,

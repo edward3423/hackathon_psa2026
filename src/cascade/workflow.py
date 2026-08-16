@@ -542,11 +542,10 @@ class WorkflowRun:
                 plan = self.brain.revise_plan(plan, evaluation.rejection_reasons, briefing)
                 evaluation = self.toolbox.evaluate_plan(revised_eta, analysis, plan, emphasis)
                 await self._emit_evaluation(plan, evaluation)
-            if not evaluation.feasible:
-                raise RuntimeError(
-                    f"Plan {plan.archetype.value} stayed infeasible after "
-                    f"{MAX_REVISION_ROUNDS} revision rounds."
-                )
+            # A plan that stays infeasible after the revision limit is carried
+            # into the comparison as-is: compare_plans never recommends an
+            # infeasible plan, and its final REJECTED evaluation stays visible
+            # in the trace. Only a fully infeasible slate fails the run below.
             final_plans.append(plan)
         comparison = self.toolbox.compare_plans(
             revised_eta, analysis, final_plans, emphasis, run_confidence
@@ -571,6 +570,11 @@ class WorkflowRun:
             assumptions=compared.assumptions,
             elapsed_ms=310,
         )
+        if comparison.recommended is None:
+            raise RuntimeError(
+                "All plans stayed infeasible after "
+                f"{MAX_REVISION_ROUNDS} revision rounds; nothing can be recommended."
+            )
         recommended_plan = None
         if comparison.recommended is not None:
             recommended_plan = next(
@@ -597,7 +601,10 @@ class WorkflowRun:
             kind=EventKind.AGENT_COMPLETED,
             stage=WorkflowStage.PLANNING,
             agent=AgentName.RECOVERY,
-            result=f"{len(final_plans)} feasible plans ready for approval.",
+            result=(
+                f"{sum(1 for e in comparison.evaluations if e.feasible)} feasible plans "
+                "ready for approval."
+            ),
             confidence=comparison.confidence,
             elapsed_ms=340,
             next_handoff=AgentName.COORDINATOR,
