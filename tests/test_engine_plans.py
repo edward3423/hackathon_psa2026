@@ -14,12 +14,14 @@ from cascade.contracts import (
     AlternativeSailing,
     CargoType,
     Confidence,
+    ConnectionAnalysis,
     CostRates,
     PlanAction,
     PlanArchetype,
     PriorityEmphasis,
     RecoveryActionType,
     RecoveryPlan,
+    WorldFixture,
 )
 from cascade.engine import analyse_connections, compare_plans, evaluate_plan
 from cascade.engine.plans import CRANE_SURGE_ALLOWANCE_CONTAINERS
@@ -27,7 +29,7 @@ from cascade.engine.plans import CRANE_SURGE_ALLOWANCE_CONTAINERS
 EMPHASIS = PriorityEmphasis.BALANCED
 
 
-def missed_dry_world(container_count: int = 5, sailing_capacity: int = 3):
+def missed_dry_world(container_count: int = 5, sailing_capacity: int = 3) -> WorldFixture:
     """A world where all dry containers miss MV GONE; rebooking is cheap but
     the only alternative sailing is too small to carry them all."""
     vessels = [
@@ -94,18 +96,18 @@ def rebook_plan(count: int = 5) -> RecoveryPlan:
     )
 
 
-def analyse(world):
+def analyse(world: WorldFixture) -> ConnectionAnalysis:
     return analyse_connections(world, REVISED_ETA, EMPHASIS)
 
 
-def test_plan_exceeding_sailing_capacity_is_infeasible():
+def test_plan_exceeding_sailing_capacity_is_infeasible() -> None:
     world = missed_dry_world()
     evaluation = evaluate_plan(world, REVISED_ETA, analyse(world), rebook_plan(5), EMPHASIS)
     assert not evaluation.feasible
     assert any("capacity" in reason for reason in evaluation.rejection_reasons)
 
 
-def test_plan_exceeding_crane_surge_allowance_is_infeasible():
+def test_plan_exceeding_crane_surge_allowance_is_infeasible() -> None:
     count = CRANE_SURGE_ALLOWANCE_CONTAINERS + 1
     world = missed_dry_world(container_count=count)
     evaluation = evaluate_plan(world, REVISED_ETA, analyse(world), rush_plan(count), EMPHASIS)
@@ -113,7 +115,7 @@ def test_plan_exceeding_crane_surge_allowance_is_infeasible():
     assert any("crane surge" in reason for reason in evaluation.rejection_reasons)
 
 
-def test_plan_leaving_affected_group_without_action_is_infeasible():
+def test_plan_leaving_affected_group_without_action_is_infeasible() -> None:
     world = missed_dry_world()
     empty_plan = RecoveryPlan(
         archetype=PlanArchetype.STANDARD_REBOOK, title="Do nothing", actions=[]
@@ -123,7 +125,7 @@ def test_plan_leaving_affected_group_without_action_is_infeasible():
     assert any("no action" in reason for reason in evaluation.rejection_reasons)
 
 
-def test_plan_exceeding_reefer_plugs_is_infeasible():
+def test_plan_exceeding_reefer_plugs_is_infeasible() -> None:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV GONE", REVISED_ETA - timedelta(hours=2)),
@@ -157,7 +159,7 @@ def test_plan_exceeding_reefer_plugs_is_infeasible():
     assert any("reefer plugs" in reason for reason in evaluation.rejection_reasons)
 
 
-def test_cheaper_plan_exceeding_capacity_is_never_recommended():
+def test_cheaper_plan_exceeding_capacity_is_never_recommended() -> None:
     world = missed_dry_world()
     connections = analyse(world)
     comparison = compare_plans(
@@ -172,7 +174,7 @@ def test_cheaper_plan_exceeding_capacity_is_never_recommended():
     assert "AGGRESSIVE_RUSH" in comparison.rationale
 
 
-def test_repeated_compare_plans_return_the_same_recommendation():
+def test_repeated_compare_plans_return_the_same_recommendation() -> None:
     world = missed_dry_world()
     connections = analyse(world)
     plans = [rush_plan(5), rebook_plan(5)]
@@ -181,7 +183,7 @@ def test_repeated_compare_plans_return_the_same_recommendation():
     assert first == second
 
 
-def test_fewest_missed_connections_wins_among_feasible_plans():
+def test_fewest_missed_connections_wins_among_feasible_plans() -> None:
     world = missed_dry_world(container_count=5, sailing_capacity=5)
     connections = analyse(world)
     partial_rebook = RecoveryPlan(
@@ -206,7 +208,7 @@ def test_fewest_missed_connections_wins_among_feasible_plans():
     assert comparison.recommended is PlanArchetype.AGGRESSIVE_RUSH
 
 
-def test_no_feasible_plan_yields_no_recommendation():
+def test_no_feasible_plan_yields_no_recommendation() -> None:
     world = missed_dry_world()
     comparison = compare_plans(
         world,

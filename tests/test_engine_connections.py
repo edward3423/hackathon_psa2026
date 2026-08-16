@@ -8,11 +8,11 @@ from engine_world import (
     outbound_vessel,
 )
 
-from cascade.contracts import CargoType, ConnectionStatus, PriorityEmphasis
+from cascade.contracts import CargoType, ConnectionStatus, PriorityEmphasis, WorldFixture
 from cascade.engine import analyse_connections
 
 
-def margin_world(margins_hours: list[float]):
+def margin_world(margins_hours: list[float]) -> WorldFixture:
     vessels = [inbound_vessel_fixture()]
     containers = []
     for index, margin in enumerate(margins_hours):
@@ -22,7 +22,7 @@ def margin_world(margins_hours: list[float]):
     return make_world(containers, vessels=vessels)
 
 
-def test_margin_classification_boundaries():
+def test_margin_classification_boundaries() -> None:
     world = margin_world([5, 4, 0, -1])
     analysis = analyse_connections(world, REVISED_ETA, PriorityEmphasis.BALANCED)
     by_id = {c.container_id: c for c in analysis.connections}
@@ -36,7 +36,7 @@ def test_margin_classification_boundaries():
     assert analysis.delay_hours == 18
 
 
-def test_ready_time_and_margin_use_handling_hours():
+def test_ready_time_and_margin_use_handling_hours() -> None:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV OUT", REVISED_ETA + timedelta(hours=6)),
@@ -49,7 +49,7 @@ def test_ready_time_and_margin_use_handling_hours():
     assert connection.status is ConnectionStatus.AT_RISK
 
 
-def test_equal_margin_containers_rank_in_cargo_order_with_reason():
+def test_equal_margin_containers_rank_in_cargo_order_with_reason() -> None:
     containers = [
         make_container("C-DRY", cargo_type=CargoType.GENERAL_DRY),
         make_container("C-PHARMA", cargo_type=CargoType.PHARMA_REEFER, requires_power=True),
@@ -67,7 +67,7 @@ def test_equal_margin_containers_rank_in_cargo_order_with_reason():
         assert f"{connection.margin_hours:.1f}h margin" in connection.priority_reason
 
 
-def test_smaller_margin_ranks_higher_within_cargo_type():
+def test_smaller_margin_ranks_higher_within_cargo_type() -> None:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV TIGHT", REVISED_ETA + timedelta(hours=1)),
@@ -83,13 +83,13 @@ def test_smaller_margin_ranks_higher_within_cargo_type():
     assert [c.container_id for c in ordered] == ["C-TIGHT", "C-LOOSE"]
 
 
-def test_containers_without_onward_vessel_are_excluded():
+def test_containers_without_onward_vessel_are_excluded() -> None:
     world = make_world([make_container("C001"), make_container("C-STAY", onward_vessel=None)])
     analysis = analyse_connections(world, REVISED_ETA, PriorityEmphasis.BALANCED)
     assert [c.container_id for c in analysis.connections] == ["C001"]
 
 
-def test_group_summaries_count_per_vessel_cargo_status():
+def test_group_summaries_count_per_vessel_cargo_status() -> None:
     containers = [
         make_container("C001"),
         make_container("C002"),

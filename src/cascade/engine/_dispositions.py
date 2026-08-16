@@ -66,13 +66,13 @@ def assign_plan_actions(
     cursor: dict[tuple[str, CargoType], int] = dict.fromkeys(groups, 0)
     for action in plan.actions:
         key = (action.onward_vessel, action.cargo_type)
-        members = groups.get(key)
-        if members is None:
+        matched = groups.get(key)
+        if matched is None:
             continue
         start = cursor[key]
-        for connection in members[start : start + action.container_count]:
+        for connection in matched[start : start + action.container_count]:
             assignment[connection.container_id] = action
-        cursor[key] = min(start + action.container_count, len(members))
+        cursor[key] = min(start + action.container_count, len(matched))
 
     return assignment
 
