@@ -4,9 +4,9 @@ Audience: AI agents working on this repository. Optimized for accurate
 grounding, not for human reading. Facts below are path-anchored; when this
 file and the code disagree, the code wins - then update this file.
 
-Last full revision: 2026-08-17, at main commit "merge analysis
-workstream" (fixtures, analysis, and verification merged; workflow and
-frontend still in flight).
+Last full revision: 2026-08-17, after all five workstreams merged
+(fixtures, analysis, verification, workflow, frontend) plus the type
+annotation cleanup and regenerated API types.
 
 ## 1. Project identity
 
@@ -34,26 +34,23 @@ frontend still in flight).
 | fixtures/golden_world.json | Generated world, committed, byte-reproducible | fixtures |
 | fixtures/evidence_pack.json | 10 reviewed public facts for retrieve_context | fixtures |
 | src/cascade/engine/ | Pure deterministic analysis functions | analysis (Agent 3) |
-| src/cascade/workflow.py, api.py, agents/, tools/ | Stage machine, FastAPI, ADK agents, tool wrappers (being rebuilt on branch cascade/workflow-api) | workflow (Agent 4) |
+| src/cascade/workflow.py, api.py, agents/, tools/ | Stage machine, FastAPI, agent brains, ToolBox seam | workflow (Agent 4) |
 | fixtures/fake_agent_events.json, replay_events.json, fake_tool_responses.json | Scripted/captured event and tool fixtures | workflow |
-| frontend/src/ | React dashboard (being rebuilt on branch cascade/frontend-dashboard) | frontend (Agent 5) |
+| frontend/src/ | React dashboard (components/, hooks/useRunStream.ts, api/client.ts, lib/derive.ts) | frontend (Agent 5) |
 | frontend/src/api/schema.d.ts | GENERATED from openapi.json. Never hand-edit | integration |
 | e2e/ | Self-contained Playwright project (own package.json, not in npm workspace) | verification (Agent 6) |
 | scripts/preflight.py | Demo preflight checks | verification |
 | fixtures/recorded_gemini/ | Recorded live-response format spec (recordings TBD) | verification |
 | scratch/ | Throwaway probes (gemini_test.py works and is the reference for live Gemini calls) | anyone |
 
-Branch and worktree layout (integration in progress):
-- main: integration trunk. Merged so far: foundation, contracts extension,
-  cascade/data-fixtures, cascade/verification-delivery,
-  cascade/simulation-engine.
-- cascade/workflow-api at D:/Projects/cascade-wt/workflow - in flight.
-- cascade/frontend-dashboard at D:/Projects/cascade-wt/frontend - in flight.
-- Merge order (PRD 15.3): fixtures -> analysis -> workflow -> frontend ->
-  verification-follow-ups. After merging workflow or contracts changes run
-  `npm run generate:types` and commit the regenerated files.
-- Cross-workstream asks live in plan/contract_requests_*.md; selector
-  requirements for the UI are in plan/contract_requests_verification.md.
+Branch layout: all five workstream branches (cascade/data-fixtures,
+cascade/simulation-engine, cascade/workflow-api,
+cascade/frontend-dashboard, cascade/verification-delivery) are merged
+into main; the D:/Projects/cascade-wt/* worktrees are historical. After
+changing contracts or API endpoints run `npm run generate:types` and
+commit the regenerated files. Cross-workstream asks live in
+plan/contract_requests_*.md (verification, frontend, workflow) - some
+remain open; reconcile through Agent 1 before acting on them.
 
 ## 3. Commands (Windows; always uv for Python)
 
