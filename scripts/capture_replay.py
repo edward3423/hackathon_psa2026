@@ -10,8 +10,10 @@ Run: uv run python scripts/capture_replay.py
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 from cascade.agents.scripted import ScriptedBrain
 from cascade.contracts import (
@@ -43,7 +45,7 @@ class TickClock:
         return self._now
 
 
-async def _wait_for(predicate, timeout: float = 5.0) -> None:
+async def _wait_for(predicate: Callable[[], object], timeout: float = 5.0) -> None:
     async def poll() -> None:
         while not predicate():
             await asyncio.sleep(0.01)
@@ -51,7 +53,7 @@ async def _wait_for(predicate, timeout: float = 5.0) -> None:
     await asyncio.wait_for(poll(), timeout)
 
 
-async def capture() -> list[dict]:
+async def capture() -> list[dict[str, Any]]:
     controls = ScenarioControls()
     run = WorkflowRun(
         run_id="golden-capture",
@@ -64,6 +66,7 @@ async def capture() -> list[dict]:
     )
     run.start()
     await _wait_for(lambda: run.stage is WorkflowStage.DISPUTE and run.active_dispute)
+    assert run.active_dispute is not None
     run.resolve_dispute(
         DisputeResolutionRequest(
             dispute_id=run.active_dispute.dispute_id, confirmed_constraint=CONSTRAINT
@@ -82,7 +85,7 @@ async def capture() -> list[dict]:
     return [event.model_dump(mode="json", exclude_none=False) for event in run.trace]
 
 
-def _write(name: str, events: list[dict]) -> None:
+def _write(name: str, events: list[dict[str, Any]]) -> None:
     path = FIXTURES / name
     path.write_text(json.dumps(events, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {path} ({len(events)} events)")

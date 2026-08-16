@@ -12,12 +12,14 @@ from engine_world import (
 from cascade.contracts import (
     AlternativeSailing,
     CargoType,
+    CostEstimate,
     CostRates,
     PlanAction,
     PlanArchetype,
     PriorityEmphasis,
     RecoveryActionType,
     RecoveryPlan,
+    WorldFixture,
 )
 from cascade.engine import analyse_connections, estimate_cost, simulate_yard
 
@@ -32,7 +34,7 @@ RATES = CostRates(
 )
 
 
-def hybrid_scenario(rates: CostRates = RATES):
+def hybrid_scenario(rates: CostRates = RATES) -> tuple[WorldFixture, RecoveryPlan]:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV GONE", REVISED_ETA - timedelta(hours=2)),
@@ -85,13 +87,13 @@ def hybrid_scenario(rates: CostRates = RATES):
     return world, plan
 
 
-def compute(world, plan):
+def compute(world: WorldFixture, plan: RecoveryPlan) -> CostEstimate:
     connections = analyse_connections(world, REVISED_ETA, EMPHASIS)
     yard = simulate_yard(world, REVISED_ETA, connections, plan)
     return estimate_cost(world, connections, plan, yard)
 
 
-def test_total_equals_sum_of_components_and_all_five_present():
+def test_total_equals_sum_of_components_and_all_five_present() -> None:
     world, plan = hybrid_scenario()
     estimate = compute(world, plan)
     assert estimate.illustrative is True
@@ -107,7 +109,7 @@ def test_total_equals_sum_of_components_and_all_five_present():
         assert component.basis
 
 
-def test_component_values_follow_documented_formulas():
+def test_component_values_follow_documented_formulas() -> None:
     world, plan = hybrid_scenario()
     estimate = compute(world, plan)
     by_name = {component.name: component for component in estimate.components}
@@ -121,7 +123,7 @@ def test_component_values_follow_documented_formulas():
     assert by_name["rebooking"].amount == 1 * 25.0
 
 
-def test_changing_one_rate_changes_only_the_matching_component():
+def test_changing_one_rate_changes_only_the_matching_component() -> None:
     world, plan = hybrid_scenario()
     baseline = {c.name: c.amount for c in compute(world, plan).components}
     bumped_rates = RATES.model_copy(update={"rebooking_fee": 75.0})

@@ -7,7 +7,7 @@ when construction fails.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from cascade.contracts import (
     ActionReceipt,
@@ -51,7 +51,10 @@ class EngineToolBox:
     def analyse_connections(
         self, revised_eta: datetime, emphasis: PriorityEmphasis
     ) -> ConnectionAnalysis:
-        return self._engine.connections.analyse_connections(self._world, revised_eta, emphasis)
+        return cast(
+            ConnectionAnalysis,
+            self._engine.connections.analyse_connections(self._world, revised_eta, emphasis),
+        )
 
     def simulate_yard(
         self,
@@ -60,8 +63,11 @@ class EngineToolBox:
         plan: RecoveryPlan | None,
         horizon_hours: int,
     ) -> YardForecast:
-        return self._engine.yard.simulate_yard(
-            self._world, revised_eta, connections, plan, horizon_hours
+        return cast(
+            YardForecast,
+            self._engine.yard.simulate_yard(
+                self._world, revised_eta, connections, plan, horizon_hours
+            ),
         )
 
     def find_alternative_sailings(self, force_timeout: bool) -> AlternativeSailingResult:
@@ -86,8 +92,9 @@ class EngineToolBox:
         plan: RecoveryPlan,
         emphasis: PriorityEmphasis,
     ) -> PlanEvaluation:
-        return self._engine.plans.evaluate_plan(
-            self._world, revised_eta, connections, plan, emphasis
+        return cast(
+            PlanEvaluation,
+            self._engine.plans.evaluate_plan(self._world, revised_eta, connections, plan, emphasis),
         )
 
     def compare_plans(
@@ -98,14 +105,17 @@ class EngineToolBox:
         emphasis: PriorityEmphasis,
         confidence: Confidence,
     ) -> PlanComparison:
-        return self._engine.plans.compare_plans(
-            self._world, revised_eta, connections, plans, emphasis, confidence
+        return cast(
+            PlanComparison,
+            self._engine.plans.compare_plans(
+                self._world, revised_eta, connections, plans, emphasis, confidence
+            ),
         )
 
     def build_actions(self, plan: RecoveryPlan) -> list[MockedAction]:
-        return self._engine.actions.build_actions(plan)
+        return cast(list[MockedAction], self._engine.actions.build_actions(plan))
 
     def validate_actions(
         self, plan: RecoveryPlan, actions: list[MockedAction]
     ) -> list[ActionReceipt]:
-        return self._engine.actions.validate_actions(plan, actions)
+        return cast(list[ActionReceipt], self._engine.actions.validate_actions(plan, actions))

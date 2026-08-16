@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from engine_world import (
     BASE,
@@ -12,28 +12,31 @@ from engine_world import (
 
 from cascade.contracts import (
     CargoType,
+    ConnectionAnalysis,
     PlanAction,
     PlanArchetype,
     PriorityEmphasis,
     RecoveryActionType,
     RecoveryPlan,
+    WorldFixture,
+    YardForecast,
 )
 from cascade.engine import analyse_connections, simulate_yard
 
 EMPHASIS = PriorityEmphasis.BALANCED
 
 
-def analyse(world):
+def analyse(world: WorldFixture) -> ConnectionAnalysis:
     return analyse_connections(world, REVISED_ETA, EMPHASIS)
 
 
-def occupancy_at(forecast, block_id, moment):
+def occupancy_at(forecast: YardForecast, block_id: str, moment: datetime) -> int:
     block = next(b for b in forecast.blocks if b.block_id == block_id)
     point = next(p for p in block.series if p.time == moment)
     return point.occupancy
 
 
-def test_series_starts_at_inbound_eta_floor_and_spans_horizon():
+def test_series_starts_at_inbound_eta_floor_and_spans_horizon() -> None:
     world = make_world([make_container("C001")])
     forecast = simulate_yard(world, REVISED_ETA, analyse(world))
     assert forecast.horizon_hours == 72
@@ -43,7 +46,7 @@ def test_series_starts_at_inbound_eta_floor_and_spans_horizon():
     assert block.series[-1].time == BASE + timedelta(hours=71)
 
 
-def test_series_is_identical_across_repeated_runs_and_never_negative():
+def test_series_is_identical_across_repeated_runs_and_never_negative() -> None:
     containers = [make_container(f"C{i:03d}") for i in range(6)]
     world = make_world(containers)
     connections = analyse(world)
@@ -55,7 +58,7 @@ def test_series_is_identical_across_repeated_runs_and_never_negative():
             assert point.occupancy >= 0
 
 
-def test_arrival_and_departure_shape():
+def test_arrival_and_departure_shape() -> None:
     world = make_world([make_container("C001")])
     forecast = simulate_yard(world, REVISED_ETA, analyse(world))
     # arrives at revised ETA (hour 18), departs at MV OUT ETD (hour 30)
@@ -65,7 +68,7 @@ def test_arrival_and_departure_shape():
     assert occupancy_at(forecast, "B1", BASE + timedelta(hours=30)) == 0
 
 
-def test_capacity_breaches_are_visible_not_hidden():
+def test_capacity_breaches_are_visible_not_hidden() -> None:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV GONE", REVISED_ETA - timedelta(hours=2)),
@@ -80,7 +83,7 @@ def test_capacity_breaches_are_visible_not_hidden():
     assert block.peak_occupancy == 6
 
 
-def test_unresolved_missed_containers_dwell_for_whole_horizon():
+def test_unresolved_missed_containers_dwell_for_whole_horizon() -> None:
     vessels = [
         inbound_vessel_fixture(),
         outbound_vessel("MV GONE", REVISED_ETA - timedelta(hours=2)),
@@ -91,7 +94,7 @@ def test_unresolved_missed_containers_dwell_for_whole_horizon():
     assert block.series[-1].occupancy == 1
 
 
-def test_rebooked_missed_containers_depart_at_alternative_sailing():
+def test_rebooked_missed_containers_depart_at_alternative_sailing() -> None:
     from cascade.contracts import AlternativeSailing
 
     vessels = [
@@ -129,7 +132,7 @@ def test_rebooked_missed_containers_depart_at_alternative_sailing():
     assert occupancy_at(forecast, "B1", BASE + timedelta(hours=40)) == 0
 
 
-def test_eleven_reefers_with_ten_plugs_produce_one_shortage_with_start_time():
+def test_eleven_reefers_with_ten_plugs_produce_one_shortage_with_start_time() -> None:
     containers = [
         make_container(f"R{i:03d}", cargo_type=CargoType.PHARMA_REEFER, requires_power=True)
         for i in range(11)
@@ -144,7 +147,7 @@ def test_eleven_reefers_with_ten_plugs_produce_one_shortage_with_start_time():
     assert shortage.available_plugs == 10
 
 
-def test_ten_reefers_with_ten_plugs_produce_no_shortage():
+def test_ten_reefers_with_ten_plugs_produce_no_shortage() -> None:
     containers = [
         make_container(f"R{i:03d}", cargo_type=CargoType.PHARMA_REEFER, requires_power=True)
         for i in range(10)
@@ -154,7 +157,7 @@ def test_ten_reefers_with_ten_plugs_produce_no_shortage():
     assert forecast.reefer_shortages == []
 
 
-def test_rushed_reefers_still_consume_plugs():
+def test_rushed_reefers_still_consume_plugs() -> None:
     # Missed reefer rushed onto a vessel whose ETD is already past: it must
     # still appear in plug demand for at least one hour.
     vessels = [

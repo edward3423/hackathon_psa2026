@@ -36,7 +36,7 @@ def hybrid_plan() -> RecoveryPlan:
     )
 
 
-def test_build_actions_is_deterministic_with_sequential_ids():
+def test_build_actions_is_deterministic_with_sequential_ids() -> None:
     plan = hybrid_plan()
     first = build_actions(plan)
     second = build_actions(plan)
@@ -57,7 +57,7 @@ def test_build_actions_is_deterministic_with_sequential_ids():
     assert "target=ALT ONE" in first[3].payload_summary
 
 
-def test_validate_accepts_derived_actions_with_deterministic_receipts():
+def test_validate_accepts_derived_actions_with_deterministic_receipts() -> None:
     plan = hybrid_plan()
     actions = build_actions(plan)
     receipts = validate_actions(plan, actions)
@@ -69,7 +69,7 @@ def test_validate_accepts_derived_actions_with_deterministic_receipts():
     assert receipts == validate_actions(plan, actions)
 
 
-def test_validate_rejects_action_not_in_plan():
+def test_validate_rejects_action_not_in_plan() -> None:
     plan = hybrid_plan()
     rogue = MockedAction(
         action_id="WO-099",
@@ -84,7 +84,7 @@ def test_validate_rejects_action_not_in_plan():
     assert "not derivable" in receipts[-1].detail
 
 
-def test_validate_rejects_tampered_action_content():
+def test_validate_rejects_tampered_action_content() -> None:
     plan = hybrid_plan()
     actions = build_actions(plan)
     tampered = actions[0].model_copy(update={"payload_summary": "count=999"})
@@ -93,7 +93,7 @@ def test_validate_rejects_tampered_action_content():
     assert "does not match" in receipts[0].detail
 
 
-def test_validate_rejects_duplicate_dispatch():
+def test_validate_rejects_duplicate_dispatch() -> None:
     plan = hybrid_plan()
     actions = build_actions(plan)
     receipts = validate_actions(plan, [actions[0], actions[0]])

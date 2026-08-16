@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Any
 
 import httpx
 import pytest
@@ -58,13 +59,14 @@ async def drive_run(http: httpx.AsyncClient, run_id: str, decision: str = "APPRO
     raise AssertionError("run did not complete")
 
 
-async def create_run(http: httpx.AsyncClient, mode: str = "LIVE_STUB") -> dict:
+async def create_run(http: httpx.AsyncClient, mode: str = "LIVE_STUB") -> dict[str, Any]:
     response = await http.post("/api/runs", json={**GOLDEN_CONTROLS, "mode": mode})
     assert response.status_code == 201, response.text
-    return response.json()
+    payload: dict[str, Any] = response.json()
+    return payload
 
 
-def parse_sse(text: str) -> list[tuple[str, dict]]:
+def parse_sse(text: str) -> list[tuple[str, dict[str, Any]]]:
     events = []
     for block in text.split("\n\n"):
         lines = [line for line in block.strip().splitlines() if line]

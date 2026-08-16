@@ -23,6 +23,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -62,7 +63,8 @@ def _port_open(port: int) -> bool:
 def _http_get(url: str, timeout: float = 3.0) -> str | None:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
-            return response.read(65536).decode("utf-8", errors="replace")
+            body: bytes = response.read(65536)
+            return body.decode("utf-8", errors="replace")
     except (urllib.error.URLError, TimeoutError, OSError):
         return None
 
@@ -87,7 +89,7 @@ def check_frontend_port() -> CheckResult:
     return CheckResult(name, FAIL, "occupied by an unknown service; stop it or change ports")
 
 
-def _validate_fixture(path: Path, adapter: TypeAdapter | None, required: bool) -> CheckResult:
+def _validate_fixture(path: Path, adapter: TypeAdapter[Any] | None, required: bool) -> CheckResult:
     name = f"fixture {path.relative_to(REPO_ROOT).as_posix()}"
     if not path.exists():
         if required:
@@ -111,7 +113,7 @@ def _validate_fixture(path: Path, adapter: TypeAdapter | None, required: bool) -
 def check_fixtures() -> list[CheckResult]:
     fixtures_dir = REPO_ROOT / "fixtures"
     trace_list = TypeAdapter(list[TraceEvent])
-    plan: list[tuple[str, TypeAdapter | None, bool]] = [
+    plan: list[tuple[str, TypeAdapter[Any] | None, bool]] = [
         ("golden_scenario.json", TypeAdapter(ScenarioState), True),
         ("fake_agent_events.json", trace_list, True),
         ("replay_events.json", trace_list, True),

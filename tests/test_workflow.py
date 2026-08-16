@@ -52,6 +52,7 @@ async def wait_for(predicate: Callable[[], bool], timeout: float = 5.0) -> None:
 async def drive_to_approval(run: WorkflowRun) -> None:
     run.start()
     await wait_for(lambda: run.stage is WorkflowStage.DISPUTE and run.active_dispute is not None)
+    assert run.active_dispute is not None
     run.resolve_dispute(
         DisputeResolutionRequest(
             dispute_id=run.active_dispute.dispute_id, confirmed_constraint=CONSTRAINT
@@ -82,7 +83,11 @@ async def test_happy_path_reaches_receipts_through_approval() -> None:
 
     # Parallel delegation is visible via a shared parallel group.
     parallel = [event for event in run.trace if event.parallel_group == "assessment-1"]
-    assert {event.agent.value for event in parallel} == {"Impact Agent", "Yard Agent"}
+    parallel_agents: set[str] = set()
+    for event in parallel:
+        assert event.agent is not None
+        parallel_agents.add(event.agent.value)
+    assert parallel_agents == {"Impact Agent", "Yard Agent"}
 
     # Results are populated and dispatched actions carry accepted receipts.
     results = run.results
@@ -98,6 +103,7 @@ async def test_happy_path_reaches_receipts_through_approval() -> None:
     # Displayed figures flow from tool results, not hard-coded strings.
     analysis = results.connection_analysis
     impact_event = next(event for event in run.trace if event.tool == "analyse_connections")
+    assert impact_event.result is not None
     assert str(analysis.safe_count) in impact_event.result
     assert str(analysis.at_risk_count) in impact_event.result
     assert str(analysis.missed_count) in impact_event.result
@@ -221,6 +227,7 @@ async def test_timeout_sets_medium_confidence_and_still_requires_approval() -> N
     assert any("stale" in assumption.lower() for assumption in fallback.assumptions)
     approval = next(event for event in run.trace if event.kind == EventKind.APPROVAL_REQUIRED)
     assert approval.confidence is Confidence.MEDIUM
+    assert run.results.plan_comparison is not None
     assert run.results.plan_comparison.confidence is Confidence.MEDIUM
     run.decide_approval(
         ApprovalRequest(
@@ -265,6 +272,7 @@ async def test_replay_mode_streams_captured_sequence_offline() -> None:
     run.start()
     await wait_for(lambda: run.stage is WorkflowStage.DISPUTE)
     assert all("DEMO REPLAY" in event.assumptions for event in run.trace)
+    assert run.active_dispute is not None
     run.resolve_dispute(
         DisputeResolutionRequest(
             dispute_id=run.active_dispute.dispute_id, confirmed_constraint=CONSTRAINT
