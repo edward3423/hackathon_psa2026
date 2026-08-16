@@ -1,49 +1,62 @@
 import { expect, test } from '@playwright/test'
 
-import { openDashboard, startRun } from './helpers'
+import {
+  openDashboard,
+  resetBackend,
+  resolveReeferDispute,
+  stageReadout,
+  startRun,
+} from './helpers'
 
-// This spec passes against the current stub backend. It proves that the
-// Playwright harness (webServer startup, SSE streaming, UI selectors) works
-// end to end before the full workflow lands.
+// Harness smoke tests against the real LIVE_STUB workflow: a run starts from
+// the UI, trace events render, the workflow pauses at the reefer dispute
+// (instead of streaming to the end unattended), and reset restores the shell.
+//
+// The dispute overlay is modal, so background controls (trace drawer, Reset)
+// are only clickable while no dispute is waiting for the human.
 
-test('stub run streams trace events to the dashboard and reaches stream end', async ({ page }) => {
+test.beforeEach(async ({ request }) => {
+  await resetBackend(request)
+})
+
+test('stub run streams trace events and pauses at the dispute', async ({ page }) => {
   await openDashboard(page)
 
-  // Before the run: empty trace and idle stream indicator.
-  await expect(page.getByText('Start analysis to stream agent decisions and tool results.')).toBeVisible()
+  // Before the run: idle indicator and no recorded events.
   await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
+  await expect(page.getByText('0 events')).toBeVisible()
+
+  // Expand the trace drawer up front; the modal dispute overlay would block
+  // the toggle once the workflow pauses.
+  await page.getByRole('button', { name: /EXECUTION TRACE/ }).click()
 
   await startRun(page)
 
-  // Trace events render as the stub stream arrives (the fixture has 7 events).
-  const traceItems = page.locator('.trace-list li')
-  await expect(traceItems).toHaveCount(7, { timeout: 20_000 })
-  await expect(page.getByText('7 events')).toBeVisible()
+  // Trace events arrive over SSE and render in the open drawer.
+  const rows = page.locator('.trace-list li')
+  await expect(rows.first()).toBeVisible({ timeout: 20_000 })
+  await expect(rows.first()).toContainText('Coordinator Agent')
+  await expect(rows.first()).toContainText('RUN STARTED')
+  await expect(page.getByText('STREAMING', { exact: true })).toBeVisible()
 
-  // The first event comes from the coordinator starting the run.
-  await expect(traceItems.first()).toContainText('Coordinator Agent')
-  await expect(traceItems.first()).toContainText('RUN STARTED')
-
-  // Stream end state: indicator back to IDLE, start button re-enabled,
-  // and the workflow stage reflects the final stub event.
-  await expect(page.getByText('IDLE', { exact: true })).toBeVisible({ timeout: 20_000 })
-  await expect(page.getByRole('button', { name: 'Start analysis' })).toBeEnabled()
-  await expect(page.getByText('AWAITING APPROVAL', { exact: true })).toBeVisible()
-
-  // Agent cards left the WAITING state for every agent that produced events.
-  await expect(page.locator('.agent-card', { hasText: 'Impact Agent' })).toContainText('COMPLETE')
-  await expect(page.locator('.agent-card', { hasText: 'Yard Agent' })).toContainText('COMPLETE')
+  // The run pauses at the reefer dispute and waits for the human.
+  await expect(page.getByRole('dialog', { name: /dispute/i })).toBeVisible({ timeout: 30_000 })
+  await expect(stageReadout(page)).toHaveText('DISPUTE')
+  expect(await rows.count()).toBeGreaterThanOrEqual(2)
 })
 
 test('reset returns the dashboard to the original scenario state', async ({ page }) => {
   await openDashboard(page)
   await startRun(page)
 
-  await expect(page.locator('.trace-list li')).toHaveCount(7, { timeout: 20_000 })
-
+  // Reach the dispute pause, resolve it (the modal overlay blocks Reset while
+  // open), then reset mid-run during planning.
+  await resolveReeferDispute(page)
   await page.getByRole('button', { name: 'Reset' }).click()
 
-  await expect(page.getByText('Start analysis to stream agent decisions and tool results.')).toBeVisible()
+  await expect(page.getByRole('dialog', { name: /dispute/i })).toBeHidden()
   await expect(page.getByText('0 events')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Start analysis' })).toBeEnabled()
+  await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
+  await expect(stageReadout(page)).toHaveText('READY')
+  await expect(page.getByRole('button', { name: 'Start run' })).toBeEnabled()
 })
