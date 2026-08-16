@@ -3,6 +3,8 @@ Global Agent Instructions
 Keep responses terse and informative.
 Developers are not familiar with shipping/transportation concepts/terms, explaining abbreviations in parentheses immediately after and also detailing concepts worth remembering in standalone paragraphs in a style readable to a 5 year old.
 
+NEVER use web artifacts. if you wish to show me something, do so in a local html file in the scratch folder.
+
 william is in colorado.
 
 - Never use the em dash "—". Use plain dash "-" instead

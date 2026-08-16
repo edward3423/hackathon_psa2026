@@ -2,7 +2,7 @@
 
 ## 1. Project overview
 
-CASCADE is a human-in-the-loop agentic AI demonstration for PSA port operations. It shows how a delayed incoming vessel can cause missed onward sailings, longer container stays, crowded storage yards, and additional operating costs over the next 72 hours.
+CASCADE is an AI-led, human-governed multi-agent demonstration for PSA port operations. It shows how a delayed incoming vessel can cause missed onward sailings, longer container stays, crowded storage yards, and additional operating costs over the next 72 hours.
 
 CASCADE stands for Cognitive Agent for Synchro-modal Cascading Anomaly and Disruption Engine.
 
@@ -26,7 +26,7 @@ Port controllers need to understand the consequences of a vessel delay quickly. 
 - which recovery plan gives the best outcome;
 - whether a human should approve the action.
 
-CASCADE demonstrates how an AI agent can coordinate analysis tools, compare recovery options, request approval, and show a clear execution trace.
+CASCADE demonstrates how a coordinator agent delegates work to specialist agents, reconciles their findings, uses deterministic operational tools, develops recovery options, requests human approval, and shows a clear execution trace.
 
 ## 3. Hackathon objective
 
@@ -41,17 +41,19 @@ Demonstrate one polished and repeatable workflow that satisfies the PSA Code Spr
 7. dispatch mocked actions;
 8. report decisions, calls, results, approvals, and errors.
 
-Higher autonomy is not required. Human approval is appropriate because the proposed actions affect cargo handling and vessel connections.
+The agents independently analyze, delegate, use tools, revise infeasible proposals, and prepare actions. The human sets priorities, resolves exceptional disputes, and approves execution. Human approval is appropriate because the proposed actions affect cargo handling and vessel connections.
 
 ## 4. Goals
 
 - Demonstrate a complete alert-to-action agentic workflow.
+- Make agent delegation, parallel work, tool use, disagreement, and handoffs clearly visible.
 - Produce believable connection and yard-impact results.
 - Compare exactly three recovery plans.
 - Explain why one plan is recommended.
 - Require a visible human approval step.
 - Show one controlled tool failure and safe fallback.
 - Make the demonstration deterministic and easy to reset.
+- Support limited scenario variation without becoming a general simulation platform.
 - Deliver a polished single-screen command dashboard.
 
 ## 5. Non-goals
@@ -91,6 +93,14 @@ The synthetic world contains:
 - two mocked external tools;
 - one controlled tool failure.
 
+The user may vary only:
+
+- vessel delay from 6 to 24 hours;
+- priority emphasis between cargo protection, congestion reduction, and balanced operation;
+- alternative-sailing tool failure on or off.
+
+Arbitrary file uploads and unrestricted scenario editing are outside the demonstration scope.
+
 A reefer is a refrigerated container. It needs electrical power to keep its cargo cold.
 
 The graph may group containers by cargo type and onward vessel. The simulator can still calculate individual container results internally.
@@ -102,18 +112,24 @@ The user injects an 18-hour delay for the synthetic vessel `MV ATLAS STAR`.
 CASCADE then:
 
 1. identifies the issue and response objective;
-2. finds safe, at-risk, and missed connections;
-3. identifies 60 pharmaceutical reefers as high priority;
-4. forecasts yard occupancy for 72 hours;
-5. creates rush, rebook, and hybrid recovery plans;
-6. recommends the hybrid plan;
-7. pauses for human approval;
-8. dispatches mocked work orders and carrier notices;
-9. shows execution receipts and the improved forecast.
+2. delegates connection analysis and yard analysis to specialist agents running concurrently;
+3. finds safe, at-risk, and missed connections;
+4. identifies 60 pharmaceutical reefers as high priority;
+5. forecasts yard occupancy for 72 hours;
+6. surfaces a controlled disagreement between cargo protection and reefer plug capacity;
+7. opens a transient dispute panel for human resolution;
+8. handles an alternative-sailing lookup timeout using a labeled cached fixture;
+9. creates, validates, and revises rush, rebook, and hybrid recovery plans;
+10. recommends the hybrid plan with medium confidence because cached sailing data was used;
+11. pauses for human approval;
+12. prepares and validates mocked work orders and carrier notices;
+13. shows execution receipts and the improved forecast.
 
-The demonstration also includes a controlled alternative-sailing lookup timeout. CASCADE reports the error, uses a documented fallback fixture, lowers confidence, and requires human review.
+The Impact Agent initially recommends rushing all pharmaceutical reefers. The Yard Agent reports that this would exceed available reefer plugs. The coordinator presents both evidence sets and asks the human to confirm the governing constraint before planning continues.
 
 All figures shown in the interface must come from the same fixture and calculation path. The user interface must not contain separate hard-coded result totals.
+
+The live Gemini workflow is attempted first. If the Gemini API is unavailable, the presenter may explicitly start `DEMO_REPLAY` mode. Replay Mode uses a previously captured valid run and must remain visibly labeled throughout. It must never silently impersonate a live agent run.
 
 ## 9. Features and tests
 
@@ -207,13 +223,13 @@ The total equals the sum of the displayed components. Changing one fixture input
 
 **FEATURE**
 
-Generate exactly three plans:
+The Recovery Agent generates exactly three plans from fixed archetypes:
 
 1. `AGGRESSIVE_RUSH`: protect current connections using additional handling capacity;
 2. `STANDARD_REBOOK`: move affected containers to later synthetic sailings;
 3. `OPTIMIZED_HYBRID`: rush high-priority cargo and rebook lower-priority cargo.
 
-Each plan shows cost, delay, yard peak, critical cargo protected, and important assumptions.
+The agent chooses cargo allocations, actions, and assumptions. Deterministic tools calculate cost, delay, yard peak, and critical cargo protected. Infeasible proposals are rejected and returned to the agent for revision.
 
 **TEST**
 
@@ -231,7 +247,7 @@ Recommend a plan using this fixed order:
 4. reduce yard congestion;
 5. reduce cost and delay.
 
-The AI agent explains the calculated recommendation but cannot change simulation values.
+The coordinator interprets specialist evidence, selects among feasible plans, and explains the recommendation. It cannot change simulation values.
 
 **TEST**
 
@@ -241,7 +257,7 @@ Given fixed plan results, repeated runs return the same recommendation. A cheape
 
 **FEATURE**
 
-Pause before mocked dispatch. Let the controller compare plans, approve one plan, or reject the recommendation.
+Provide optional human steering after the initial assessment and mandatory approval before mocked dispatch. Let the controller change priorities, compare plans, approve one plan, or reject the recommendation.
 
 **TEST**
 
@@ -254,9 +270,13 @@ No mocked work order appears before approval. Approval produces the expected act
 Show an ordered trace containing:
 
 - workflow stage;
+- agent name and objective;
+- agent handoff;
 - tool called;
 - short input summary;
 - result or error;
+- confidence and assumptions;
+- elapsed time;
 - recommendation;
 - human decision;
 - mocked action and receipt.
@@ -271,7 +291,7 @@ The golden run shows every required stage in order. Every displayed figure match
 
 **FEATURE**
 
-Provide a demo control that makes the alternative-sailing tool time out. Report the failure, load a clearly labeled cached fixture, lower recommendation confidence, and require human approval.
+Provide a demo control that makes the alternative-sailing tool time out. Report the failure, load a clearly labeled cached fixture that may be stale, set confidence to `MEDIUM`, avoid assuming unverified capacity, and require human approval.
 
 **TEST**
 
@@ -301,7 +321,7 @@ Forecast peaks, times, units, and plan values match the tool results and remain 
 
 **FEATURE**
 
-Convert the approved plan into mocked terminal work orders and carrier notices. Display a success or failure receipt for each action.
+The Execution Agent converts the approved plan into sequenced mocked terminal work orders, reefer checks, and carrier notices. A deterministic validator rejects actions that are not present in the approved plan or allowed tool list. Display a success or failure receipt for each accepted action.
 
 **TEST**
 
@@ -317,37 +337,106 @@ Reset the application to the original golden scenario through one button or comm
 
 After a completed or failed run, reset restores the original alert, fixture, trace, plans, and UI state.
 
+### 9.17 Multi-agent orchestration
+
+**FEATURE**
+
+Run one Coordinator Agent and four specialist agents. Run the Impact Agent and Yard Agent concurrently, then hand their evidence to the Recovery Agent. The Execution Agent runs only after approval.
+
+**TEST**
+
+The trace shows both parallel specialists, their results, the recovery handoff, and the approval-gated execution handoff in the required order.
+
+### 9.18 Transient dispute resolution
+
+**FEATURE**
+
+Open a temporary dispute panel only when agents conflict, inputs are ambiguous, or a human decision is required. Show each position and its tool evidence. Convert the human response into a visible confirmed constraint.
+
+**TEST**
+
+The golden reefer-capacity conflict pauses planning until the human selects a constraint. The confirmed constraint appears in the trace and revised plans respect it.
+
+### 9.19 Scenario controls
+
+**FEATURE**
+
+Allow the user to vary delay, priority emphasis, and alternative-sailing failure. Re-run agent analysis and calculations from those inputs.
+
+**TEST**
+
+Changing any supported control starts a new run whose trace and results reference the selected value. Unsupported input cannot enter the workflow.
+
+### 9.20 Honest Replay Mode
+
+**FEATURE**
+
+Replay one previously captured valid agent run when the Gemini API is unavailable. Display a persistent `DEMO REPLAY` label and preserve the normal approval interaction.
+
+**TEST**
+
+Replay works without network access, matches the captured event sequence, and cannot be mistaken for a live Gemini run.
+
 ## 10. Agent behavior
 
-The agent coordinates the workflow. Deterministic tools perform calculations.
+CASCADE is AI-led and human-governed. Gemini agents interpret the disruption, delegate analysis, choose tools, reconcile evidence, propose actions, and revise rejected plans. Deterministic tools remain the source of truth for operational calculations and capacity constraints.
+
+### Agent roles
+
+| Agent | Responsibility | Reasoning level |
+|---|---|---|
+| Coordinator Agent | Interpret the alert, set objectives, delegate work, reconcile results, manage disputes, and recommend the next step | Higher |
+| Impact Agent | Analyze connections, cargo urgency, and disruption consequences | Lower |
+| Yard Agent | Analyze yard occupancy, reefer plugs, and physical constraints | Lower |
+| Recovery Agent | Generate, validate, revise, and compare recovery plans | Higher |
+| Execution Agent | Translate an approved plan into validated mocked actions | Lower |
 
 ```text
 receive alert
     -> identify issue and objective
-    -> call connection analysis
-    -> call yard simulation
+    -> delegate in parallel
+        -> Impact Agent calls connection analysis
+        -> Yard Agent calls yard simulation
+    -> reconcile evidence or open dispute panel
     -> call alternative-sailing lookup
-    -> generate and compare plans
+    -> Recovery Agent generates plans
+    -> deterministic tools validate and score plans
+    -> Recovery Agent revises rejected plans
     -> request human approval
+    -> Execution Agent prepares actions
+    -> deterministic action validation
     -> dispatch mocked actions
     -> report results
 ```
 
-The agent may:
+Agents may:
 
 - choose the next approved tool;
+- delegate work to the named specialist agents;
 - summarize structured results;
-- compare the three plans;
+- generate allocations and actions within the three plan archetypes;
+- revise a proposal rejected by deterministic validation;
+- compare feasible plans and explain trade-offs;
 - request clarification or approval;
 - explain failures and fallback behavior.
 
-The agent may not:
+Agents may not:
 
 - change calculated values;
 - invent missing operational data;
 - bypass the approval step;
 - call unlisted tools;
 - execute real operational actions.
+
+### Confidence
+
+Use categorical confidence only:
+
+- `HIGH`: all required inputs are complete and required tools succeeded;
+- `MEDIUM`: a fallback or potentially stale cached result was used;
+- `LOW`: critical inputs conflict or remain missing.
+
+Low confidence forces dispute resolution before planning continues. Medium confidence permits planning but never removes approval. Do not display invented confidence percentages.
 
 ## 11. Demonstration tools
 
@@ -357,6 +446,8 @@ The agent may not:
 | `simulate_yard` | Produce the 72-hour yard forecast | Deterministic local function |
 | `find_alternative_sailings` | Return later synthetic sailings | Mocked tool with optional timeout |
 | `compare_plans` | Calculate and rank three plans | Deterministic local function |
+| `retrieve_context` | Retrieve selected PSA and port context with source links | Local evidence-pack lookup |
+| `validate_actions` | Ensure proposed actions match the approved plan and allowlist | Deterministic local function |
 | `dispatch_plan` | Produce work orders and notices | Mocked tool only |
 
 ## 12. Architecture
@@ -368,13 +459,14 @@ React dashboard
       v
 FastAPI backend
       |
-      +-- agent workflow
+      +-- Google ADK multi-agent workflow
       +-- deterministic analysis tools
       +-- mocked external tools
       +-- in-memory demo state
+      +-- captured Replay Mode events
       |
       v
-Seeded JSON fixtures
+Seeded JSON fixtures and local evidence pack
 ```
 
 SSE means Server-Sent Events. It lets the server send trace updates to the browser over one open connection.
@@ -384,7 +476,10 @@ SSE means Server-Sent Events. It lets the server send trace updates to the brows
 - Python 3.12 or later.
 - `uv` for all Python package and script commands.
 - FastAPI and Pydantic for the backend and typed data.
-- A small explicit workflow graph for agent stages and approval.
+- Google Agent Development Kit (ADK) for multi-agent delegation, tools, sessions, and events.
+- Gemini API using `gemini-3.5-flash` for all five agents.
+- Higher reasoning effort for the Coordinator and Recovery agents, and lower effort for the other specialists.
+- An explicit coordinator-controlled stage sequence around ADK for repeatability and approval gates.
 - React and TypeScript for the frontend.
 - React Flow for the cascade graph.
 - A lightweight chart library for yard forecasts.
@@ -392,6 +487,8 @@ SSE means Server-Sent Events. It lets the server send trace updates to the brows
 - Playwright for the golden end-to-end demonstration test.
 
 No database is required for the hackathon build.
+
+The system runs locally on one laptop. Gemini is the only live network dependency. Google Cloud deployment, Agent-to-Agent networking, and a second model provider are outside scope.
 
 ## 13. Data plan
 
@@ -409,11 +506,25 @@ UN/LOCODE means United Nations Code for Trade and Transport Locations. It provid
 
 These sources provide context and rough calibration only. They do not provide container connections, yard occupancy, crane availability, customer costs, or alternative-sailing capacity.
 
+Extract a small reviewed evidence pack from these sources. The `retrieve_context` tool returns short facts with source links. Agents must not browse the internet during the live workflow.
+
 ### Synthetic operational data
 
 Generate the complete demo fixture with seed `42`. Clearly label all vessels, containers, yard values, costs, plans, and results as synthetic or illustrative.
 
 Store one reviewed fixture in the repository so the judged demonstration does not depend on network access.
+
+### Dashboard layout
+
+- Top: alert, objective, scenario controls, and current workflow stage.
+- Left: cascade graph of vessels and affected cargo.
+- Center: live agent activity, parallel work, and handoffs.
+- Right: operational metrics and three recovery-plan cards.
+- Bottom drawer: expandable execution trace.
+- Temporary overlay: dispute evidence and human resolution.
+- Fixed approval bar: selected plan, consequences, approve, and reject.
+
+Chat is not a persistent assistant interface. It appears only inside the transient dispute panel. Completed agent activity cards remain expandable and show objectives, inputs, tools, evidence summaries, assumptions, confidence, result, elapsed time, and next handoff. They never expose private chain-of-thought.
 
 ## 14. Safety, security, and scalability statement
 
@@ -426,6 +537,7 @@ These topics are documentation deliverables, not production implementation work.
 - Capacity rules are deterministic.
 - Missing or failed data lowers confidence and prevents automatic action.
 - The interface labels synthetic and illustrative values.
+- Replay Mode is always visibly labeled and never presented as live agent execution.
 
 ### Security
 
@@ -436,6 +548,8 @@ Prompt injection is when untrusted text tries to command the agent. The demonstr
 ### Scalability
 
 A production version could replace JSON and in-memory state with a relational database, event bus, and independent simulation workers. The hackathon build only needs to support one local demonstration user and one scenario at a time.
+
+Free-tier Gemini prompts and responses may be used by Google to improve its products. Only synthetic data and the public evidence pack may be sent to Gemini.
 
 An event bus is a shared delivery system for updates between services.
 
@@ -450,12 +564,14 @@ Agent 1 completes the shared foundation before parallel implementation begins:
 - root lint, test, type-check, and build commands;
 - shared Pydantic and OpenAPI schemas;
 - generated TypeScript API types;
-- workflow-state and trace-event schemas;
+- workflow-state, agent-event, dispute, confidence, and trace-event schemas;
+- Google ADK shell with five stub agents and stub tools;
 - golden input fixture;
 - fake tool responses;
+- captured Replay Mode event fixture;
 - minimal backend and frontend shells.
 
-The foundation passes when a clean worktree installs successfully, validates the golden fixture, generates frontend types, renders a fake alert, and passes all initial checks.
+The foundation passes when a clean worktree installs successfully, validates the golden fixture, generates frontend types, streams a fake multi-agent run to the dashboard, renders the alert, and passes all initial checks.
 
 ### 15.2 Parallel worktrees
 
@@ -465,10 +581,10 @@ After the foundation passes, six agents work simultaneously:
 |---|---|---|
 | 1: Integration | `codex/integration-foundation` | contracts, root configuration, integration, shared checks |
 | 2: Fixtures | `codex/data-fixtures` | synthetic generator and reviewed golden fixture |
-| 3: Analysis | `codex/simulation-engine` | connections, yard, reefer, cost, plans, unit tests |
-| 4: Workflow | `codex/workflow-api` | agent stages, API, SSE, approval, mock dispatch |
-| 5: Frontend | `codex/frontend-dashboard` | dashboard, graph, chart, cards, trace, approval UI |
-| 6: Verification | `codex/verification-delivery` | end-to-end test, failure test, reset script, slides, video |
+| 3: Analysis | `codex/simulation-engine` | deterministic connections, yard, reefer, cost, validation, and unit tests |
+| 4: Workflow | `codex/workflow-api` | Gemini and ADK agents, API, SSE, disputes, approval, and mock dispatch |
+| 5: Frontend | `codex/frontend-dashboard` | dashboard, agent activity, dispute panel, graph, chart, plans, trace, and approval UI |
+| 6: Verification | `codex/verification-delivery` | recorded responses, live evaluation, browser tests, reset, preflight, slides, and video |
 
 Each agent owns separate paths. Shared contract changes go through Agent 1.
 
@@ -478,12 +594,12 @@ Merge small working slices in this order:
 
 1. contracts, fixtures, and fake responses;
 2. alert and objective display;
-3. connection analysis and cascade graph;
-4. yard simulation and forecast;
-5. three plans and recommendation;
-6. approval and mocked dispatch;
-7. controlled failure and fallback;
-8. golden end-to-end test and UI polish.
+3. visible parallel agent delegation with recorded responses;
+4. connection analysis, yard simulation, and visual results;
+5. dispute resolution and confirmed constraints;
+6. agent-generated plans, deterministic validation, and recommendation;
+7. approval, validated mocked dispatch, and receipts;
+8. live Gemini path, tool failure, Replay Mode, end-to-end tests, and UI polish.
 
 A vertical slice is one small path that works from user input to visible result.
 
@@ -493,10 +609,10 @@ A vertical slice is one small path that works from user input to visible result.
 |---|---|
 | 1 | Foundation contracts and fake vertical path pass |
 | 2 | Six worktrees build fixtures, tools, API, UI, and tests in parallel |
-| 3 | Alert, connection analysis, and cascade graph integrate |
-| 4 | Yard forecast, plans, and recommendation integrate |
-| 5 | Approval, mocked dispatch, and golden end-to-end flow pass |
-| 6 | Failure path, visual polish, slides, and video rehearsal |
+| 3 | Parallel agents, alert, connection analysis, yard analysis, and visual results integrate |
+| 4 | Dispute resolution, plans, validation, and recommendation integrate |
+| 5 | Approval, mocked dispatch, Replay Mode, and golden end-to-end flow pass |
+| 6 | Live Gemini evaluation, failure path, visual polish, slides, and video rehearsal |
 | 7 | Final checks, reset rehearsal, recording, and backup video |
 
 ### 15.5 Coordination rules
@@ -505,7 +621,8 @@ A vertical slice is one small path that works from user input to visible result.
 - Do not manually edit generated API types.
 - Keep commits small and merge working slices daily.
 - Run Python commands through `uv`.
-- Do not add live external service dependencies.
+- Do not add live external service dependencies other than the Gemini API.
+- Keep all prompts and agent outputs versioned and schema-validated.
 - Route cross-owned defects to the owning agent with a reproduction.
 - Stop adding features after the golden end-to-end flow passes.
 
@@ -515,8 +632,11 @@ Required automated checks:
 
 - unit tests for classification, yard, costs, and plan ranking;
 - contract tests for API and trace shapes;
-- one golden browser test from alert through mocked receipt;
-- one browser test for the tool timeout and fallback;
+- deterministic agent tests using recorded Gemini responses;
+- one golden browser test from alert through dispute, approval, and mocked receipt;
+- one browser test for the tool timeout, cached sailing fallback, and medium confidence;
+- one browser test for visibly labeled Replay Mode;
+- one optional live Gemini evaluation for valid delegation, tool selection, evidence use, constraint compliance, and approval gating;
 - lint and type checks for backend and frontend;
 - one visual review at the demonstration screen size.
 
@@ -532,8 +652,8 @@ The video must be no longer than 10 minutes:
 |---|---|
 | 0:00 to 1:00 | PSA problem, user, and objective |
 | 1:00 to 2:00 | CASCADE and human-in-the-loop design |
-| 2:00 to 7:00 | Golden workflow from alert to mocked receipt |
-| 7:00 to 8:00 | Controlled tool failure and fallback |
+| 2:00 to 7:00 | Live multi-agent workflow, parallel analysis, dispute, plans, approval, and mocked receipt |
+| 7:00 to 8:00 | Tool timeout, cached fallback, and confidence handling |
 | 8:00 to 9:00 | Architecture, safety, security, and scalability |
 | 9:00 to 10:00 | Illustrative impact, limitations, and closing |
 
@@ -546,7 +666,7 @@ The presentation must contain no more than 10 slides:
 3. cascading disruption example;
 4. solution and autonomy choice;
 5. agent tools and execution flow;
-6. demonstration results;
+6. visible agent collaboration and demonstration results;
 7. architecture;
 8. uncertainty, safety, and security;
 9. illustrative impact, limitations, and scalability;
@@ -559,15 +679,21 @@ All synthetic values and illustrative savings must be labeled.
 The demonstration is ready when:
 
 - the golden workflow succeeds from alert through mocked receipt;
+- live activity clearly shows all five agents, parallel specialist work, tool calls, and handoffs;
+- the reefer-capacity disagreement pauses for human resolution;
 - reset restores the original scenario;
 - the same fixture produces the same displayed results;
 - exactly three plans appear;
 - no action appears before approval;
 - the timeout path visibly reports an error and fallback;
+- cached sailing data changes confidence to `MEDIUM`;
+- Replay Mode works offline and remains visibly labeled;
 - every trace value matches a tool result;
+- unsupported or unapproved actions fail deterministic validation;
 - the interface has no clipped text, overlapping controls, or unreadable charts;
-- lint, types, required unit tests, and both browser tests pass;
-- the demo runs without internet access;
+- lint, types, required unit tests, deterministic agent tests, and browser tests pass;
+- the preflight check validates Gemini access, model availability, ports, and fixtures;
+- the demo can replay without internet access;
 - the video is no longer than 10 minutes;
 - the presentation contains no more than 10 slides;
 - no real external action can be triggered.
@@ -580,4 +706,7 @@ The demonstration is ready when:
 - Alternative sailings and action receipts are mocked.
 - Fixed ETA scenarios do not represent a full probability forecast.
 - The application supports one scenario and one local user at a time.
+- Live agent wording and tool sequence may vary between runs even when calculated results remain fixed.
+- Gemini free-tier availability and limits are not guaranteed during judging.
+- Replay Mode demonstrates a captured run rather than live AI reasoning.
 - Security and scalability are described but not implemented.
