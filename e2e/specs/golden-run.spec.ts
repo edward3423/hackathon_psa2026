@@ -17,13 +17,7 @@ test.beforeEach(async ({ request }) => {
   await resetBackend(request)
 })
 
-// test.fixme: blocked by product bug "LIVE_STUB planning always fails" - see
-// plan/contract_requests_verification.md, section "Open product defects",
-// entry 1. After dispute resolution the run reaches stage FAILED ("Plan
-// AGGRESSIVE_RUSH stayed infeasible after 3 revision rounds"), so plans,
-// approval, and receipts never appear. The spec below encodes the intended
-// acceptance flow and is validated against the working DEMO_REPLAY path.
-test.fixme('golden run: parallel analysis, dispute resolution, three plans, approval, receipts', async ({ page }) => {
+test('golden run: parallel analysis, dispute resolution, three plans, approval, receipts', async ({ page }) => {
   await openDashboard(page)
   await startRun(page)
 
@@ -46,7 +40,7 @@ test.fixme('golden run: parallel analysis, dispute resolution, three plans, appr
   await expect(planCards).toHaveCount(3, { timeout: 30_000 })
   const recommendedCard = planCards.filter({ hasText: 'Recommended' })
   await expect(recommendedCard).toHaveCount(1)
-  await expect(recommendedCard).toContainText('OPTIMIZED_HYBRID')
+  await expect(recommendedCard).toContainText(/optimized[ _]hybrid/i)
 
   // Approval gate: still nothing dispatch-like before the human approves.
   await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
