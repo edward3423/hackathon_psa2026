@@ -89,6 +89,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{run_id}/dispute-resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Dispute */
+        post: operations["resolve_dispute_api_runs__run_id__dispute_resolution_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{run_id}/approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Approval */
+        post: operations["decide_approval_api_runs__run_id__approval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reset": {
         parameters: {
             query?: never;
@@ -172,6 +206,18 @@ export interface components {
             sailings: components["schemas"]["AlternativeSailing"][];
             /** Stale Notice */
             stale_notice?: string | null;
+        };
+        /**
+         * ApprovalDecision
+         * @enum {string}
+         */
+        ApprovalDecision: "APPROVED" | "REJECTED";
+        /** ApprovalRequest */
+        ApprovalRequest: {
+            plan_archetype: components["schemas"]["PlanArchetype"];
+            decision: components["schemas"]["ApprovalDecision"];
+            /** Note */
+            note?: string | null;
         };
         /** BlockForecast */
         BlockForecast: {
@@ -274,6 +320,26 @@ export interface components {
              */
             illustrative: boolean;
         };
+        /**
+         * CreateRunRequest
+         * @description Scenario controls plus explicit run-mode selection.
+         */
+        CreateRunRequest: {
+            /**
+             * Delay Hours
+             * @default 18
+             */
+            delay_hours: number;
+            /** @default BALANCED */
+            priority_emphasis: components["schemas"]["PriorityEmphasis"];
+            /**
+             * Alternative Sailing Failure
+             * @default true
+             */
+            alternative_sailing_failure: boolean;
+            /** @default LIVE_STUB */
+            mode: components["schemas"]["RunMode"];
+        };
         /** Dispute */
         Dispute: {
             /** Dispute Id */
@@ -297,6 +363,13 @@ export interface components {
             position: string;
             /** Evidence */
             evidence: string[];
+        };
+        /** DisputeResolutionRequest */
+        DisputeResolutionRequest: {
+            /** Dispute Id */
+            dispute_id: string;
+            /** Confirmed Constraint */
+            confirmed_constraint: string;
         };
         /** DisruptionAlert */
         DisruptionAlert: {
@@ -644,14 +717,17 @@ export interface operations {
     };
     create_run_api_runs_post: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Overrides the body mode field. */
+                mode?: components["schemas"]["RunMode"] | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ScenarioControls"];
+                "application/json": components["schemas"]["CreateRunRequest"];
             };
         };
         responses: {
@@ -716,6 +792,76 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_dispute_api_runs__run_id__dispute_resolution_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisputeResolutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_approval_api_runs__run_id__approval_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApprovalRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

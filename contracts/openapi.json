@@ -55,15 +55,35 @@
         ],
         "summary": "Create Run",
         "operationId": "create_run_api_runs_post",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RunMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Overrides the body mode field.",
+              "title": "Mode"
+            },
+            "description": "Overrides the body mode field."
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ScenarioControls"
+                "$ref": "#/components/schemas/CreateRunRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -147,6 +167,110 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/dispute-resolution": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Resolve Dispute",
+        "operationId": "resolve_dispute_api_runs__run_id__dispute_resolution_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeResolutionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/approval": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Decide Approval",
+        "operationId": "decide_approval_api_runs__run_id__approval_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -370,6 +494,42 @@
           "sailings"
         ],
         "title": "AlternativeSailingResult"
+      },
+      "ApprovalDecision": {
+        "type": "string",
+        "enum": [
+          "APPROVED",
+          "REJECTED"
+        ],
+        "title": "ApprovalDecision"
+      },
+      "ApprovalRequest": {
+        "properties": {
+          "plan_archetype": {
+            "$ref": "#/components/schemas/PlanArchetype"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ApprovalDecision"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "plan_archetype",
+          "decision"
+        ],
+        "title": "ApprovalRequest"
       },
       "BlockForecast": {
         "properties": {
@@ -623,6 +783,34 @@
         ],
         "title": "CostEstimate"
       },
+      "CreateRunRequest": {
+        "properties": {
+          "delay_hours": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 6.0,
+            "title": "Delay Hours",
+            "default": 18
+          },
+          "priority_emphasis": {
+            "$ref": "#/components/schemas/PriorityEmphasis",
+            "default": "BALANCED"
+          },
+          "alternative_sailing_failure": {
+            "type": "boolean",
+            "title": "Alternative Sailing Failure",
+            "default": true
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode",
+            "default": "LIVE_STUB"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CreateRunRequest",
+        "description": "Scenario controls plus explicit run-mode selection."
+      },
       "Dispute": {
         "properties": {
           "dispute_id": {
@@ -691,6 +879,25 @@
           "evidence"
         ],
         "title": "DisputePosition"
+      },
+      "DisputeResolutionRequest": {
+        "properties": {
+          "dispute_id": {
+            "type": "string",
+            "title": "Dispute Id"
+          },
+          "confirmed_constraint": {
+            "type": "string",
+            "title": "Confirmed Constraint"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dispute_id",
+          "confirmed_constraint"
+        ],
+        "title": "DisputeResolutionRequest"
       },
       "DisruptionAlert": {
         "properties": {
