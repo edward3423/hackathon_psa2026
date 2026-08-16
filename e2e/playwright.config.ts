@@ -14,7 +14,9 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    // The e2e frontend runs on a dedicated port so the suite is independent
+    // of any dev server already using the default 5173.
+    baseURL: 'http://127.0.0.1:5174',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -33,9 +35,9 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'npm --workspace frontend run dev',
+      command: 'npm --workspace frontend run dev -- --port 5174 --strictPort',
       cwd: repoRoot,
-      url: 'http://127.0.0.1:5173',
+      url: 'http://127.0.0.1:5174',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

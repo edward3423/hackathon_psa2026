@@ -82,7 +82,7 @@ def check_frontend_port() -> CheckResult:
     if not _port_open(FRONTEND_PORT):
         return CheckResult(name, PASS, "free")
     body = _http_get(f"http://127.0.0.1:{FRONTEND_PORT}/")
-    if body is not None and ("vite" in body.lower() or "cascade" in body.lower()):
+    if body is not None and "CASCADE" in body:
         return CheckResult(name, PASS, "occupied by the CASCADE frontend dev server")
     return CheckResult(name, FAIL, "occupied by an unknown service; stop it or change ports")
 
