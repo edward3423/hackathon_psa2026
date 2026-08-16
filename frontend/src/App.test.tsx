@@ -167,6 +167,30 @@ describe('CASCADE dashboard', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it('keeps Reset working while the dispute overlay is open', async () => {
+    const source = await startRun()
+    currentState = workflowState({ stage: 'DISPUTE', active_dispute: dispute })
+    act(() =>
+      source.emit(
+        'trace',
+        traceEvent({ kind: 'DISPUTE_OPENED', stage: 'DISPUTE', confidence: 'LOW' }),
+      ),
+    )
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+
+    // The paused dispute must not strand the presenter: the top-bar Reset
+    // stays clickable and clears the run, dispute overlay included.
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    await waitFor(() => {
+      const reset = calls.find(
+        (call) => call.url.endsWith('/api/reset') && call.method === 'POST',
+      )
+      expect(reset).toBeDefined()
+    })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
   it('hides the approval bar until AWAITING_APPROVAL and posts the decision', async () => {
     const source = await startRun()
     act(() => source.emit('trace', traceEvent({ kind: 'AGENT_STARTED', stage: 'ASSESSING' })))
