@@ -1,23 +1,34 @@
 import { expect, test } from '@playwright/test'
 
-import { expectNoDispatchArtifacts, openDashboard, startRun } from './helpers'
+import {
+  approvePlan,
+  expectNoDispatchArtifacts,
+  openDashboard,
+  resetBackend,
+  resolveReeferDispute,
+  stageReadout,
+  startRun,
+} from './helpers'
 
-// PRD 9.x golden acceptance flow: alert -> parallel analysis -> dispute ->
+// PRD golden acceptance flow: alert -> parallel analysis -> dispute ->
 // three plans with recommendation -> approval -> mocked receipts.
-//
-// test.fixme: awaits the full workflow backend (dispute pause at
-// DISPUTE_OPENED, POST /api/runs/{id}/dispute-resolution, approval pause at
-// APPROVAL_REQUIRED, POST /api/runs/{id}/approval, mocked dispatch results)
-// and the dashboard dispute panel, plan cards, and approval bar UI.
-// The stub backend streams straight through with no pauses and the shell UI
-// has no dispute, plan, or approval elements yet.
 
+test.beforeEach(async ({ request }) => {
+  await resetBackend(request)
+})
+
+// test.fixme: blocked by product bug "LIVE_STUB planning always fails" - see
+// plan/contract_requests_verification.md, section "Open product defects",
+// entry 1. After dispute resolution the run reaches stage FAILED ("Plan
+// AGGRESSIVE_RUSH stayed infeasible after 3 revision rounds"), so plans,
+// approval, and receipts never appear. The spec below encodes the intended
+// acceptance flow and is validated against the working DEMO_REPLAY path.
 test.fixme('golden run: parallel analysis, dispute resolution, three plans, approval, receipts', async ({ page }) => {
   await openDashboard(page)
   await startRun(page)
 
   // Parallel specialist work: Impact and Yard agent cards are both active
-  // before either reports completion (PRD 9.17).
+  // before the dispute pauses the workflow (PRD 9.17).
   const impactCard = page.locator('.agent-card', { hasText: 'Impact Agent' })
   const yardCard = page.locator('.agent-card', { hasText: 'Yard Agent' })
   await expect(impactCard).not.toContainText('WAITING', { timeout: 30_000 })
@@ -26,32 +37,26 @@ test.fixme('golden run: parallel analysis, dispute resolution, three plans, appr
   // No dispatch-like element exists this early in the run.
   await expectNoDispatchArtifacts(page)
 
-  // The reefer plug capacity dispute pauses the workflow (PRD 9.18).
-  const disputePanel = page.getByRole('dialog', { name: /dispute/i })
-  await expect(disputePanel).toBeVisible({ timeout: 60_000 })
-  await expect(disputePanel).toContainText(/reefer/i)
-  await expect(disputePanel).toContainText('Impact Agent')
-  await expect(disputePanel).toContainText('Yard Agent')
-
-  // The human confirms the governing constraint; planning resumes.
-  await disputePanel.getByRole('button', { name: /reefer plug capacity/i }).click()
-  await expect(disputePanel).toBeHidden({ timeout: 15_000 })
+  // The reefer plug capacity dispute pauses the workflow until the human
+  // confirms the governing constraint (PRD 9.18).
+  await resolveReeferDispute(page)
 
   // Exactly three recovery plans with a visible recommendation (PRD 9.8/9.9).
-  const planCards = page.getByRole('article', { name: /plan/i })
-  await expect(planCards).toHaveCount(3, { timeout: 60_000 })
-  await expect(page.getByText(/recommended/i).first()).toBeVisible()
-  await expect(page.getByText(/OPTIMIZED[_ ]HYBRID/i).first()).toBeVisible()
+  const planCards = page.getByRole('article', { name: /^Recovery plan:/ })
+  await expect(planCards).toHaveCount(3, { timeout: 30_000 })
+  const recommendedCard = planCards.filter({ hasText: 'Recommended' })
+  await expect(recommendedCard).toHaveCount(1)
+  await expect(recommendedCard).toContainText('OPTIMIZED_HYBRID')
 
   // Approval gate: still nothing dispatch-like before the human approves.
-  await expect(page.getByText('AWAITING APPROVAL', { exact: true })).toBeVisible({ timeout: 30_000 })
+  await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
   await expectNoDispatchArtifacts(page)
 
   // Approve the hybrid plan from the approval bar (PRD 9.10).
-  await page.getByRole('button', { name: /approve/i }).click()
+  await approvePlan(page, 'OPTIMIZED_HYBRID')
 
   // Mocked receipts appear only after approval (PRD 9.15).
-  await expect(page.getByText(/receipt/i).first()).toBeVisible({ timeout: 60_000 })
-  await expect(page.getByText('ACCEPTED').first()).toBeVisible()
-  await expect(page.getByText('COMPLETE', { exact: true })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('EXECUTION RECEIPTS (MOCKED)')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.receipt-list .receipt-status').first()).toHaveText('ACCEPTED')
+  await expect(stageReadout(page)).toHaveText('COMPLETE', { timeout: 30_000 })
 })

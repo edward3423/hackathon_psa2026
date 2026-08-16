@@ -5,6 +5,53 @@ can flip from `test.fixme()` to passing without selector churn. Tests select
 by role and accessible name wherever possible; these are the elements the
 final acceptance specs assume.
 
+## Open product defects (found by e2e verification, 2026-08-17)
+
+### 1. LIVE_STUB planning always fails: run ends FAILED instead of AWAITING_APPROVAL
+
+Blocks: `e2e/specs/golden-run.spec.ts`, `e2e/specs/timeout-fallback.spec.ts`
+(both left `test.fixme` referencing this entry). DEMO_REPLAY is unaffected and
+its browser test passes, so the plan/approval/receipt UI itself works.
+
+Repro (no browser needed):
+1. `uv run uvicorn cascade.api:app --port 8000`
+2. `POST /api/runs` with default controls (LIVE_STUB, delay 18, BALANCED,
+   failure toggle on or off - both reproduce).
+3. Wait for stage DISPUTE, then `POST /api/runs/{id}/dispute-resolution` with
+   any constraint offered by the UI, e.g. "Respect physical reefer plug
+   capacity".
+4. Expected: three evaluated plans, stage AWAITING_APPROVAL.
+5. Actual: stage FAILED; trace ERROR "Plan AGGRESSIVE_RUSH stayed infeasible
+   after 3 revision rounds."; result "Run failed; no further actions will be
+   taken."
+
+Root cause (two owners, pick either fix):
+- Engine (Agent 3): `CRANE_SURGE_ALLOWANCE_CONTAINERS = 12` in
+  `src/cascade/engine/plans.py`, while the golden world has 172 threatened
+  containers (23 pharma reefer, 68 manufacturing, 81 dry). Any archetype that
+  rushes whole groups exceeds 12 by an order of magnitude.
+- Scripted brain (Agent 4): `ScriptedBrain.revise_plan` in
+  `src/cascade/agents/scripted.py` only revises PHARMA_REEFER rush actions
+  (and only caps them when the text contains "rush at most N"). Rush actions
+  for manufacturing and dry cargo are never converted to rebooks, so
+  AGGRESSIVE_RUSH (172 rushed) and OPTIMIZED_HYBRID (rushes all 68
+  manufacturing) can never satisfy the 12-container allowance, and the
+  workflow raises after MAX_REVISION_ROUNDS.
+
+Why the unit suite is green anyway: `tests/test_api.py` and
+`tests/test_workflow.py` replace the toolbox with `FakeToolBox`, so the real
+`EngineToolBox` planning path is never exercised end to end. Suggest one
+integration test that runs `RunStore` with `build_toolbox()`.
+
+### 2. Minor UX: the dispute overlay blocks the Reset button
+
+`DisputeOverlay` renders a full-screen backdrop, so while the workflow is
+paused at the dispute the Reset button (and trace drawer toggle) cannot be
+clicked. PRD 9.16 expects one-button reset; during a live demo a stuck
+dispute would strand the presenter. Suggest allowing Reset above the
+backdrop or a cancel affordance in the overlay. The e2e specs work around it
+(they resolve the dispute before resetting).
+
 ## For Agent 5 (frontend dashboard)
 
 1. Dispute panel: render as `role="dialog"` with an accessible name containing
