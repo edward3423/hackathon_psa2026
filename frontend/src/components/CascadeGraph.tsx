@@ -164,9 +164,11 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
 
       <div className="graph-canvas">
         <ReactFlow
+          key={analysis ? `flow-${analysis.groups.length}` : 'flow-empty'}
           nodes={nodes}
           edges={edges}
           fitView
+          fitViewOptions={{ padding: 0.12 }}
           nodesConnectable={false}
           elementsSelectable={false}
           panOnDrag

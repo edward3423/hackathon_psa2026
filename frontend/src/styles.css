@@ -81,6 +81,8 @@ ul { margin: 0; padding-left: 18px; }
 /* Cascade graph */
 .graph-canvas { height: 440px; margin-top: 14px; border: 1px solid var(--line-soft); background: #060e14; }
 .graph-canvas .react-flow { background: #060e14; }
+.graph-canvas .react-flow__attribution { background: transparent; }
+.graph-canvas .react-flow__attribution a { color: #3a505c; font-size: 9px; }
 .graph-vessel, .graph-group { display: grid; gap: 3px; text-align: left; }
 .graph-node-kind { color: var(--muted); font: 0.58rem var(--mono); letter-spacing: 0.1em; }
 .graph-node-meta { color: var(--amber); font: 0.62rem var(--mono); }

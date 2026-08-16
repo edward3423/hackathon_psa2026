@@ -116,7 +116,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                       value: '85% congested',
                       fill: '#f1a33c',
                       fontSize: 10,
-                      position: 'insideBottomLeft',
+                      position: 'insideBottomRight',
                     }}
                   />
                   <ReferenceLine
@@ -128,6 +128,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                       fill: '#e35d5d',
                       fontSize: 10,
                       position: 'insideTopLeft',
+                      dy: -2,
                     }}
                   />
                   <Line
