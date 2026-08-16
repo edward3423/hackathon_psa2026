@@ -187,19 +187,34 @@ class GeminiBrain:
         return self._client
 
     def _generate(self, agent: AgentName, message: str, schema: type[ModelT]) -> ModelT:
+        # JSON mode plus local pydantic validation: the API's schema enforcement
+        # rejects the strict (extra=forbid) contract schemas, so the schema is
+        # stated in the versioned prompt and validated here, with one retry that
+        # feeds the validation error back to the agent.
         from google.genai import types
 
         system_instruction = load_prompt(_PROMPT_NAMES[agent])
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json",
-            response_schema=schema,
             thinking_config=types.ThinkingConfig(thinking_budget=THINKING_BUDGETS[agent]),
         )
-        response = self._get_client().models.generate_content(
-            model=MODEL, contents=message, config=config
-        )
-        text = response.text or ""
-        if self._recorder is not None:
-            self._recorder.record(agent, system_instruction, message, text)
-        return schema.model_validate_json(text)
+        client = self._get_client()
+        last_error: Exception | None = None
+        contents = message
+        for _ in range(2):
+            response = client.models.generate_content(
+                model=MODEL, contents=contents, config=config
+            )
+            text = response.text or ""
+            if self._recorder is not None:
+                self._recorder.record(agent, system_instruction, contents, text)
+            try:
+                return schema.model_validate_json(text)
+            except ValueError as error:
+                last_error = error
+                contents = (
+                    f"{message}\n\nYour previous response failed schema validation with: "
+                    f"{error}\nRespond again with only the corrected JSON object."
+                )
+        raise RuntimeError(f"Gemini output failed schema validation twice: {last_error}")
