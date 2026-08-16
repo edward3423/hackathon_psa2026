@@ -110,6 +110,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActionReceipt */
+        ActionReceipt: {
+            /** Action Id */
+            action_id: string;
+            status: components["schemas"]["ActionReceiptStatus"];
+            /** Receipt Ref */
+            receipt_ref?: string | null;
+            /** Detail */
+            detail: string;
+        };
+        /**
+         * ActionReceiptStatus
+         * @enum {string}
+         */
+        ActionReceiptStatus: "ACCEPTED" | "REJECTED";
         /** AgentActivity */
         AgentActivity: {
             agent: components["schemas"]["AgentName"];
@@ -131,11 +146,134 @@ export interface components {
          * @enum {string}
          */
         AgentStatus: "WAITING" | "RUNNING" | "COMPLETED" | "BLOCKED" | "FAILED";
+        /** AlternativeSailing */
+        AlternativeSailing: {
+            /** Vessel Name */
+            vessel_name: string;
+            /** Replaces Onward Vessel */
+            replaces_onward_vessel: string;
+            /**
+             * Departs
+             * Format: date-time
+             */
+            departs: string;
+            /**
+             * Connection Cutoff
+             * Format: date-time
+             */
+            connection_cutoff: string;
+            /** Available Capacity */
+            available_capacity: number;
+        };
+        /** AlternativeSailingResult */
+        AlternativeSailingResult: {
+            status: components["schemas"]["SailingLookupStatus"];
+            /** Sailings */
+            sailings: components["schemas"]["AlternativeSailing"][];
+            /** Stale Notice */
+            stale_notice?: string | null;
+        };
+        /** BlockForecast */
+        BlockForecast: {
+            /** Block Id */
+            block_id: string;
+            /** Container Capacity */
+            container_capacity: number;
+            /** Series */
+            series: components["schemas"]["YardOccupancyPoint"][];
+            /** Peak Occupancy */
+            peak_occupancy: number;
+            /**
+             * Peak Time
+             * Format: date-time
+             */
+            peak_time: string;
+        };
+        /**
+         * CargoType
+         * @enum {string}
+         */
+        CargoType: "PHARMA_REEFER" | "TIME_CRITICAL_MANUFACTURING" | "GENERAL_DRY";
         /**
          * Confidence
          * @enum {string}
          */
         Confidence: "HIGH" | "MEDIUM" | "LOW";
+        /** ConnectionAnalysis */
+        ConnectionAnalysis: {
+            /** Delay Hours */
+            delay_hours: number;
+            /** Safe Count */
+            safe_count: number;
+            /** At Risk Count */
+            at_risk_count: number;
+            /** Missed Count */
+            missed_count: number;
+            /** Groups */
+            groups: components["schemas"]["ConnectionGroupSummary"][];
+            /** Connections */
+            connections: components["schemas"]["ContainerConnection"][];
+        };
+        /** ConnectionGroupSummary */
+        ConnectionGroupSummary: {
+            /** Onward Vessel */
+            onward_vessel: string;
+            cargo_type: components["schemas"]["CargoType"];
+            status: components["schemas"]["ConnectionStatus"];
+            /** Container Count */
+            container_count: number;
+        };
+        /**
+         * ConnectionStatus
+         * @enum {string}
+         */
+        ConnectionStatus: "SAFE" | "AT_RISK" | "MISSED" | "RESOLVED";
+        /** ContainerConnection */
+        ContainerConnection: {
+            /** Container Id */
+            container_id: string;
+            cargo_type: components["schemas"]["CargoType"];
+            /** Onward Vessel */
+            onward_vessel: string;
+            /**
+             * Ready Time
+             * Format: date-time
+             */
+            ready_time: string;
+            /**
+             * Connection Cutoff
+             * Format: date-time
+             */
+            connection_cutoff: string;
+            /** Margin Hours */
+            margin_hours: number;
+            status: components["schemas"]["ConnectionStatus"];
+            /** Priority Rank */
+            priority_rank: number;
+            /** Priority Reason */
+            priority_reason: string;
+        };
+        /** CostComponent */
+        CostComponent: {
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: number;
+            /** Basis */
+            basis: string;
+        };
+        /** CostEstimate */
+        CostEstimate: {
+            /** Components */
+            components: components["schemas"]["CostComponent"][];
+            /** Total */
+            total: number;
+            /**
+             * Illustrative
+             * @default true
+             */
+            illustrative: boolean;
+        };
         /** Dispute */
         Dispute: {
             /** Dispute Id */
@@ -206,11 +344,104 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** MockedAction */
+        MockedAction: {
+            /** Action Id */
+            action_id: string;
+            action_type: components["schemas"]["MockedActionType"];
+            plan_archetype: components["schemas"]["PlanArchetype"];
+            /** Description */
+            description: string;
+            /** Payload Summary */
+            payload_summary: string;
+        };
+        /**
+         * MockedActionType
+         * @enum {string}
+         */
+        MockedActionType: "TERMINAL_WORK_ORDER" | "REEFER_CHECK" | "CARRIER_NOTICE";
+        /** PlanAction */
+        PlanAction: {
+            action: components["schemas"]["RecoveryActionType"];
+            /** Onward Vessel */
+            onward_vessel: string;
+            cargo_type: components["schemas"]["CargoType"];
+            /** Container Count */
+            container_count: number;
+            /** Target Sailing */
+            target_sailing?: string | null;
+            /** Rationale */
+            rationale: string;
+        };
+        /**
+         * PlanArchetype
+         * @enum {string}
+         */
+        PlanArchetype: "AGGRESSIVE_RUSH" | "STANDARD_REBOOK" | "OPTIMIZED_HYBRID";
+        /** PlanComparison */
+        PlanComparison: {
+            /** Evaluations */
+            evaluations: components["schemas"]["PlanEvaluation"][];
+            recommended?: components["schemas"]["PlanArchetype"] | null;
+            /** Rationale */
+            rationale: string;
+            confidence: components["schemas"]["Confidence"];
+        };
+        /** PlanEvaluation */
+        PlanEvaluation: {
+            plan: components["schemas"]["RecoveryPlan"];
+            metrics: components["schemas"]["PlanMetrics"];
+            /** Feasible */
+            feasible: boolean;
+            /** Rejection Reasons */
+            rejection_reasons?: string[];
+        };
+        /** PlanMetrics */
+        PlanMetrics: {
+            cost: components["schemas"]["CostEstimate"];
+            /** Missed Connections */
+            missed_connections: number;
+            /** Critical Cargo Protected Pct */
+            critical_cargo_protected_pct: number;
+            /** Yard Peak Occupancy Pct */
+            yard_peak_occupancy_pct: number;
+            /** Max Additional Delay Hours */
+            max_additional_delay_hours: number;
+        };
         /**
          * PriorityEmphasis
          * @enum {string}
          */
         PriorityEmphasis: "CARGO_PROTECTION" | "CONGESTION_REDUCTION" | "BALANCED";
+        /**
+         * RecoveryActionType
+         * @enum {string}
+         */
+        RecoveryActionType: "RUSH" | "REBOOK" | "HOLD";
+        /** RecoveryPlan */
+        RecoveryPlan: {
+            archetype: components["schemas"]["PlanArchetype"];
+            /** Title */
+            title: string;
+            /** Actions */
+            actions: components["schemas"]["PlanAction"][];
+            /** Assumptions */
+            assumptions?: string[];
+        };
+        /** ReeferShortage */
+        ReeferShortage: {
+            /** Block Id */
+            block_id: string;
+            /**
+             * Start Time
+             * Format: date-time
+             */
+            start_time: string;
+            /** Required Plugs */
+            required_plugs: number;
+            /** Available Plugs */
+            available_plugs: number;
+        };
         /** RunCreated */
         RunCreated: {
             /** Run Id */
@@ -225,6 +456,23 @@ export interface components {
          * @enum {string}
          */
         RunMode: "LIVE_STUB" | "LIVE_GEMINI" | "DEMO_REPLAY";
+        /** RunResults */
+        RunResults: {
+            connection_analysis?: components["schemas"]["ConnectionAnalysis"] | null;
+            baseline_yard?: components["schemas"]["YardForecast"] | null;
+            planned_yard?: components["schemas"]["YardForecast"] | null;
+            alternative_sailings?: components["schemas"]["AlternativeSailingResult"] | null;
+            plan_comparison?: components["schemas"]["PlanComparison"] | null;
+            /** Dispatched Actions */
+            dispatched_actions?: components["schemas"]["MockedAction"][];
+            /** Receipts */
+            receipts?: components["schemas"]["ActionReceipt"][];
+        };
+        /**
+         * SailingLookupStatus
+         * @enum {string}
+         */
+        SailingLookupStatus: "MOCK_SUCCESS" | "TIMEOUT_CACHED_FALLBACK";
         /** ScenarioControls */
         ScenarioControls: {
             /**
@@ -320,6 +568,30 @@ export interface components {
             /** Trace */
             trace?: components["schemas"]["TraceEvent"][];
             active_dispute?: components["schemas"]["Dispute"] | null;
+            results?: components["schemas"]["RunResults"] | null;
+        };
+        /** YardForecast */
+        YardForecast: {
+            /** Horizon Hours */
+            horizon_hours: number;
+            /** Blocks */
+            blocks: components["schemas"]["BlockForecast"][];
+            /** Reefer Shortages */
+            reefer_shortages: components["schemas"]["ReeferShortage"][];
+        };
+        /** YardOccupancyPoint */
+        YardOccupancyPoint: {
+            /**
+             * Time
+             * Format: date-time
+             */
+            time: string;
+            /** Occupancy */
+            occupancy: number;
+            /** Congested */
+            congested: boolean;
+            /** Full */
+            full: boolean;
         };
     };
     responses: never;
