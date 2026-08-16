@@ -1,15 +1,52 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Page, type APIRequestContext } from '@playwright/test'
+
+export const REEFER_CONSTRAINT = 'Respect physical reefer plug capacity'
+
+/** Clear any dangling paused runs from earlier tests. */
+export async function resetBackend(request: APIRequestContext): Promise<void> {
+  await request.post('http://127.0.0.1:8000/api/reset')
+}
 
 /** Load the dashboard and wait for the scenario to render. */
 export async function openDashboard(page: Page): Promise<void> {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'CASCADE' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'MV ATLAS STAR' })).toBeVisible()
+  await expect(page.locator('.alert-vessel')).toHaveText('MV ATLAS STAR')
 }
 
-/** Start a run from the UI using the primary action button. */
+/** Start a live-stub run from the UI using the primary action button. */
 export async function startRun(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Start analysis' }).click()
+  await page.getByRole('button', { name: 'Start run' }).click()
+}
+
+/** The workflow-stage readout in the top bar (scoped: the stage track repeats stage names). */
+export function stageReadout(page: Page) {
+  return page.locator('.run-state strong')
+}
+
+/**
+ * Resolve the golden reefer-capacity dispute: wait for the dialog, confirm
+ * the reefer plug capacity constraint, and wait for the dialog to close.
+ */
+export async function resolveReeferDispute(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: /dispute/i })
+  await expect(dialog).toBeVisible({ timeout: 30_000 })
+  await expect(dialog).toContainText('Impact Agent')
+  await expect(dialog).toContainText('Yard Agent')
+  await expect(dialog).toContainText(/reefer/i)
+  await dialog.getByRole('button', { name: REEFER_CONSTRAINT }).click()
+  await dialog.getByRole('button', { name: 'Confirm constraint' }).click()
+  await expect(dialog).toBeHidden({ timeout: 15_000 })
+}
+
+/**
+ * Wait for the approval bar, pick the given plan, and approve it.
+ */
+export async function approvePlan(page: Page, archetype: string): Promise<void> {
+  const approvalBar = page.getByRole('region', { name: 'Human approval' })
+  await expect(approvalBar).toBeVisible({ timeout: 30_000 })
+  await approvalBar.getByLabel('Plan').selectOption(archetype)
+  await approvalBar.getByRole('button', { name: 'Approve' }).click()
 }
 
 /**
