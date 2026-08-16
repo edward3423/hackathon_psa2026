@@ -4,7 +4,7 @@ from typing import Any, TypeVar
 
 from pydantic import TypeAdapter
 
-from cascade.contracts import ScenarioState, TraceEvent
+from cascade.contracts import ScenarioState, TraceEvent, WorldFixture
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "fixtures"
@@ -30,3 +30,11 @@ def load_replay_events() -> list[TraceEvent]:
 
 def load_fake_tool_responses() -> dict[str, Any]:
     return dict(_read_json("fake_tool_responses.json"))
+
+
+def load_golden_world() -> WorldFixture:
+    return WorldFixture.model_validate(_read_json("golden_world.json"))
+
+
+def load_evidence_pack() -> dict[str, Any]:
+    return dict(_read_json("evidence_pack.json"))
