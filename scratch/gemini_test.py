@@ -50,17 +50,28 @@ def main() -> int:
 
     client = genai.Client(
         api_key=api_key,
-        http_options=types.HttpOptions(timeout=20_000),
+        http_options=types.HttpOptions(
+            timeout=60_000,
+            retry_options=types.HttpRetryOptions(
+                attempts=3,
+                initial_delay=1,
+                max_delay=4,
+                http_status_codes=[408, 429, 500, 502, 503, 504],
+            ),
+        ),
     )
     started = perf_counter()
     try:
-        response = client.models.generate_content(
+        chat = client.chats.create(
             model=args.model,
-            contents=f"Reply with exactly this token and nothing else: {EXPECTED_TOKEN}",
             config=types.GenerateContentConfig(
                 temperature=0,
-                max_output_tokens=32,
+                max_output_tokens=64,
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
+        )
+        response = chat.send_message(
+            f"Reply with exactly this token and nothing else: {EXPECTED_TOKEN}"
         )
         response_text = (response.text or "").strip()
     except Exception as error:  # The SDK exposes several transport-specific errors.
