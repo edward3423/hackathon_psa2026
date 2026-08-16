@@ -28,20 +28,6 @@ export type Dispute = components['schemas']['Dispute']
 export type Confidence = components['schemas']['Confidence']
 export type EventKind = components['schemas']['EventKind']
 
-/**
- * Request bodies for endpoints that exist in the integration contract but are
- * not yet part of the generated OpenAPI schema. See
- * plan/contract_requests_frontend.md for the request to add them.
- */
-export interface DisputeResolutionRequest {
-  dispute_id: string
-  confirmed_constraint: string
-}
-
-export type ApprovalDecision = 'APPROVED' | 'REJECTED'
-
-export interface ApprovalRequest {
-  plan_archetype: PlanArchetype
-  decision: ApprovalDecision
-  note?: string
-}
+export type DisputeResolutionRequest = components['schemas']['DisputeResolutionRequest']
+export type ApprovalDecision = components['schemas']['ApprovalDecision']
+export type ApprovalRequest = components['schemas']['ApprovalRequest']
