@@ -1,0 +1,46 @@
+[project]
+name = "cascade-demo"
+version = "0.1.0"
+description = "AI-led, human-governed disruption recovery demonstration"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi>=0.116.1,<1.0.0",
+    "google-adk>=2.0.0,<3.0.0",
+    "pydantic>=2.11.7,<3.0.0",
+    "uvicorn[standard]>=0.35.0,<1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1,<1.0.0",
+    "mypy>=1.17.1,<2.0.0",
+    "pytest>=8.4.1,<9.0.0",
+    "ruff>=0.12.8,<1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cascade"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore:BaseAgentConfig is deprecated.*:DeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
