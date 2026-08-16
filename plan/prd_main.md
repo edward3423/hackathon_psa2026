@@ -1,518 +1,583 @@
-# CASCADE Product Requirements Document
+# CASCADE Hackathon Product Requirements Document
 
 ## 1. Project overview
 
-CASCADE is a decision-support system for port operations controllers. It predicts how a late inbound vessel can cause missed onward sailings, longer container stays, crowded storage yards, and higher operating costs over the next 72 hours.
+CASCADE is a human-in-the-loop agentic AI demonstration for PSA port operations. It shows how a delayed incoming vessel can cause missed onward sailings, longer container stays, crowded storage yards, and additional operating costs over the next 72 hours.
 
 CASCADE stands for Cognitive Agent for Synchro-modal Cascading Anomaly and Disruption Engine.
 
-The hackathon product uses synthetic data and mocked external systems. It does not control real port equipment or make real carrier bookings.
+The product is a hackathon demonstration. It uses synthetic operational data and mocked external systems. It will not connect to production PSA systems or control real port operations.
 
-### Concept worth remembering: transshipment
+### Transshipment
 
-Transshipment means a container arrives on one ship and leaves on another ship. Think of changing buses during a journey. If the first bus is late, the passenger may miss the next bus. CASCADE finds those problems before they spread.
+Transshipment means a container arrives on one ship and leaves on another ship. It is like changing buses. If the first ship is late, the container may miss the next ship.
 
-### Concept worth remembering: cascading disruption
+### Cascading disruption
 
-A cascading disruption is one delay causing more delays. A late ship can make containers miss their next ship. Those containers then stay in the yard, take up space, and slow other work.
+A cascading disruption is one delay causing more delays. A late ship can make containers miss their next ship. Those containers stay in the yard, use space, and make other work harder.
 
 ## 2. Problem
 
-Port controllers receive frequent vessel schedule changes. They must quickly determine:
+Port controllers need to understand the consequences of a vessel delay quickly. They must identify:
 
-- which containers will miss their onward connection;
-- which cargo needs urgent protection;
-- when yard blocks will become too full;
-- which recovery plan has the best operational outcome;
-- which decisions require human approval.
+- which containers may miss their next vessel;
+- which cargo needs protection first;
+- whether the yard may become too full;
+- which recovery plan gives the best outcome;
+- whether a human should approve the action.
 
-Manual analysis across alerts, schedules, manifests, and spreadsheets is slow and difficult to repeat. CASCADE combines these inputs into one reproducible forecast and decision brief.
+CASCADE demonstrates how an AI agent can coordinate analysis tools, compare recovery options, request approval, and show a clear execution trace.
 
-## 3. Goals
+## 3. Hackathon objective
 
-- Detect affected container connections from a revised vessel arrival time.
-- Simulate container flow and yard occupancy for 72 hours.
-- Generate exactly three feasible recovery plans.
-- Explain costs, benefits, constraints, and data confidence.
-- Require human approval for sensitive operational actions.
-- Produce a replayable, deterministic hackathon demonstration.
-- Keep calculations separate from language-model recommendations.
-- Maintain an auditable record of inputs, outputs, approval, and mocked execution.
+Demonstrate one polished and repeatable workflow that satisfies the PSA Code Sprint requirements:
 
-## 4. Non-goals
+1. process an operational alert;
+2. identify the issue and objective;
+3. choose and invoke relevant tools;
+4. determine a recovery plan;
+5. handle uncertainty and one tool failure;
+6. request human approval;
+7. dispatch mocked actions;
+8. report decisions, calls, results, approvals, and errors.
 
-- Connecting to production PSA systems.
-- Controlling cranes, berths, gates, or other physical equipment.
-- Sending real EDI (Electronic Data Interchange) carrier messages.
-- Predicting weather, labor availability, or equipment failures.
-- Optimizing an entire port across multiple weeks.
-- Claiming verified savings from synthetic demo results.
+Higher autonomy is not required. Human approval is appropriate because the proposed actions affect cargo handling and vessel connections.
+
+## 4. Goals
+
+- Demonstrate a complete alert-to-action agentic workflow.
+- Produce believable connection and yard-impact results.
+- Compare exactly three recovery plans.
+- Explain why one plan is recommended.
+- Require a visible human approval step.
+- Show one controlled tool failure and safe fallback.
+- Make the demonstration deterministic and easy to reset.
+- Deliver a polished single-screen command dashboard.
+
+## 5. Non-goals
+
+- Production deployment.
+- Real PSA, terminal, carrier, crane, berth, or customer integration.
+- Production authentication, authorization, encryption, or monitoring.
+- Accurate prediction of real PSA operations or financial savings.
+- Complete port optimization.
+- Detailed crane, labor, traffic, weather, or equipment modelling.
+- Production-scale performance and reliability.
 - Displaying private model reasoning or hidden chain-of-thought.
 
-## 5. Users
+Removed production features are recorded in `plan/todo.md` as low priority.
+
+## 6. Users
 
 ### Primary user
 
-The primary user is a port operations controller responsible for vessel connections, yard conditions, and disruption response.
+A port operations controller who reviews disruptions and approves recovery actions.
 
-### Secondary user
+### Demonstration audience
 
-The secondary user is an operations manager who reviews high-impact decisions, risks, and expected savings.
+Hackathon judges evaluating relevance, agentic behavior, decision quality, tool orchestration, uncertainty handling, human oversight, impact, and presentation quality.
 
-## 6. Golden demo scenario
+## 7. Demonstration scope
 
-The demo starts with normal operations and a yard at 82 percent occupancy. The user injects an 18-hour delay for the synthetic vessel `MV ATLAS STAR`.
+The synthetic world contains:
 
-The system then:
-
-1. identifies safe, at-risk, and missed container connections;
-2. projects yard occupancy for 72 hours;
-3. identifies 60 high-priority pharmaceutical reefer containers;
-4. creates aggressive, rebooking, and hybrid recovery plans;
-5. recommends the hybrid plan with evidence;
-6. pauses for human approval;
-7. sends approved actions to mocked external systems;
-8. shows execution receipts and updated projected outcomes.
+- one terminal;
+- four yard blocks;
+- five to eight vessels;
+- 300 to 500 synthetic containers;
+- three cargo groups: pharmaceutical reefers, time-critical manufacturing cargo, and general dry cargo;
+- three affected outbound vessels;
+- three recovery plans;
+- two mocked external tools;
+- one controlled tool failure.
 
 A reefer is a refrigerated container. It needs electrical power to keep its cargo cold.
 
-All scenario counts and financial results must come from the simulation engine. They must not be separately hard-coded in the user interface.
+The graph may group containers by cargo type and onward vessel. The simulator can still calculate individual container results internally.
 
-## 7. Features and tests
+## 8. Golden demonstration scenario
 
-### 7.1 Disruption injection
+The user injects an 18-hour delay for the synthetic vessel `MV ATLAS STAR`.
+
+CASCADE then:
+
+1. identifies the issue and response objective;
+2. finds safe, at-risk, and missed connections;
+3. identifies 60 pharmaceutical reefers as high priority;
+4. forecasts yard occupancy for 72 hours;
+5. creates rush, rebook, and hybrid recovery plans;
+6. recommends the hybrid plan;
+7. pauses for human approval;
+8. dispatches mocked work orders and carrier notices;
+9. shows execution receipts and the improved forecast.
+
+The demonstration also includes a controlled alternative-sailing lookup timeout. CASCADE reports the error, uses a documented fallback fixture, lowers confidence, and requires human review.
+
+All figures shown in the interface must come from the same fixture and calculation path. The user interface must not contain separate hard-coded result totals.
+
+## 9. Features and tests
+
+### 9.1 Disruption alert
 
 **FEATURE**
 
-Accept a vessel port call, original ETA (Estimated Time of Arrival), revised ETA, and event timestamp. Calculate the delay from the two ETA values and reject inconsistent input.
+Accept an original ETA (Estimated Time of Arrival), revised ETA, vessel port call, and event time. Calculate the delay and start the workflow.
 
 **TEST**
 
-Given the seeded `MV ATLAS STAR` port call and a revised ETA 18 hours later, the API creates one disruption with `delay_hours = 18`. Repeating the same request with the same idempotency key creates no duplicate.
+Given the golden alert, CASCADE reports an 18-hour delay and starts exactly one run. Invalid or incomplete input produces a visible error.
 
-### 7.2 Connection impact analysis
+### 9.2 Issue and objective identification
 
 **FEATURE**
 
-Calculate when each container will be ready for its onward vessel. Compare that time with the onward vessel's operational cutoff, not only its departure time.
+State the operational issue and the response objective in plain language.
 
-```text
-ready_time = inbound_berth_time
-           + container_discharge_offset
-           + transfer_processing_time
-
-connection_margin = outbound_cutoff_time - ready_time
-```
-
-Classify each connection as:
-
-- `SAFE`: margin is greater than 4 hours;
-- `AT_RISK`: margin is from 0 through 4 hours;
-- `MISSED`: margin is below 0 hours.
+The golden objective is to protect critical cargo, reduce missed connections, avoid severe yard congestion, and minimize illustrative disruption cost.
 
 **TEST**
 
-Use fixtures with margins of 5, 4, 0, and -1 hours. The expected results are `SAFE`, `AT_RISK`, `AT_RISK`, and `MISSED`.
+The golden alert produces the expected vessel, delay, planning horizon, constraints, and objective without adding facts absent from the fixture.
 
-### 7.3 Cargo priority assessment
+### 9.3 Connection-impact analysis
 
 **FEATURE**
 
-Prioritize cargo using declared category, temperature requirements, dangerous-goods status, service commitment, and connection margin. The initial priority order is pharmaceutical reefer, dangerous goods, time-critical manufacturing cargo, perishable reefer, then general dry cargo.
+Compare each container's ready time with its onward vessel cutoff and classify it as:
 
-Dangerous goods are materials that need special handling because they may burn, react, leak, or harm people and the environment.
+- `SAFE`: more than 4 hours remain;
+- `AT_RISK`: 0 through 4 hours remain;
+- `MISSED`: the cutoff has passed.
 
 **TEST**
 
-Given containers with equal connection margins but different categories, the system ranks them in the documented order and records the fields that caused each priority.
+Fixtures with margins of 5, 4, 0, and -1 hours produce `SAFE`, `AT_RISK`, `AT_RISK`, and `MISSED`.
 
-### 7.4 Yard occupancy simulation
+### 9.4 Cargo priority
 
 **FEATURE**
 
-Simulate each yard block in hourly steps for 72 hours. Model container arrival, discharge, placement, onward loading, missed-connection dwell, and rebooking departure. Convert 20-foot containers to 1 TEU and 40-foot containers to 2 TEU.
-
-TEU means Twenty-foot Equivalent Unit. It is a shared measuring stick: one 20-foot container is 1 TEU and one 40-foot container is 2 TEU.
-
-Occupancy is stored as a fraction from 0 to 1. Congestion overhead is:
-
-```text
-overhead(U) = 1.0,                                      when U <= 0.85
-overhead(U) = 1.0 + 0.15 * exp(20 * (U - 0.85)),       when U > 0.85
-```
+Prioritize pharmaceutical reefers, then time-critical manufacturing cargo, then general dry cargo. Show the cargo category and connection margin that caused the priority.
 
 **TEST**
 
-The same seed, disruption, and simulation version produce byte-equivalent results. Occupancy never becomes negative. A value above physical capacity is returned as a visible capacity breach, not silently capped.
+Containers with the same connection margin are ranked in the documented order and display the correct reason.
 
-### 7.5 Reefer plug simulation
+### 9.5 Simplified yard forecast
 
 **FEATURE**
 
-Track total and occupied electrical plugs in every yard block. Mark reefers without an available plug as critical. Do not treat the stated 36-hour limit as battery life unless the dataset explicitly marks the container as operating without external power.
+Project hourly yard occupancy for four blocks over 72 hours. Model container arrival, onward loading, missed-connection dwell, and rebooked departure.
+
+Mark 85 percent as congested and 100 percent as full.
 
 **TEST**
 
-Given 11 reefers entering a block with 10 available plugs, the result reports one plug shortage with the affected container ID and start time.
+The golden fixture always produces the same hourly series. Occupancy never becomes negative, and capacity breaches are shown rather than hidden.
 
-### 7.6 Cost calculation
+### 9.6 Simplified reefer capacity
 
 **FEATURE**
 
-Calculate costs in Singapore dollars using versioned rate assumptions. Return every component separately and include its quantity, unit, rate, and duration. Initial components are excess dwell, reefer power, service penalties, crane labor, rebooking, and yard shuffle overhead.
-
-The system must state whether billing rounds partial days up, down, or proportionally. It must prevent the same expense from appearing in more than one component.
+Compare the number of reefers requiring power with the available plug count in each yard block. Report any shortage as critical.
 
 **TEST**
 
-A fixture with known quantities and rates produces the expected itemized total. The total equals the exact sum of components, and changing one rate changes only its corresponding component.
+Eleven reefers entering a block with ten available plugs produces one shortage with a visible start time.
 
-### 7.7 Recovery plan generation
+### 9.7 Illustrative cost estimate
 
 **FEATURE**
 
-Generate exactly three feasible plans:
+Calculate a simple illustrative cost from fixed documented rates:
 
-1. `AGGRESSIVE_RUSH`: protect the largest number of current connections using available handling capacity;
-2. `STANDARD_REBOOK`: move affected containers to later sailings with confirmed synthetic capacity;
+- additional container dwell;
+- reefer risk;
+- missed-connection penalty;
+- extra crane time;
+- rebooking.
+
+Show each component and label the result as illustrative.
+
+**TEST**
+
+The total equals the sum of the displayed components. Changing one fixture input changes the corresponding component.
+
+### 9.8 Recovery plans
+
+**FEATURE**
+
+Generate exactly three plans:
+
+1. `AGGRESSIVE_RUSH`: protect current connections using additional handling capacity;
+2. `STANDARD_REBOOK`: move affected containers to later synthetic sailings;
 3. `OPTIMIZED_HYBRID`: rush high-priority cargo and rebook lower-priority cargo.
 
-Every plan lists container assignments, required resources, expected cost, delay, yard peak, reefer risk, and constraint violations. An infeasible plan remains visible but cannot be recommended or approved.
+Each plan shows cost, delay, yard peak, critical cargo protected, and important assumptions.
 
 **TEST**
 
-For the golden scenario, three plans are returned. Every affected container appears exactly once in each plan. No feasible plan exceeds crane, vessel, yard, or reefer-plug capacity.
+The golden scenario returns three plans. Every affected container group receives one action in each plan.
 
-### 7.8 Plan scoring and recommendation
+### 9.9 Plan recommendation
 
 **FEATURE**
 
-Rank feasible plans using deterministic normalized metrics. The initial decision order is:
+Recommend a plan using this fixed order:
 
-1. reject safety or physical-capacity violations;
-2. minimize critical cargo failures;
-3. minimize missed connections;
-4. minimize yard capacity breaches;
-5. minimize total cost and delay.
+1. reject plans that exceed physical capacity;
+2. protect critical cargo;
+3. reduce missed connections;
+4. reduce yard congestion;
+5. reduce cost and delay.
 
-The language model may summarize results but may not invent inputs, alter calculated values, or override feasibility rules.
+The AI agent explains the calculated recommendation but cannot change simulation values.
 
 **TEST**
 
-Given fixed plan metrics, repeated ranking returns the same order. A cheaper plan with a safety violation is never recommended over a safe plan.
+Given fixed plan results, repeated runs return the same recommendation. A cheaper plan that exceeds capacity is never recommended.
 
-### 7.9 Human approval
+### 9.10 Human approval
 
 **FEATURE**
 
-Require human approval when any of these conditions is true:
-
-- projected disruption cost is at least SGD 250,000;
-- pharmaceutical reefer cargo is at risk;
-- a dangerous-goods handling assignment changes;
-- crane or berth allocation changes;
-- an external booking or work order would be issued;
-- required data is stale, missing, or below the configured confidence threshold.
-
-For the hackathon, every external action is mocked and requires approval.
+Pause before mocked dispatch. Let the controller compare plans, approve one plan, or reject the recommendation.
 
 **TEST**
 
-Create one fixture for every approval condition and verify that execution pauses. Verify that a rejected plan creates no work order and that an approved plan resumes exactly once.
+No mocked work order appears before approval. Approval produces the expected actions, while rejection produces none.
 
-### 7.10 Decision brief
+### 9.11 Execution trace
 
 **FEATURE**
 
-Show the recommended plan, alternatives, expected improvement, assumptions, risks, confidence, and the evidence used. Clearly label all data as synthetic.
+Show an ordered trace containing:
+
+- workflow stage;
+- tool called;
+- short input summary;
+- result or error;
+- recommendation;
+- human decision;
+- mocked action and receipt.
+
+Do not display hidden chain-of-thought.
 
 **TEST**
 
-The brief displays all required fields, matches the simulation response exactly, and contains no value absent from the structured result.
+The golden run shows every required stage in order. Every displayed figure matches the corresponding tool result.
 
-### 7.11 Evidence trace
+### 9.12 Controlled failure and fallback
 
 **FEATURE**
 
-Stream a concise operational trace containing stage, status, timestamp, summary, tool name, input reference, and output reference. Never expose private model reasoning or hidden chain-of-thought.
+Provide a demo control that makes the alternative-sailing tool time out. Report the failure, load a clearly labeled cached fixture, lower recommendation confidence, and require human approval.
 
 **TEST**
 
-The user sees ordered events from ingestion through approval. After reconnection with the last event ID, the stream resumes without missing or duplicating events.
+When failure mode is enabled, the trace shows the timeout and fallback. The workflow still reaches approval but cannot dispatch automatically.
 
-### 7.12 Cascade graph
+### 9.13 Cascade graph
 
 **FEATURE**
 
-Display the delayed inbound vessel, connected outbound vessels, and grouped container flows. Edge width represents TEU count. Color and labels identify `SAFE`, `AT_RISK`, `MISSED`, and `RESOLVED` states. Color is never the only indicator.
+Display the delayed inbound vessel, three outbound vessels, and grouped container flows. Use labels and colors to distinguish safe, at-risk, missed, and resolved connections.
 
 **TEST**
 
-Graph totals match the API response. Keyboard users can focus every vessel node, open its details, and identify state without relying on color.
+Graph totals match the analysis results, and every state remains understandable from its text label without color.
 
-### 7.13 Yard forecast
+### 9.14 Yard and plan comparison
 
 **FEATURE**
 
-Display hourly occupancy for each yard block and mark 85 percent congestion and 100 percent physical capacity thresholds. Allow baseline and proposed plans to be compared.
+Display the baseline yard forecast beside the selected plan forecast. Show three compact plan cards with comparable metrics.
 
 **TEST**
 
-Chart values and peak timestamps match the simulation result. Thresholds, axes, units, and comparison labels remain readable at supported screen sizes.
+Forecast peaks, times, units, and plan values match the tool results and remain readable on the demonstration screen.
 
-### 7.14 Mocked action dispatch
+### 9.15 Mocked action dispatch
 
 **FEATURE**
 
-Translate an approved plan into mocked work orders and carrier notices. Store each request and receipt with a correlation ID. Dispatch is idempotent and retry-safe.
+Convert the approved plan into mocked terminal work orders and carrier notices. Display a success or failure receipt for each action.
 
 **TEST**
 
-Submitting approval twice produces one logical dispatch. A simulated timeout followed by a retry does not create duplicate work orders.
+Approving the hybrid plan produces the expected fixed set of mocked actions and visible receipts without contacting an external system.
 
-### 7.15 Scenario replay
+### 9.16 Demo reset
 
 **FEATURE**
 
-Store the input snapshot, random seed, rate version, simulator version, generated plans, decision, and execution receipts so a completed run can be replayed.
+Reset the application to the original golden scenario through one button or command.
 
 **TEST**
 
-Replaying the golden scenario with the recorded versions produces the same classifications, plan metrics, and recommendation.
+After a completed or failed run, reset restores the original alert, fixture, trace, plans, and UI state.
 
-### 7.16 Failure and uncertainty handling
+## 10. Agent behavior
 
-**FEATURE**
-
-Show optimistic, expected, and pessimistic scenarios when ETA confidence is uncertain. Mark recommendations as degraded when required data or tools are unavailable. Never silently substitute invented data.
-
-**TEST**
-
-When the schedule lookup times out, the run enters `DEGRADED_AWAITING_REVIEW`, states the missing evidence, and prevents dispatch.
-
-## 8. Functional architecture
+The agent coordinates the workflow. Deterministic tools perform calculations.
 
 ```text
-React command dashboard
-        |
-        | REST and SSE
-        v
-FastAPI application
-        |
-        +-- disruption service
-        +-- deterministic connection engine
-        +-- deterministic yard and cost simulator
-        +-- plan generator and scorer
-        +-- approval workflow
-        +-- evidence event stream
-        +-- mocked external adapters
-        |
-        v
-SQLite database
+receive alert
+    -> identify issue and objective
+    -> call connection analysis
+    -> call yard simulation
+    -> call alternative-sailing lookup
+    -> generate and compare plans
+    -> request human approval
+    -> dispatch mocked actions
+    -> report results
 ```
 
-SSE means Server-Sent Events. It is a simple way for the server to keep sending status updates to the browser over one open connection.
+The agent may:
 
-The workflow layer coordinates deterministic services. It does not own shipping calculations. This separation keeps results testable and allows the language model to be replaced without changing business rules.
+- choose the next approved tool;
+- summarize structured results;
+- compare the three plans;
+- request clarification or approval;
+- explain failures and fallback behavior.
 
-## 9. Technology plan
+The agent may not:
 
-### Backend
+- change calculated values;
+- invent missing operational data;
+- bypass the approval step;
+- call unlisted tools;
+- execute real operational actions.
+
+## 11. Demonstration tools
+
+| Tool | Purpose | Implementation |
+|---|---|---|
+| `analyse_connections` | Classify container connections | Deterministic local function |
+| `simulate_yard` | Produce the 72-hour yard forecast | Deterministic local function |
+| `find_alternative_sailings` | Return later synthetic sailings | Mocked tool with optional timeout |
+| `compare_plans` | Calculate and rank three plans | Deterministic local function |
+| `dispatch_plan` | Produce work orders and notices | Mocked tool only |
+
+## 12. Architecture
+
+```text
+React dashboard
+      |
+      | REST and SSE
+      v
+FastAPI backend
+      |
+      +-- agent workflow
+      +-- deterministic analysis tools
+      +-- mocked external tools
+      +-- in-memory demo state
+      |
+      v
+Seeded JSON fixtures
+```
+
+SSE means Server-Sent Events. It lets the server send trace updates to the browser over one open connection.
+
+### Technology choices
 
 - Python 3.12 or later.
-- `uv` for dependency management and all Python commands.
-- FastAPI for REST and SSE endpoints.
-- Pydantic for validation and typed contracts.
-- SQLAlchemy and SQLite for local persistence.
-- A workflow graph for pause, approval, resume, and failure states.
-- Deterministic services for connection, yard, cost, and scoring logic.
-
-### Frontend
-
-- React and TypeScript.
+- `uv` for all Python package and script commands.
+- FastAPI and Pydantic for the backend and typed data.
+- A small explicit workflow graph for agent stages and approval.
+- React and TypeScript for the frontend.
 - React Flow for the cascade graph.
-- A chart library for the 72-hour yard forecast.
-- Generated TypeScript types from the OpenAPI schema.
-- Accessible components with keyboard and screen-reader support.
+- A lightweight chart library for yard forecasts.
+- JSON fixtures and in-memory state for deterministic reset.
+- Playwright for the golden end-to-end demonstration test.
 
-### Quality
+No database is required for the hackathon build.
 
-- Unit tests for formulas and boundary values.
-- Contract tests for API schemas.
-- Integration tests for workflow persistence and idempotency.
-- End-to-end tests for the golden scenario and approval flow.
-- Visual regression tests for the command dashboard.
-- Formatting, type checks, linting, and tests enforced in continuous integration.
+## 13. Data plan
 
-## 10. API contract
+### Official context sources
 
-Base path: `/api/v1`
+- [PSA International Annual and Sustainability Report 2025](https://annualreport.globalpsa.com/)
+- [PSA Singapore Sustainability Report 2025](https://www.singaporepsa.com/wp-content/uploads/2026/06/PSA-SG-Sustainability-Report-2025.pdf)
+- [MPA Port Statistics](https://www.mpa.gov.sg/who-we-are/newsroom-resources/research-and-statistics/port-statistics)
+- [MPA Vessel Arrivals, Monthly](https://data.gov.sg/collections/394/view)
+- [UN/LOCODE](https://unlocode.unece.org/publications/)
 
-| Method | Route | Purpose |
+MPA means Maritime and Port Authority of Singapore.
+
+UN/LOCODE means United Nations Code for Trade and Transport Locations. It provides standard codes for ports and other transport places.
+
+These sources provide context and rough calibration only. They do not provide container connections, yard occupancy, crane availability, customer costs, or alternative-sailing capacity.
+
+### Synthetic operational data
+
+Generate the complete demo fixture with seed `42`. Clearly label all vessels, containers, yard values, costs, plans, and results as synthetic or illustrative.
+
+Store one reviewed fixture in the repository so the judged demonstration does not depend on network access.
+
+## 14. Safety, security, and scalability statement
+
+These topics are documentation deliverables, not production implementation work.
+
+### Safety
+
+- All actions are mocked.
+- Human approval is always required.
+- Capacity rules are deterministic.
+- Missing or failed data lowers confidence and prevents automatic action.
+- The interface labels synthetic and illustrative values.
+
+### Security
+
+A production version would require authentication, role-based approval, secret management, restricted tool permissions, protected audit records, input validation, and prompt-injection controls. The hackathon build contains no real credentials or production connections.
+
+Prompt injection is when untrusted text tries to command the agent. The demonstration uses controlled synthetic fixtures, while the production design would treat all external text as untrusted data.
+
+### Scalability
+
+A production version could replace JSON and in-memory state with a relational database, event bus, and independent simulation workers. The hackathon build only needs to support one local demonstration user and one scenario at a time.
+
+An event bus is a shared delivery system for updates between services.
+
+## 15. Multi-agent implementation plan
+
+### 15.1 Blocking foundation
+
+Agent 1 completes the shared foundation before parallel implementation begins:
+
+- repository structure;
+- Python and frontend package configuration;
+- root lint, test, type-check, and build commands;
+- shared Pydantic and OpenAPI schemas;
+- generated TypeScript API types;
+- workflow-state and trace-event schemas;
+- golden input fixture;
+- fake tool responses;
+- minimal backend and frontend shells.
+
+The foundation passes when a clean worktree installs successfully, validates the golden fixture, generates frontend types, renders a fake alert, and passes all initial checks.
+
+### 15.2 Parallel worktrees
+
+After the foundation passes, six agents work simultaneously:
+
+| Agent | Branch | Ownership |
 |---|---|---|
-| `GET` | `/overview` | Current synthetic port summary |
-| `POST` | `/disruptions` | Create a disruption and start analysis |
-| `GET` | `/disruptions/{id}` | Read status and summary |
-| `GET` | `/disruptions/{id}/events` | Stream evidence events using SSE |
-| `GET` | `/disruptions/{id}/cascade` | Read graph nodes and container-flow edges |
-| `GET` | `/disruptions/{id}/simulation` | Read baseline and scenario forecasts |
-| `GET` | `/disruptions/{id}/plans` | Read the three recovery plans |
-| `POST` | `/disruptions/{id}/decision` | Approve or reject one plan |
-| `GET` | `/disruptions/{id}/actions` | Read mocked dispatch requests and receipts |
+| 1: Integration | `codex/integration-foundation` | contracts, root configuration, integration, shared checks |
+| 2: Fixtures | `codex/data-fixtures` | synthetic generator and reviewed golden fixture |
+| 3: Analysis | `codex/simulation-engine` | connections, yard, reefer, cost, plans, unit tests |
+| 4: Workflow | `codex/workflow-api` | agent stages, API, SSE, approval, mock dispatch |
+| 5: Frontend | `codex/frontend-dashboard` | dashboard, graph, chart, cards, trace, approval UI |
+| 6: Verification | `codex/verification-delivery` | end-to-end test, failure test, reset script, slides, video |
 
-All timestamps use ISO 8601 with timezone offsets. All money fields include currency. All percentages use fractions from 0 to 1 in the API and are formatted as percentages only in the user interface.
+Each agent owns separate paths. Shared contract changes go through Agent 1.
 
-Write requests require an idempotency key. Errors use a shared structure containing code, message, retryability, correlation ID, and field details.
+### 15.3 Merge order
 
-## 11. Core data model
+Merge small working slices in this order:
 
-- `Vessel`: stable ship identity and physical characteristics.
-- `PortCall`: one visit by a vessel, including terminal, berth, ETA, ETD (Estimated Time of Departure), and operational cutoffs.
-- `Container`: size, weight, category, requirements, and current state.
-- `Connection`: inbound port call, outbound port call, booked capacity, and processing requirements.
-- `YardBlock`: TEU capacity, reefer plugs, allowed cargo, and current inventory.
-- `YardEvent`: time-stamped arrival, placement, move, load, or departure.
-- `Disruption`: original and revised schedule facts.
-- `SimulationRun`: immutable input snapshot, versions, seed, and results.
-- `Plan`: calculated metrics and feasibility.
-- `PlanAction`: one proposed operational change.
-- `Decision`: approver, selected plan, reason, and timestamp.
-- `ExecutionReceipt`: mocked external result and correlation ID.
+1. contracts, fixtures, and fake responses;
+2. alert and objective display;
+3. connection analysis and cascade graph;
+4. yard simulation and forecast;
+5. three plans and recommendation;
+6. approval and mocked dispatch;
+7. controlled failure and fallback;
+8. golden end-to-end test and UI polish.
 
-A port call is one ship visit. A vessel may visit many times, so connections must use port-call IDs rather than only vessel IDs.
+A vertical slice is one small path that works from user input to visible result.
 
-## 12. Data assumptions
+### 15.4 Seven-day schedule
 
-The seeded dataset contains:
+| Day | Target |
+|---|---|
+| 1 | Foundation contracts and fake vertical path pass |
+| 2 | Six worktrees build fixtures, tools, API, UI, and tests in parallel |
+| 3 | Alert, connection analysis, and cascade graph integrate |
+| 4 | Yard forecast, plans, and recommendation integrate |
+| 5 | Approval, mocked dispatch, and golden end-to-end flow pass |
+| 6 | Failure path, visual polish, slides, and video rehearsal |
+| 7 | Final checks, reset rehearsal, recording, and backup video |
 
-- 25 large mainline vessels;
-- 40 smaller regional feeder vessels;
-- 5,000 transshipping containers;
-- enough port calls before and after the disruption to simulate 72 hours;
-- yard blocks with cargo restrictions and reefer-plug limits;
-- alternative sailings with explicit available capacity.
+### 15.5 Coordination rules
 
-A feeder vessel is a smaller ship that carries containers between a large hub and nearby ports.
+- Use `contracts/` as the shared interface source.
+- Do not manually edit generated API types.
+- Keep commits small and merge working slices daily.
+- Run Python commands through `uv`.
+- Do not add live external service dependencies.
+- Route cross-owned defects to the owning agent with a reproduction.
+- Stop adding features after the golden end-to-end flow passes.
 
-The generator uses seed `42`. Data is synthetic and must be labeled as such in the dashboard, presentation, and video.
+## 16. Quality plan
 
-## 13. Workflow states
+Required automated checks:
 
-```text
-RECEIVED
-ANALYZING
-SIMULATING
-GENERATING_PLANS
-AWAITING_APPROVAL
-APPROVED
-REJECTED
-DISPATCHING
-COMPLETED
-DEGRADED_AWAITING_REVIEW
-FAILED
-```
+- unit tests for classification, yard, costs, and plan ranking;
+- contract tests for API and trace shapes;
+- one golden browser test from alert through mocked receipt;
+- one browser test for the tool timeout and fallback;
+- lint and type checks for backend and frontend;
+- one visual review at the demonstration screen size.
 
-Every transition is persisted. A process restart must not lose an approval pause or duplicate execution.
+Production-scale, exhaustive, and cross-browser testing is not required.
 
-## 14. Non-functional requirements
+## 17. Submission deliverables
 
-- First evidence event appears within 500 milliseconds of a successful request.
-- The seeded 5,000-container simulation completes within 3 seconds on the demo machine.
-- The dashboard becomes interactive within 2 seconds after local application load.
-- All write operations are idempotent.
-- Every calculated value is traceable to an input snapshot and formula version.
-- No secret, private prompt, or chain-of-thought appears in logs or the UI.
-- The interface supports keyboard navigation and readable contrast.
-- The supported desktop layout has no clipped text, overlapping controls, or unreadable chart labels.
-- A failed dependency cannot cause silent autonomous execution.
+### Demonstration video
 
-## 15. Implementation plan
+The video must be no longer than 10 minutes:
 
-### Day 1: contracts and foundations
+| Time | Content |
+|---|---|
+| 0:00 to 1:00 | PSA problem, user, and objective |
+| 1:00 to 2:00 | CASCADE and human-in-the-loop design |
+| 2:00 to 7:00 | Golden workflow from alert to mocked receipt |
+| 7:00 to 8:00 | Controlled tool failure and fallback |
+| 8:00 to 9:00 | Architecture, safety, security, and scalability |
+| 9:00 to 10:00 | Illustrative impact, limitations, and closing |
 
-- Freeze terminology, schemas, API routes, workflow states, and rate assumptions.
-- Create repository structure, quality checks, migrations, and generated API types.
-- Define the golden scenario and its expected outputs.
+### Presentation
 
-### Day 2: data and deterministic domain logic
+The presentation must contain no more than 10 slides:
 
-- Build the seeded synthetic data generator.
-- Implement port calls, connection readiness, TEU conversion, and classification.
-- Add boundary-focused unit and property tests.
+1. title and value proposition;
+2. PSA problem;
+3. cascading disruption example;
+4. solution and autonomy choice;
+5. agent tools and execution flow;
+6. demonstration results;
+7. architecture;
+8. uncertainty, safety, and security;
+9. illustrative impact, limitations, and scalability;
+10. team and next steps.
 
-### Day 3: simulation and planning
+All synthetic values and illustrative savings must be labeled.
 
-- Implement yard events, reefer plugs, congestion, and itemized cost calculations.
-- Implement plan feasibility, generation, and deterministic scoring.
-- Lock golden-scenario snapshots after review.
+## 18. Release acceptance criteria
 
-### Day 4: workflow and API
+The demonstration is ready when:
 
-- Implement disruption creation, persisted workflow states, approval, replay, and SSE.
-- Add idempotency, correlation IDs, mocked adapters, and contract tests.
-
-### Day 5: user interface and end-to-end tests
-
-- Build the overview, cascade graph, yard forecast, plan comparison, evidence trace, and approval flow.
-- Test the complete golden scenario from the user's perspective.
-- Add visual regression and accessibility checks.
-
-### Day 6: resilience and polish
-
-- Add uncertainty scenarios, stale-data handling, timeouts, retries, and degraded states.
-- Fix UI defects, test failures, lint failures, and flaky tests.
-- Validate every displayed value against API data.
-
-### Day 7: delivery
-
-- Run the full quality pipeline on the demo machine.
-- Record a deterministic demonstration with a reset procedure and backup recording.
-- Finalize slides with synthetic-data and illustrative-savings labels.
-
-## 16. Release acceptance criteria
-
-The hackathon release is ready when:
-
-- the golden scenario succeeds from disruption injection through mocked dispatch;
-- the same inputs produce the same outputs across five clean runs;
-- all plan totals reconcile with their itemized calculations;
-- every approval rule has an automated test;
-- duplicate requests and retries create no duplicate actions;
-- failure and degraded states are visible and safe;
-- the UI passes end-to-end, visual, accessibility, type, lint, and unit checks;
-- the demo can be reset without editing the database manually;
-- all displayed claims are produced by the system or labeled illustrative;
+- the golden workflow succeeds from alert through mocked receipt;
+- reset restores the original scenario;
+- the same fixture produces the same displayed results;
+- exactly three plans appear;
+- no action appears before approval;
+- the timeout path visibly reports an error and fallback;
+- every trace value matches a tool result;
+- the interface has no clipped text, overlapping controls, or unreadable charts;
+- lint, types, required unit tests, and both browser tests pass;
+- the demo runs without internet access;
+- the video is no longer than 10 minutes;
+- the presentation contains no more than 10 slides;
 - no real external action can be triggered.
 
-## 17. Limitations
+## 19. Limitations
 
-- Results depend on synthetic schedules, manifests, capacities, and rates.
-- The simulator simplifies crane sequencing, traffic, labor, weather, and equipment behavior.
-- Three scenario bands do not represent a complete probability forecast.
-- Mocked carrier capacity is not proof that a real booking is available.
-- Cost outputs demonstrate the product method and are not verified PSA savings.
-- SQLite is suitable for the local demo, not a multi-site production deployment.
-- The model recommends from supplied options and cannot discover every possible recovery strategy.
-
-## 18. Risks and controls
-
-| Risk | Control |
-|---|---|
-| Invented schedule or capacity | Recommendations use structured tool results only |
-| Wrong cost total | Versioned rates, itemized output, and reconciliation tests |
-| Duplicate work order | Idempotency keys and persisted execution receipts |
-| Unsafe recommendation | Hard feasibility rules and human approval |
-| Misleading confidence | Visible scenario assumptions and degraded states |
-| Demo instability | Seeded data, replay, reset command, and backup recording |
-| UI hides important detail | Labels, keyboard access, visible units, and visual tests |
-
-## 19. Future direction
-
-- Replace synthetic data with approved, read-only operational feeds.
-- Add calibrated ETA probability models and historical validation.
-- Expand the simulator to crane, berth, labor, gate, rail, and truck constraints.
-- Use a production database and event bus.
-- Add role-based access, signed approvals, and full security review.
-- Run recommendations in shadow mode before any controlled operational pilot.
-
-Shadow mode means the system makes suggestions but cannot act. People compare its suggestions with real outcomes to learn whether it is safe and useful.
+- All operational records and costs are synthetic.
+- The result is a demonstration of a decision process, not a prediction of real PSA outcomes.
+- The yard model omits many real operational constraints.
+- Alternative sailings and action receipts are mocked.
+- Fixed ETA scenarios do not represent a full probability forecast.
+- The application supports one scenario and one local user at a time.
+- Security and scalability are described but not implemented.
