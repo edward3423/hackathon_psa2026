@@ -12,8 +12,9 @@ import {
 // the UI, trace events render, the workflow pauses at the reefer dispute
 // (instead of streaming to the end unattended), and reset restores the shell.
 //
-// The dispute overlay is modal, so background controls (trace drawer, Reset)
-// are only clickable while no dispute is waiting for the human.
+// The dispute overlay is modal over the main content, but the top-bar
+// controls (Reset in particular) stay above the backdrop so the presenter
+// is never stranded mid-dispute (PRD 9.16).
 
 test.beforeEach(async ({ request }) => {
   await resetBackend(request)
@@ -49,8 +50,7 @@ test('reset returns the dashboard to the original scenario state', async ({ page
   await openDashboard(page)
   await startRun(page)
 
-  // Reach the dispute pause, resolve it (the modal overlay blocks Reset while
-  // open), then reset mid-run during planning.
+  // Reach the dispute pause, resolve it, then reset mid-run during planning.
   await resolveReeferDispute(page)
   await page.getByRole('button', { name: 'Reset' }).click()
 
@@ -59,4 +59,19 @@ test('reset returns the dashboard to the original scenario state', async ({ page
   await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
   await expect(stageReadout(page)).toHaveText('READY')
   await expect(page.getByRole('button', { name: 'Start run' })).toBeEnabled()
+})
+
+test('reset works while the dispute overlay is open', async ({ page }) => {
+  await openDashboard(page)
+  await startRun(page)
+
+  // The workflow pauses at the dispute; the overlay must not intercept the
+  // top-bar Reset (Playwright's actionability check fails on an obscured
+  // button, so this genuinely proves the backdrop does not cover it).
+  await expect(page.getByRole('dialog', { name: /dispute/i })).toBeVisible({ timeout: 30_000 })
+  await page.getByRole('button', { name: 'Reset' }).click()
+
+  await expect(page.getByRole('dialog', { name: /dispute/i })).toBeHidden()
+  await expect(stageReadout(page)).toHaveText('READY')
+  await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
 })
