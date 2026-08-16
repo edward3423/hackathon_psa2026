@@ -195,6 +195,48 @@
   },
   "components": {
     "schemas": {
+      "ActionReceipt": {
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActionReceiptStatus"
+          },
+          "receipt_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Ref"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action_id",
+          "status",
+          "detail"
+        ],
+        "title": "ActionReceipt"
+      },
+      "ActionReceiptStatus": {
+        "type": "string",
+        "enum": [
+          "ACCEPTED",
+          "REJECTED"
+        ],
+        "title": "ActionReceiptStatus"
+      },
       "AgentActivity": {
         "properties": {
           "agent": {
@@ -260,6 +302,124 @@
         ],
         "title": "AgentStatus"
       },
+      "AlternativeSailing": {
+        "properties": {
+          "vessel_name": {
+            "type": "string",
+            "title": "Vessel Name"
+          },
+          "replaces_onward_vessel": {
+            "type": "string",
+            "title": "Replaces Onward Vessel"
+          },
+          "departs": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Departs"
+          },
+          "connection_cutoff": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Connection Cutoff"
+          },
+          "available_capacity": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Available Capacity"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "vessel_name",
+          "replaces_onward_vessel",
+          "departs",
+          "connection_cutoff",
+          "available_capacity"
+        ],
+        "title": "AlternativeSailing"
+      },
+      "AlternativeSailingResult": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/SailingLookupStatus"
+          },
+          "sailings": {
+            "items": {
+              "$ref": "#/components/schemas/AlternativeSailing"
+            },
+            "type": "array",
+            "title": "Sailings"
+          },
+          "stale_notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stale Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "sailings"
+        ],
+        "title": "AlternativeSailingResult"
+      },
+      "BlockForecast": {
+        "properties": {
+          "block_id": {
+            "type": "string",
+            "title": "Block Id"
+          },
+          "container_capacity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Container Capacity"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/components/schemas/YardOccupancyPoint"
+            },
+            "type": "array",
+            "title": "Series"
+          },
+          "peak_occupancy": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Peak Occupancy"
+          },
+          "peak_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Peak Time"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "block_id",
+          "container_capacity",
+          "series",
+          "peak_occupancy",
+          "peak_time"
+        ],
+        "title": "BlockForecast"
+      },
+      "CargoType": {
+        "type": "string",
+        "enum": [
+          "PHARMA_REEFER",
+          "TIME_CRITICAL_MANUFACTURING",
+          "GENERAL_DRY"
+        ],
+        "title": "CargoType"
+      },
       "Confidence": {
         "type": "string",
         "enum": [
@@ -268,6 +428,200 @@
           "LOW"
         ],
         "title": "Confidence"
+      },
+      "ConnectionAnalysis": {
+        "properties": {
+          "delay_hours": {
+            "type": "integer",
+            "title": "Delay Hours"
+          },
+          "safe_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Safe Count"
+          },
+          "at_risk_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "At Risk Count"
+          },
+          "missed_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Missed Count"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectionGroupSummary"
+            },
+            "type": "array",
+            "title": "Groups"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/ContainerConnection"
+            },
+            "type": "array",
+            "title": "Connections"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "delay_hours",
+          "safe_count",
+          "at_risk_count",
+          "missed_count",
+          "groups",
+          "connections"
+        ],
+        "title": "ConnectionAnalysis"
+      },
+      "ConnectionGroupSummary": {
+        "properties": {
+          "onward_vessel": {
+            "type": "string",
+            "title": "Onward Vessel"
+          },
+          "cargo_type": {
+            "$ref": "#/components/schemas/CargoType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConnectionStatus"
+          },
+          "container_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Container Count"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "onward_vessel",
+          "cargo_type",
+          "status",
+          "container_count"
+        ],
+        "title": "ConnectionGroupSummary"
+      },
+      "ConnectionStatus": {
+        "type": "string",
+        "enum": [
+          "SAFE",
+          "AT_RISK",
+          "MISSED",
+          "RESOLVED"
+        ],
+        "title": "ConnectionStatus"
+      },
+      "ContainerConnection": {
+        "properties": {
+          "container_id": {
+            "type": "string",
+            "title": "Container Id"
+          },
+          "cargo_type": {
+            "$ref": "#/components/schemas/CargoType"
+          },
+          "onward_vessel": {
+            "type": "string",
+            "title": "Onward Vessel"
+          },
+          "ready_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ready Time"
+          },
+          "connection_cutoff": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Connection Cutoff"
+          },
+          "margin_hours": {
+            "type": "number",
+            "title": "Margin Hours"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ConnectionStatus"
+          },
+          "priority_rank": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Priority Rank"
+          },
+          "priority_reason": {
+            "type": "string",
+            "title": "Priority Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "container_id",
+          "cargo_type",
+          "onward_vessel",
+          "ready_time",
+          "connection_cutoff",
+          "margin_hours",
+          "status",
+          "priority_rank",
+          "priority_reason"
+        ],
+        "title": "ContainerConnection"
+      },
+      "CostComponent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Amount"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "amount",
+          "basis"
+        ],
+        "title": "CostComponent"
+      },
+      "CostEstimate": {
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/CostComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "total": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Total"
+          },
+          "illustrative": {
+            "type": "boolean",
+            "title": "Illustrative",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "components",
+          "total"
+        ],
+        "title": "CostEstimate"
       },
       "Dispute": {
         "properties": {
@@ -435,6 +789,203 @@
         ],
         "title": "HealthResponse"
       },
+      "MockedAction": {
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "title": "Action Id"
+          },
+          "action_type": {
+            "$ref": "#/components/schemas/MockedActionType"
+          },
+          "plan_archetype": {
+            "$ref": "#/components/schemas/PlanArchetype"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "payload_summary": {
+            "type": "string",
+            "title": "Payload Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action_id",
+          "action_type",
+          "plan_archetype",
+          "description",
+          "payload_summary"
+        ],
+        "title": "MockedAction"
+      },
+      "MockedActionType": {
+        "type": "string",
+        "enum": [
+          "TERMINAL_WORK_ORDER",
+          "REEFER_CHECK",
+          "CARRIER_NOTICE"
+        ],
+        "title": "MockedActionType"
+      },
+      "PlanAction": {
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/RecoveryActionType"
+          },
+          "onward_vessel": {
+            "type": "string",
+            "title": "Onward Vessel"
+          },
+          "cargo_type": {
+            "$ref": "#/components/schemas/CargoType"
+          },
+          "container_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Container Count"
+          },
+          "target_sailing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Sailing"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "action",
+          "onward_vessel",
+          "cargo_type",
+          "container_count",
+          "rationale"
+        ],
+        "title": "PlanAction"
+      },
+      "PlanArchetype": {
+        "type": "string",
+        "enum": [
+          "AGGRESSIVE_RUSH",
+          "STANDARD_REBOOK",
+          "OPTIMIZED_HYBRID"
+        ],
+        "title": "PlanArchetype"
+      },
+      "PlanComparison": {
+        "properties": {
+          "evaluations": {
+            "items": {
+              "$ref": "#/components/schemas/PlanEvaluation"
+            },
+            "type": "array",
+            "title": "Evaluations"
+          },
+          "recommended": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanArchetype"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evaluations",
+          "rationale",
+          "confidence"
+        ],
+        "title": "PlanComparison"
+      },
+      "PlanEvaluation": {
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/RecoveryPlan"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/PlanMetrics"
+          },
+          "feasible": {
+            "type": "boolean",
+            "title": "Feasible"
+          },
+          "rejection_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rejection Reasons"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "plan",
+          "metrics",
+          "feasible"
+        ],
+        "title": "PlanEvaluation"
+      },
+      "PlanMetrics": {
+        "properties": {
+          "cost": {
+            "$ref": "#/components/schemas/CostEstimate"
+          },
+          "missed_connections": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Missed Connections"
+          },
+          "critical_cargo_protected_pct": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Critical Cargo Protected Pct"
+          },
+          "yard_peak_occupancy_pct": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Yard Peak Occupancy Pct"
+          },
+          "max_additional_delay_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max Additional Delay Hours"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cost",
+          "missed_connections",
+          "critical_cargo_protected_pct",
+          "yard_peak_occupancy_pct",
+          "max_additional_delay_hours"
+        ],
+        "title": "PlanMetrics"
+      },
       "PriorityEmphasis": {
         "type": "string",
         "enum": [
@@ -443,6 +994,80 @@
           "BALANCED"
         ],
         "title": "PriorityEmphasis"
+      },
+      "RecoveryActionType": {
+        "type": "string",
+        "enum": [
+          "RUSH",
+          "REBOOK",
+          "HOLD"
+        ],
+        "title": "RecoveryActionType"
+      },
+      "RecoveryPlan": {
+        "properties": {
+          "archetype": {
+            "$ref": "#/components/schemas/PlanArchetype"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/PlanAction"
+            },
+            "type": "array",
+            "title": "Actions"
+          },
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Assumptions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "archetype",
+          "title",
+          "actions"
+        ],
+        "title": "RecoveryPlan"
+      },
+      "ReeferShortage": {
+        "properties": {
+          "block_id": {
+            "type": "string",
+            "title": "Block Id"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "required_plugs": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Required Plugs"
+          },
+          "available_plugs": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Available Plugs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "block_id",
+          "start_time",
+          "required_plugs",
+          "available_plugs"
+        ],
+        "title": "ReeferShortage"
       },
       "RunCreated": {
         "properties": {
@@ -479,6 +1104,85 @@
           "DEMO_REPLAY"
         ],
         "title": "RunMode"
+      },
+      "RunResults": {
+        "properties": {
+          "connection_analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConnectionAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "baseline_yard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/YardForecast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "planned_yard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/YardForecast"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alternative_sailings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlternativeSailingResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plan_comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dispatched_actions": {
+            "items": {
+              "$ref": "#/components/schemas/MockedAction"
+            },
+            "type": "array",
+            "title": "Dispatched Actions"
+          },
+          "receipts": {
+            "items": {
+              "$ref": "#/components/schemas/ActionReceipt"
+            },
+            "type": "array",
+            "title": "Receipts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RunResults"
+      },
+      "SailingLookupStatus": {
+        "type": "string",
+        "enum": [
+          "MOCK_SUCCESS",
+          "TIMEOUT_CACHED_FALLBACK"
+        ],
+        "title": "SailingLookupStatus"
       },
       "ScenarioControls": {
         "properties": {
@@ -797,6 +1501,16 @@
                 "type": "null"
               }
             ]
+          },
+          "results": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunResults"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -809,6 +1523,68 @@
           "activities"
         ],
         "title": "WorkflowState"
+      },
+      "YardForecast": {
+        "properties": {
+          "horizon_hours": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Horizon Hours"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/BlockForecast"
+            },
+            "type": "array",
+            "title": "Blocks"
+          },
+          "reefer_shortages": {
+            "items": {
+              "$ref": "#/components/schemas/ReeferShortage"
+            },
+            "type": "array",
+            "title": "Reefer Shortages"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "horizon_hours",
+          "blocks",
+          "reefer_shortages"
+        ],
+        "title": "YardForecast"
+      },
+      "YardOccupancyPoint": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Time"
+          },
+          "occupancy": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Occupancy"
+          },
+          "congested": {
+            "type": "boolean",
+            "title": "Congested"
+          },
+          "full": {
+            "type": "boolean",
+            "title": "Full"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "time",
+          "occupancy",
+          "congested",
+          "full"
+        ],
+        "title": "YardOccupancyPoint"
       }
     }
   }

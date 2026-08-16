@@ -148,6 +148,7 @@ class WorkflowState(ContractModel):
     activities: list[AgentActivity]
     trace: list[TraceEvent] = Field(default_factory=list)
     active_dispute: Dispute | None = None
+    results: "RunResults | None" = None
 
 
 class RunCreated(ContractModel):
@@ -160,3 +161,259 @@ class RunCreated(ContractModel):
 class HealthResponse(ContractModel):
     status: str
     version: str
+
+
+class CargoType(StrEnum):
+    PHARMA_REEFER = "PHARMA_REEFER"
+    TIME_CRITICAL_MANUFACTURING = "TIME_CRITICAL_MANUFACTURING"
+    GENERAL_DRY = "GENERAL_DRY"
+
+
+class ConnectionStatus(StrEnum):
+    SAFE = "SAFE"
+    AT_RISK = "AT_RISK"
+    MISSED = "MISSED"
+    RESOLVED = "RESOLVED"
+
+
+class VesselRole(StrEnum):
+    INBOUND = "INBOUND"
+    OUTBOUND = "OUTBOUND"
+
+
+class PlanArchetype(StrEnum):
+    AGGRESSIVE_RUSH = "AGGRESSIVE_RUSH"
+    STANDARD_REBOOK = "STANDARD_REBOOK"
+    OPTIMIZED_HYBRID = "OPTIMIZED_HYBRID"
+
+
+class RecoveryActionType(StrEnum):
+    RUSH = "RUSH"
+    REBOOK = "REBOOK"
+    HOLD = "HOLD"
+
+
+class MockedActionType(StrEnum):
+    TERMINAL_WORK_ORDER = "TERMINAL_WORK_ORDER"
+    REEFER_CHECK = "REEFER_CHECK"
+    CARRIER_NOTICE = "CARRIER_NOTICE"
+
+
+class SailingLookupStatus(StrEnum):
+    MOCK_SUCCESS = "MOCK_SUCCESS"
+    TIMEOUT_CACHED_FALLBACK = "TIMEOUT_CACHED_FALLBACK"
+
+
+class Vessel(ContractModel):
+    name: str
+    role: VesselRole
+    port_call: str
+    eta: datetime
+    etd: datetime
+    connection_cutoff: datetime | None = None
+
+
+class YardBlock(ContractModel):
+    block_id: str
+    container_capacity: Annotated[int, Field(gt=0)]
+    reefer_plugs: Annotated[int, Field(ge=0)]
+    initial_containers: Annotated[int, Field(ge=0)]
+    initial_reefers_on_power: Annotated[int, Field(ge=0)]
+
+
+class Container(ContractModel):
+    container_id: str
+    cargo_type: CargoType
+    requires_power: bool
+    inbound_vessel: str
+    onward_vessel: str | None = None
+    yard_block: str
+    handling_hours: Annotated[float, Field(ge=0)]
+
+
+class AlternativeSailing(ContractModel):
+    vessel_name: str
+    replaces_onward_vessel: str
+    departs: datetime
+    connection_cutoff: datetime
+    available_capacity: Annotated[int, Field(ge=0)]
+
+
+class CostRates(ContractModel):
+    dwell_per_container_hour: Annotated[float, Field(ge=0)]
+    reefer_risk_per_hour: Annotated[float, Field(ge=0)]
+    missed_connection_penalty: Annotated[float, Field(ge=0)]
+    crane_hour: Annotated[float, Field(ge=0)]
+    rebooking_fee: Annotated[float, Field(ge=0)]
+
+
+class WorldFixture(ContractModel):
+    seed: int
+    terminal: str
+    vessels: list[Vessel]
+    yard_blocks: list[YardBlock]
+    containers: list[Container]
+    alternative_sailings: list[AlternativeSailing]
+    cost_rates: CostRates
+    synthetic_notice: str
+
+
+class ContainerConnection(ContractModel):
+    container_id: str
+    cargo_type: CargoType
+    onward_vessel: str
+    ready_time: datetime
+    connection_cutoff: datetime
+    margin_hours: float
+    status: ConnectionStatus
+    priority_rank: Annotated[int, Field(ge=1)]
+    priority_reason: str
+
+
+class ConnectionGroupSummary(ContractModel):
+    onward_vessel: str
+    cargo_type: CargoType
+    status: ConnectionStatus
+    container_count: Annotated[int, Field(ge=0)]
+
+
+class ConnectionAnalysis(ContractModel):
+    delay_hours: int
+    safe_count: Annotated[int, Field(ge=0)]
+    at_risk_count: Annotated[int, Field(ge=0)]
+    missed_count: Annotated[int, Field(ge=0)]
+    groups: list[ConnectionGroupSummary]
+    connections: list[ContainerConnection]
+
+
+class YardOccupancyPoint(ContractModel):
+    time: datetime
+    occupancy: Annotated[int, Field(ge=0)]
+    congested: bool
+    full: bool
+
+
+class BlockForecast(ContractModel):
+    block_id: str
+    container_capacity: Annotated[int, Field(gt=0)]
+    series: list[YardOccupancyPoint]
+    peak_occupancy: Annotated[int, Field(ge=0)]
+    peak_time: datetime
+
+
+class ReeferShortage(ContractModel):
+    block_id: str
+    start_time: datetime
+    required_plugs: Annotated[int, Field(ge=0)]
+    available_plugs: Annotated[int, Field(ge=0)]
+
+
+class YardForecast(ContractModel):
+    horizon_hours: Annotated[int, Field(gt=0)]
+    blocks: list[BlockForecast]
+    reefer_shortages: list[ReeferShortage]
+
+
+class CostComponent(ContractModel):
+    name: str
+    amount: Annotated[float, Field(ge=0)]
+    basis: str
+
+
+class CostEstimate(ContractModel):
+    components: list[CostComponent]
+    total: Annotated[float, Field(ge=0)]
+    illustrative: bool = True
+
+
+class PlanAction(ContractModel):
+    action: RecoveryActionType
+    onward_vessel: str
+    cargo_type: CargoType
+    container_count: Annotated[int, Field(ge=0)]
+    target_sailing: str | None = None
+    rationale: str
+
+
+class RecoveryPlan(ContractModel):
+    archetype: PlanArchetype
+    title: str
+    actions: list[PlanAction]
+    assumptions: list[str] = Field(default_factory=list)
+
+
+class PlanMetrics(ContractModel):
+    cost: CostEstimate
+    missed_connections: Annotated[int, Field(ge=0)]
+    critical_cargo_protected_pct: Annotated[float, Field(ge=0, le=100)]
+    yard_peak_occupancy_pct: Annotated[float, Field(ge=0)]
+    max_additional_delay_hours: Annotated[float, Field(ge=0)]
+
+
+class PlanEvaluation(ContractModel):
+    plan: RecoveryPlan
+    metrics: PlanMetrics
+    feasible: bool
+    rejection_reasons: list[str] = Field(default_factory=list)
+
+
+class PlanComparison(ContractModel):
+    evaluations: list[PlanEvaluation]
+    recommended: PlanArchetype | None = None
+    rationale: str
+    confidence: Confidence
+
+
+class AlternativeSailingResult(ContractModel):
+    status: SailingLookupStatus
+    sailings: list[AlternativeSailing]
+    stale_notice: str | None = None
+
+
+class MockedAction(ContractModel):
+    action_id: str
+    action_type: MockedActionType
+    plan_archetype: PlanArchetype
+    description: str
+    payload_summary: str
+
+
+class ActionReceiptStatus(StrEnum):
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+class ActionReceipt(ContractModel):
+    action_id: str
+    status: ActionReceiptStatus
+    receipt_ref: str | None = None
+    detail: str
+
+
+class RunResults(ContractModel):
+    connection_analysis: ConnectionAnalysis | None = None
+    baseline_yard: YardForecast | None = None
+    planned_yard: YardForecast | None = None
+    alternative_sailings: AlternativeSailingResult | None = None
+    plan_comparison: PlanComparison | None = None
+    dispatched_actions: list[MockedAction] = Field(default_factory=list)
+    receipts: list[ActionReceipt] = Field(default_factory=list)
+
+
+class DisputeResolutionRequest(ContractModel):
+    dispute_id: str
+    confirmed_constraint: str
+
+
+class ApprovalDecision(StrEnum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ApprovalRequest(ContractModel):
+    plan_archetype: PlanArchetype
+    decision: ApprovalDecision
+    note: str | None = None
+
+
+WorkflowState.model_rebuild()
