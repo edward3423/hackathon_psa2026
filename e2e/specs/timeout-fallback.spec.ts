@@ -15,12 +15,7 @@ test.beforeEach(async ({ request }) => {
   await resetBackend(request)
 })
 
-// test.fixme: blocked by product bug "LIVE_STUB planning always fails" - see
-// plan/contract_requests_verification.md, section "Open product defects",
-// entry 1. The timeout error is emitted, but the run reaches stage FAILED
-// during planning, so the fallback callout, MEDIUM confidence, and the
-// approval gate are never displayed.
-test.fixme('timeout path: visible error, labeled cached fallback, MEDIUM confidence, approval required', async ({ page }) => {
+test('timeout path: visible error, labeled cached fallback, MEDIUM confidence, approval required', async ({ page }) => {
   await openDashboard(page)
 
   // Enable the controlled failure (defaults on; assert then keep on).

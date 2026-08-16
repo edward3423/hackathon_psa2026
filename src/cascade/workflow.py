@@ -646,7 +646,7 @@ class WorkflowRun:
             decision_summary=approval_summary.decision_summary,
             confidence=run_confidence,
             assumptions=approval_summary.assumptions,
-            result="No action can be dispatched until the controller decides.",
+            result="Execution stays blocked until the controller decides.",
             elapsed_ms=100,
         )
         await self._approval_event.wait()

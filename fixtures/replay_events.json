@@ -396,7 +396,7 @@
     "decision_summary": "Await mandatory human approval of OPTIMIZED_HYBRID before any mocked dispatch.",
     "confidence": "MEDIUM",
     "assumptions": [],
-    "result": "No action can be dispatched until the controller decides.",
+    "result": "Execution stays blocked until the controller decides.",
     "error": null,
     "elapsed_ms": 100,
     "next_handoff": null,
