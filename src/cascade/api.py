@@ -1,22 +1,27 @@
-import asyncio
 import json
+import os
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from cascade import __version__
 from cascade.contracts import (
+    ApprovalRequest,
+    DisputeResolutionRequest,
     HealthResponse,
     RunCreated,
+    RunMode,
     ScenarioControls,
     ScenarioState,
     TraceEvent,
     WorkflowStage,
     WorkflowState,
 )
-from cascade.workflow import DemoRun, DemoRunStore, scenario_with_controls
+from cascade.workflow import ConflictError, RunStore, WorkflowRun, scenario_with_controls
+
+KEEPALIVE_SECONDS = 15.0
 
 app = FastAPI(
     title="CASCADE API",
@@ -30,7 +35,20 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-store = DemoRunStore()
+store = RunStore(event_delay=0.05)
+
+
+class CreateRunRequest(ScenarioControls):
+    """Scenario controls plus explicit run-mode selection."""
+
+    mode: RunMode = RunMode.LIVE_STUB
+
+
+def _get_run_or_404(run_id: str) -> WorkflowRun:
+    run = store.get(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+    return run
 
 
 @app.get("/api/health", response_model=HealthResponse, tags=["system"])
@@ -43,9 +61,32 @@ def get_scenario() -> ScenarioState:
     return scenario_with_controls()
 
 
+_MODE_QUERY = Query(default=None, description="Overrides the body mode field.")
+
+
 @app.post("/api/runs", response_model=RunCreated, status_code=201, tags=["workflow"])
-def create_run(controls: ScenarioControls) -> RunCreated:
-    run = store.create(controls)
+async def create_run(
+    request: CreateRunRequest,
+    mode: RunMode | None = _MODE_QUERY,
+) -> RunCreated:
+    selected_mode = mode or request.mode
+    if selected_mode is RunMode.LIVE_GEMINI and not os.environ.get("GEMINI_API_KEY"):
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "LIVE_GEMINI requires a GEMINI_API_KEY. The live path is unavailable; "
+                "explicitly choose DEMO_REPLAY to replay the captured run instead."
+            ),
+        )
+    controls = ScenarioControls(
+        delay_hours=request.delay_hours,
+        priority_emphasis=request.priority_emphasis,
+        alternative_sailing_failure=request.alternative_sailing_failure,
+    )
+    try:
+        run = store.create(controls, selected_mode)
+    except ConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
     return RunCreated(
         run_id=run.run_id,
         mode=run.mode,
@@ -59,18 +100,27 @@ def _sse(event_name: str, payload: TraceEvent | dict[str, str]) -> str:
     return f"event: {event_name}\ndata: {json.dumps(data)}\n\n"
 
 
-async def _stream_run(run: DemoRun) -> AsyncIterator[str]:
-    for event in run.events():
-        yield _sse("trace", event)
-        await asyncio.sleep(0.08)
-    yield _sse("stream_end", {"run_id": run.run_id, "stage": run.stage.value})
+async def _stream_run(run: WorkflowRun) -> AsyncIterator[str]:
+    if run.mode is RunMode.DEMO_REPLAY:
+        yield _sse("mode", {"run_id": run.run_id, "mode": run.mode.value, "label": "DEMO REPLAY"})
+    index = 0
+    while True:
+        update = await run.wait_events(index, timeout=KEEPALIVE_SECONDS)
+        if update is None:
+            yield ": keep-alive\n\n"
+            continue
+        events, finished = update
+        for event in events:
+            index += 1
+            yield _sse("trace", event)
+        if finished and index == len(run.trace):
+            yield _sse("stream_end", {"run_id": run.run_id, "stage": run.stage.value})
+            return
 
 
 @app.get("/api/runs/{run_id}/events", tags=["workflow"])
 def stream_run(run_id: str) -> StreamingResponse:
-    run = store.get(run_id)
-    if run is None:
-        raise HTTPException(status_code=404, detail="Run not found")
+    run = _get_run_or_404(run_id)
     return StreamingResponse(
         _stream_run(run),
         media_type="text/event-stream",
@@ -80,17 +130,37 @@ def stream_run(run_id: str) -> StreamingResponse:
 
 @app.get("/api/runs/{run_id}", response_model=WorkflowState, tags=["workflow"])
 def get_run(run_id: str) -> WorkflowState:
-    run = store.get(run_id)
-    if run is None:
-        raise HTTPException(status_code=404, detail="Run not found")
+    run = _get_run_or_404(run_id)
     return WorkflowState(
         run_id=run.run_id,
         mode=run.mode,
         stage=run.stage,
-        scenario=scenario_with_controls(run.controls),
+        scenario=run.scenario,
         activities=run.activities(),
         trace=run.trace,
+        active_dispute=run.active_dispute,
+        results=run.results,
     )
+
+
+@app.post("/api/runs/{run_id}/dispute-resolution", response_model=WorkflowState, tags=["workflow"])
+async def resolve_dispute(run_id: str, request: DisputeResolutionRequest) -> WorkflowState:
+    run = _get_run_or_404(run_id)
+    try:
+        run.resolve_dispute(request)
+    except ConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    return get_run(run_id)
+
+
+@app.post("/api/runs/{run_id}/approval", response_model=WorkflowState, tags=["workflow"])
+async def decide_approval(run_id: str, request: ApprovalRequest) -> WorkflowState:
+    run = _get_run_or_404(run_id)
+    try:
+        run.decide_approval(request)
+    except ConflictError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
+    return get_run(run_id)
 
 
 @app.post("/api/reset", response_model=ScenarioState, tags=["scenario"])
