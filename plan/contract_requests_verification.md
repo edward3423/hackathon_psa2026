@@ -9,6 +9,13 @@ final acceptance specs assume.
 
 ### 1. LIVE_STUB planning always fails: run ends FAILED instead of AWAITING_APPROVAL
 
+RESOLVED 2026-08-17: crane surge allowance raised to 40, plug feasibility
+scoped to rushed reefers vs free plugs, `revise_plan` generalized to repair
+all rejection types, and an infeasible plan is now carried into the
+comparison instead of failing the run; covered by
+tests/test_integration_golden.py and the activated golden-run and
+timeout-fallback specs.
+
 Blocks: `e2e/specs/golden-run.spec.ts`, `e2e/specs/timeout-fallback.spec.ts`
 (both left `test.fixme` referencing this entry). DEMO_REPLAY is unaffected and
 its browser test passes, so the plan/approval/receipt UI itself works.
@@ -44,6 +51,10 @@ Why the unit suite is green anyway: `tests/test_api.py` and
 integration test that runs `RunStore` with `build_toolbox()`.
 
 ### 2. Minor UX: the dispute overlay blocks the Reset button
+
+RESOLVED 2026-08-17: the top bar and control strip now sit above the dispute
+backdrop so Reset works mid-dispute; verified by a component test and the
+"reset works while the dispute overlay is open" Playwright test.
 
 `DisputeOverlay` renders a full-screen backdrop, so while the workflow is
 paused at the dispute the Reset button (and trace drawer toggle) cannot be

@@ -27,9 +27,9 @@ Owner: Agent 6 (Verification). Audience: the presenter operating the live demo.
 | 2 | Click Start run | Stage moves to ASSESSING; live indicator STREAMING; the trace drawer counter climbs (click EXECUTION TRACE / Expand to watch events, first is Coordinator Agent RUN STARTED) |
 | 3 | Watch delegation | Impact Agent and Yard Agent cards active at the same time (parallel specialist work) |
 | 4 | Wait for the dispute | Dispute panel opens: Impact Agent wants to rush all pharma reefers, Yard Agent reports reefer plug shortage; workflow paused at DISPUTE |
-| 5 | Resolve the dispute | Click the preset "Respect physical reefer plug capacity", then "Confirm constraint"; panel closes; confirmed constraint appears in the trace. Note: while the dispute panel is open it blocks all other controls, including Reset |
+| 5 | Resolve the dispute | Click the preset "Respect physical reefer plug capacity", then "Confirm constraint"; panel closes; confirmed constraint appears in the trace. The top-bar controls (including Reset) stay usable while the panel is open |
 | 6 | Watch the sailing lookup | With the failure toggle ON: visible timeout error, then a clearly labeled cached fallback with a stale notice; confidence drops to MEDIUM |
-| 7 | Wait for plans | Exactly three plan cards under RECOVERY PLANS (Aggressive Rush, Standard Rebook, Optimized Hybrid); hybrid carries the Recommended badge and a WHY RECOMMENDED rationale |
+| 7 | Wait for plans | Exactly three plan cards under RECOVERY PLANS (Aggressive Rush, Standard Rebook, Optimized Hybrid); hybrid carries the Recommended badge and a WHY RECOMMENDED rationale. Aggressive Rush is marked INFEASIBLE after its visible revision attempts - it never concedes rush volume, so the crane surge allowance keeps rejecting it |
 | 8 | Point out the approval gate | Stage AWAITING APPROVAL; approval bar visible with plan switcher, Approve, and Reject; NO work order, notice, or receipt anywhere on screen |
 | 9 | Approve the hybrid plan | Keep Optimized Hybrid in the approval-bar plan switcher and click Approve; Execution Agent runs; EXECUTION RECEIPTS (MOCKED) lists ACCEPTED receipts |
 | 10 | Close | Stage COMPLETE; improved forecast beside baseline; point at the synthetic-data label |
@@ -67,14 +67,6 @@ Then:
 3. Confirm the persistent DEMO REPLAY label is visible and stays visible.
 4. Run the same click path; the dispute and approval interactions still work.
 5. Never present replay output as live agent reasoning.
-
-## 4a. Known open defect (as of 2026-08-17)
-
-LIVE_STUB runs currently fail during planning after the dispute is resolved
-(stage FAILED, "Plan AGGRESSIVE_RUSH stayed infeasible after 3 revision
-rounds"). Until the defect in plan/contract_requests_verification.md
-("Open product defects", entry 1) is fixed, rehearse the golden click path in
-DEMO REPLAY mode, which completes end to end.
 
 ## 5. Release acceptance checklist (PRD section 18)
 
