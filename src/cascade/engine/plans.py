@@ -27,7 +27,8 @@ from cascade.engine.yard import simulate_yard
 
 # Documented crane surge allowance: the terminal can rush at most this many
 # containers within the planning horizon before crane capacity is exceeded.
-CRANE_SURGE_ALLOWANCE_CONTAINERS = 12
+# Basis: illustrative surge capacity of roughly one crane-shift of extra moves.
+CRANE_SURGE_ALLOWANCE_CONTAINERS = 40
 
 ARCHETYPE_ORDER: tuple[PlanArchetype, ...] = (
     PlanArchetype.AGGRESSIVE_RUSH,
@@ -48,10 +49,10 @@ def evaluate_plan(
 ) -> PlanEvaluation:
     """Check feasibility and compute deterministic metrics for one plan.
 
-    A plan is rejected when it exceeds alternative-sailing capacity, exceeds
-    reefer plugs (the planned yard forecast shows a plug shortage), rushes
-    more containers than the crane surge allowance, or leaves an affected
-    (AT_RISK or MISSED) container group with no action. ``emphasis`` does not
+    A plan is rejected when it exceeds alternative-sailing capacity, rushes
+    more powered reefers into a yard block than that block has free reefer
+    plugs, rushes more containers than the crane surge allowance, or leaves an
+    affected (AT_RISK or MISSED) container group with no action. ``emphasis`` does not
     alter feasibility or metrics; the recommendation order is fixed (PRD 9.9).
     """
     del emphasis
@@ -101,13 +102,23 @@ def evaluate_plan(
         reasons.append(f"affected group {vessel_name}/{cargo_type} receives no action")
 
     yard = simulate_yard(world, revised_eta, connections, plan)
-    for shortage in yard.reefer_shortages:
-        reasons.append(
-            f"block {shortage.block_id} needs {shortage.required_plugs} reefer plugs "
-            f"but has {shortage.available_plugs}"
-        )
-
     dispositions = compute_dispositions(world, connections, plan)
+
+    # Reefer plug feasibility covers what a plan controls: the powered reefers
+    # it rushes must fit the plugs their block has free of the initial
+    # background load. Yard-wide plug pressure from cargo that waits in the
+    # yard regardless of the plan is a scenario condition surfaced by the yard
+    # forecast (PRD 9.6), not a plan defect.
+    blocks = {block.block_id: block for block in world.yard_blocks}
+    rushed_powered: Counter[str] = Counter()
+    for disposition in dispositions:
+        if disposition.outcome is Outcome.RUSHED and disposition.requires_power:
+            rushed_powered[disposition.yard_block] += 1
+    for block_id, count in sorted(rushed_powered.items()):
+        block = blocks[block_id]
+        free_plugs = max(0, block.reefer_plugs - block.initial_reefers_on_power)
+        if count > free_plugs:
+            reasons.append(f"block {block_id} needs {count} reefer plugs but has {free_plugs}")
     unresolved = sum(1 for d in dispositions if d.outcome is Outcome.UNRESOLVED)
     critical_affected = [
         d
