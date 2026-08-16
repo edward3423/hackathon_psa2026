@@ -32,13 +32,10 @@ def compare_plans() -> dict[str, Any]:
 
 
 def retrieve_context(query: str) -> dict[str, Any]:
-    """Return a placeholder for the reviewed local public evidence pack."""
-    return {
-        "query": query,
-        "status": "FOUNDATION_STUB",
-        "facts": [],
-        "notice": "The reviewed evidence pack is added in the fixture workstream.",
-    }
+    """Return short reviewed facts with source links from the local evidence pack."""
+    from cascade.tools.evidence import retrieve_context as _retrieve
+
+    return _retrieve(query)
 
 
 def validate_actions(plan_id: str) -> dict[str, Any]:
