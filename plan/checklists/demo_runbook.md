@@ -24,14 +24,14 @@ Owner: Agent 6 (Verification). Audience: the presenter operating the live demo.
 | Step | Action | Expected screen state |
 |---|---|---|
 | 1 | Show the dashboard before starting | Alert panel with MV ATLAS STAR, 18h delay, objective panel, five WAITING agent cards |
-| 2 | Click Start analysis | Stage moves to ASSESSING; live indicator STREAMING; trace begins with Coordinator Agent RUN STARTED |
+| 2 | Click Start run | Stage moves to ASSESSING; live indicator STREAMING; the trace drawer counter climbs (click EXECUTION TRACE / Expand to watch events, first is Coordinator Agent RUN STARTED) |
 | 3 | Watch delegation | Impact Agent and Yard Agent cards active at the same time (parallel specialist work) |
 | 4 | Wait for the dispute | Dispute panel opens: Impact Agent wants to rush all pharma reefers, Yard Agent reports reefer plug shortage; workflow paused at DISPUTE |
-| 5 | Resolve the dispute | Select "reefer plug capacity is the governing constraint" and confirm; panel closes; confirmed constraint appears in the trace |
+| 5 | Resolve the dispute | Click the preset "Respect physical reefer plug capacity", then "Confirm constraint"; panel closes; confirmed constraint appears in the trace. Note: while the dispute panel is open it blocks all other controls, including Reset |
 | 6 | Watch the sailing lookup | With the failure toggle ON: visible timeout error, then a clearly labeled cached fallback with a stale notice; confidence drops to MEDIUM |
-| 7 | Wait for plans | Exactly three plan cards (Aggressive rush, Standard rebook, Optimized hybrid); hybrid marked recommended with rationale |
-| 8 | Point out the approval gate | Stage AWAITING APPROVAL; approval bar visible; NO work order, notice, or receipt anywhere on screen |
-| 9 | Approve the hybrid plan | Execution Agent runs; mocked work orders, reefer checks, and carrier notices appear with ACCEPTED receipts |
+| 7 | Wait for plans | Exactly three plan cards under RECOVERY PLANS (Aggressive Rush, Standard Rebook, Optimized Hybrid); hybrid carries the Recommended badge and a WHY RECOMMENDED rationale |
+| 8 | Point out the approval gate | Stage AWAITING APPROVAL; approval bar visible with plan switcher, Approve, and Reject; NO work order, notice, or receipt anywhere on screen |
+| 9 | Approve the hybrid plan | Keep Optimized Hybrid in the approval-bar plan switcher and click Approve; Execution Agent runs; EXECUTION RECEIPTS (MOCKED) lists ACCEPTED receipts |
 | 10 | Close | Stage COMPLETE; improved forecast beside baseline; point at the synthetic-data label |
 
 Narration guardrails: never claim real PSA data, never claim real dispatch,
@@ -41,10 +41,11 @@ always say "mocked" for receipts and "illustrative" for costs.
 
 1. Reset.
 2. Confirm the "Simulate sailing lookup timeout" toggle is ON.
-3. Click Start analysis and resolve the dispute as in section 2.
+3. Click Start run and resolve the dispute as in section 2.
 4. Show the trace entry where `find_alternative_sailings` times out (visible
-   error, not hidden).
-5. Show the cached fallback label and the stale-data notice.
+   error, not hidden; expand the trace drawer).
+5. Show the SAILING LOOKUP TIMEOUT - CACHED FALLBACK callout and the
+   stale-data notice in the metrics panel.
 6. Show confidence MEDIUM on the recommendation and explain: fallback data
    never removes the human approval requirement.
 7. Show that the run still pauses at AWAITING APPROVAL and cannot dispatch on
@@ -62,10 +63,18 @@ announce to the audience:
 Then:
 
 1. Reset.
-2. Start a DEMO_REPLAY run from the UI.
+2. Click "Start demo replay".
 3. Confirm the persistent DEMO REPLAY label is visible and stays visible.
-4. Run the same click path; the approval interaction still works.
+4. Run the same click path; the dispute and approval interactions still work.
 5. Never present replay output as live agent reasoning.
+
+## 4a. Known open defect (as of 2026-08-17)
+
+LIVE_STUB runs currently fail during planning after the dispute is resolved
+(stage FAILED, "Plan AGGRESSIVE_RUSH stayed infeasible after 3 revision
+rounds"). Until the defect in plan/contract_requests_verification.md
+("Open product defects", entry 1) is fixed, rehearse the golden click path in
+DEMO REPLAY mode, which completes end to end.
 
 ## 5. Release acceptance checklist (PRD section 18)
 
