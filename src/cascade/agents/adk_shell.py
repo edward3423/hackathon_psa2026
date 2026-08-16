@@ -5,6 +5,7 @@ from google.adk.apps import App
 from google.adk.models import Gemini
 from google.adk.workflow import Workflow
 
+from cascade.agents.base import load_prompt
 from cascade.tools import (
     analyse_connections,
     compare_plans,
@@ -43,19 +44,13 @@ def build_agent_shell() -> AgentShell:
     impact = Agent(
         name="impact_agent",
         model=_model(),
-        instruction=(
-            "Analyze synthetic connection impact and cargo urgency. "
-            "Use tool values as facts and do not invent operational data."
-        ),
+        instruction=load_prompt("impact"),
         tools=[analyse_connections],
     )
     yard = Agent(
         name="yard_agent",
         model=_model(),
-        instruction=(
-            "Analyze synthetic yard occupancy and reefer plug constraints. "
-            "Use tool values as facts and surface capacity breaches."
-        ),
+        instruction=load_prompt("yard"),
         tools=[simulate_yard],
     )
     parallel_assessment = Workflow(
@@ -66,28 +61,19 @@ def build_agent_shell() -> AgentShell:
     recovery = Agent(
         name="recovery_agent",
         model=_model(),
-        instruction=(
-            "Generate exactly three recovery plans within the documented archetypes. "
-            "Revise any proposal rejected by deterministic validation."
-        ),
+        instruction=load_prompt("recovery"),
         tools=[find_alternative_sailings, compare_plans, retrieve_context],
     )
     execution = Agent(
         name="execution_agent",
         model=_model(),
-        instruction=(
-            "Only after human approval, translate the approved synthetic plan into "
-            "allowlisted mocked actions."
-        ),
+        instruction=load_prompt("execution"),
         tools=[validate_actions, dispatch_plan],
     )
     coordinator = Agent(
         name="coordinator_agent",
         model=_model(),
-        instruction=(
-            "Coordinate disruption recovery, reconcile specialist evidence, open disputes, "
-            "and require human approval before execution. Never alter calculated values."
-        ),
+        instruction=load_prompt("coordinator"),
     )
     app = App(name="cascade", root_agent=coordinator)
     return AgentShell(
