@@ -1,33 +1,25 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
+import type { RunMode, WorkflowState } from './api/types'
+import {
+  analysis,
+  baselineYard,
+  dispute,
+  planComparison,
+  resetSequence,
+  runCreated,
+  scenario,
+  traceEvent,
+  workflowState,
+} from './test/fixtures'
 
-const scenario = {
-  name: 'MV ATLAS STAR 18-hour delay',
-  description: 'A synthetic delay threatens onward connections.',
-  alert: {
-    vessel_name: 'MV ATLAS STAR',
-    port_call: 'SGSIN-PSA-2042',
-    original_eta: '2026-09-14T06:00:00Z',
-    revised_eta: '2026-09-15T00:00:00Z',
-    event_time: '2026-09-13T18:00:00Z',
-    synthetic: true,
-    delay_hours: 18,
-  },
-  objective: 'Protect critical cargo and reduce missed connections.',
-  planning_horizon_hours: 72,
-  controls: {
-    delay_hours: 18,
-    priority_emphasis: 'BALANCED',
-    alternative_sailing_failure: true,
-  },
-  synthetic_notice: 'All values are synthetic.',
-}
+type Listener = (event: MessageEvent<string>) => void
 
 class FakeEventSource {
   static instances: FakeEventSource[] = []
-  listeners = new Map<string, (event: MessageEvent<string>) => void>()
+  listeners = new Map<string, Set<Listener>>()
   onerror: (() => void) | null = null
 
   constructor(public url: string) {
@@ -35,54 +27,222 @@ class FakeEventSource {
   }
 
   addEventListener(name: string, listener: EventListenerOrEventListenerObject) {
-    this.listeners.set(name, listener as (event: MessageEvent<string>) => void)
+    const set = this.listeners.get(name) ?? new Set<Listener>()
+    set.add(listener as Listener)
+    this.listeners.set(name, set)
+  }
+
+  emit(name: string, data?: unknown) {
+    for (const listener of this.listeners.get(name) ?? []) {
+      listener({ data: JSON.stringify(data) } as MessageEvent<string>)
+    }
   }
 
   close() {}
 }
 
-describe('CASCADE foundation dashboard', () => {
+interface RecordedCall {
+  url: string
+  method: string
+  body?: unknown
+}
+
+let runMode: RunMode
+let currentState: WorkflowState
+let calls: RecordedCall[]
+
+function jsonResponse(payload: unknown): Response {
+  return { ok: true, status: 200, json: async () => payload } as Response
+}
+
+function installFetch() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      const path = url.split('?')[0]
+      const method = init?.method ?? 'GET'
+      calls.push({
+        url,
+        method,
+        body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
+      })
+      if (path.endsWith('/api/scenario')) return jsonResponse(scenario)
+      if (path.endsWith('/api/runs') && method === 'POST') {
+        const mode = url.includes('mode=DEMO_REPLAY') ? 'DEMO_REPLAY' : runMode
+        return jsonResponse(runCreated(mode))
+      }
+      if (path.endsWith('/api/runs/run-1/dispute-resolution')) return jsonResponse({})
+      if (path.endsWith('/api/runs/run-1/approval')) return jsonResponse({})
+      if (path.endsWith('/api/runs/run-1')) return jsonResponse(currentState)
+      if (path.endsWith('/api/reset')) return jsonResponse(scenario)
+      throw new Error(`Unexpected request: ${method} ${url}`)
+    }),
+  )
+}
+
+async function startRun() {
+  render(<App />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Start run' }))
+  await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
+  return FakeEventSource.instances[0]
+}
+
+describe('CASCADE dashboard', () => {
   beforeEach(() => {
+    resetSequence()
     FakeEventSource.instances = []
+    runMode = 'LIVE_STUB'
+    currentState = workflowState()
+    calls = []
     vi.stubGlobal('EventSource', FakeEventSource)
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => scenario,
-    }))
+    installFetch()
   })
 
-  afterEach(() => vi.unstubAllGlobals())
-
-  it('renders the golden alert and all five agents', async () => {
-    render(<App />)
-
-    expect(await screen.findByText('MV ATLAS STAR')).toBeInTheDocument()
-    expect(screen.getByText('Coordinator Agent')).toBeInTheDocument()
-    expect(screen.getByText('Impact Agent')).toBeInTheDocument()
-    expect(screen.getByText('Yard Agent')).toBeInTheDocument()
-    expect(screen.getByText('Recovery Agent')).toBeInTheDocument()
-    expect(screen.getByText('Execution Agent')).toBeInTheDocument()
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
   })
 
-  it('starts a run and opens the returned event stream', async () => {
-    const fetchMock = vi.mocked(fetch)
-    fetchMock
-      .mockResolvedValueOnce({ ok: true, json: async () => scenario } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          run_id: 'run-1',
-          mode: 'LIVE_STUB',
-          stage: 'READY',
-          events_url: '/api/runs/run-1/events',
-        }),
-      } as Response)
-
+  it('renders the alert summary and objective from the scenario', async () => {
     render(<App />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Start analysis' }))
 
+    expect((await screen.findAllByText('MV ATLAS STAR')).length).toBeGreaterThan(0)
+    expect(screen.getByText('18 h')).toBeInTheDocument()
+    expect(screen.getByText('REVISED ETA')).toBeInTheDocument()
+    expect(screen.getByText(scenario.objective)).toBeInTheDocument()
+    expect(screen.getByText(`SYNTHETIC DATA: ${scenario.synthetic_notice}`)).toBeInTheDocument()
+  })
+
+  it('shows graph totals equal to the analysis group sums', async () => {
+    const source = await startRun()
+    currentState = workflowState({
+      stage: 'COMPLETE',
+      results: { connection_analysis: analysis },
+    })
+    act(() => source.emit('trace', traceEvent({ kind: 'RUN_COMPLETED', stage: 'COMPLETE' })))
+
+    const sum = (status: string) =>
+      analysis.groups
+        .filter((group) => group.status === status)
+        .reduce((total, group) => total + group.container_count, 0)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('total-safe')).toHaveTextContent(String(sum('SAFE')))
+    })
+    expect(screen.getByTestId('total-at-risk')).toHaveTextContent(String(sum('AT_RISK')))
+    expect(screen.getByTestId('total-missed')).toHaveTextContent(String(sum('MISSED')))
+    expect(screen.getByTestId('total-resolved')).toHaveTextContent(String(sum('RESOLVED')))
+  })
+
+  it('opens the dispute overlay on DISPUTE_OPENED, posts the resolution, and closes', async () => {
+    const source = await startRun()
+    currentState = workflowState({ stage: 'DISPUTE', active_dispute: dispute })
+    act(() =>
+      source.emit(
+        'trace',
+        traceEvent({ kind: 'DISPUTE_OPENED', stage: 'DISPUTE', confidence: 'LOW' }),
+      ),
+    )
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText(dispute.question)).toBeInTheDocument()
+    expect(screen.getByText(dispute.positions[0].evidence[0])).toBeInTheDocument()
+    expect(screen.getByText(dispute.positions[1].evidence[0])).toBeInTheDocument()
+
+    expect(
+      screen.getByRole('button', { name: 'Respect physical reefer plug capacity' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: dispute.positions[1].position }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm constraint' }))
+
+    await waitFor(() => {
+      const post = calls.find((call) => call.url.endsWith('/dispute-resolution'))
+      expect(post?.body).toEqual({
+        dispute_id: 'disp-1',
+        confirmed_constraint: dispute.positions[1].position,
+      })
+    })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('hides the approval bar until AWAITING_APPROVAL and posts the decision', async () => {
+    const source = await startRun()
+    act(() => source.emit('trace', traceEvent({ kind: 'AGENT_STARTED', stage: 'ASSESSING' })))
+
+    expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Human approval' })).not.toBeInTheDocument()
+
+    currentState = workflowState({
+      stage: 'AWAITING_APPROVAL',
+      results: { plan_comparison: planComparison },
+    })
+    act(() =>
+      source.emit(
+        'trace',
+        traceEvent({ kind: 'APPROVAL_REQUIRED', stage: 'AWAITING_APPROVAL' }),
+      ),
+    )
+
+    const approve = await screen.findByRole('button', { name: 'Approve' })
+    await waitFor(() => expect(approve).toBeEnabled())
+    expect(screen.getByRole('region', { name: 'Human approval' })).toHaveTextContent(
+      'Optimized Hybrid',
+    )
+    fireEvent.click(approve)
+
+    await waitFor(() => {
+      const post = calls.find((call) => call.url.endsWith('/approval'))
+      expect(post?.body).toEqual({ plan_archetype: 'OPTIMIZED_HYBRID', decision: 'APPROVED' })
+    })
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Approve' })).not.toBeInTheDocument(),
+    )
+  })
+
+  it('renders mocked receipts after dispatch events', async () => {
+    const source = await startRun()
+    expect(screen.queryByText('EXECUTION RECEIPTS (MOCKED)')).not.toBeInTheDocument()
+
+    currentState = workflowState({
+      stage: 'EXECUTING',
+      results: {
+        connection_analysis: analysis,
+        baseline_yard: baselineYard,
+        receipts: [
+          {
+            action_id: 'act-1',
+            status: 'ACCEPTED',
+            receipt_ref: 'WO-2042-001',
+            detail: 'Terminal work order accepted by mocked TOS.',
+          },
+          {
+            action_id: 'act-2',
+            status: 'REJECTED',
+            receipt_ref: null,
+            detail: 'Carrier notice rejected by validator.',
+          },
+        ],
+      },
+    })
+    act(() =>
+      source.emit('trace', traceEvent({ kind: 'ACTION_DISPATCHED', stage: 'EXECUTING' })),
+    )
+
+    expect(await screen.findByText('EXECUTION RECEIPTS (MOCKED)')).toBeInTheDocument()
+    expect(screen.getByText('WO-2042-001')).toBeInTheDocument()
+    expect(screen.getByText('ACCEPTED')).toBeInTheDocument()
+    expect(screen.getByText('REJECTED')).toBeInTheDocument()
+  })
+
+  it('shows a persistent DEMO REPLAY label when a replay run starts', async () => {
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Start demo replay' }))
     await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
-    expect(FakeEventSource.instances[0].url).toBe('/api/runs/run-1/events')
+
+    expect(await screen.findByText('DEMO REPLAY')).toBeInTheDocument()
+    const post = calls.find((call) => call.url.includes('/api/runs?'))
+    expect(post?.url).toContain('mode=DEMO_REPLAY')
   })
 })
-
