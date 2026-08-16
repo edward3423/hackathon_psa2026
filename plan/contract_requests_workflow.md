@@ -42,6 +42,7 @@ class StreamEnd(ContractModel):
     run_id: str
     stage: WorkflowStage
 
+
 class StreamModeLabel(ContractModel):
     run_id: str
     mode: RunMode

@@ -203,9 +203,7 @@ class GeminiBrain:
         last_error: Exception | None = None
         contents = message
         for _ in range(2):
-            response = client.models.generate_content(
-                model=MODEL, contents=contents, config=config
-            )
+            response = client.models.generate_content(model=MODEL, contents=contents, config=config)
             text = response.text or ""
             if self._recorder is not None:
                 self._recorder.record(agent, system_instruction, contents, text)
