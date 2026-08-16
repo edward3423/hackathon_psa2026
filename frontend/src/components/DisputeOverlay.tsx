@@ -52,10 +52,11 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
 
   return (
     <div className="overlay-backdrop" role="presentation">
+      {/* Not aria-modal: the top-bar controls (Reset in particular) stay
+          reachable while the workflow is paused at the dispute (PRD 9.16). */}
       <section
         className="dispute-overlay"
         role="dialog"
-        aria-modal="true"
         aria-label="Agent dispute - human decision required"
       >
         <p className="section-label">AGENT DISPUTE - HUMAN DECISION REQUIRED</p>
