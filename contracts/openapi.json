@@ -1,0 +1,815 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CASCADE API",
+    "description": "Synthetic disruption-recovery demonstration API.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scenario": {
+      "get": {
+        "tags": [
+          "scenario"
+        ],
+        "summary": "Get Scenario",
+        "operationId": "get_scenario_api_scenario_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "post": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Create Run",
+        "operationId": "create_run_api_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioControls"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Stream Run",
+        "operationId": "stream_run_api_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "workflow"
+        ],
+        "summary": "Get Run",
+        "operationId": "get_run_api_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reset": {
+      "post": {
+        "tags": [
+          "scenario"
+        ],
+        "summary": "Reset Demo",
+        "operationId": "reset_demo_api_reset_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioState"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentActivity": {
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentName"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AgentStatus",
+            "default": "WAITING"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Confidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "agent",
+          "objective"
+        ],
+        "title": "AgentActivity"
+      },
+      "AgentName": {
+        "type": "string",
+        "enum": [
+          "Coordinator Agent",
+          "Impact Agent",
+          "Yard Agent",
+          "Recovery Agent",
+          "Execution Agent"
+        ],
+        "title": "AgentName"
+      },
+      "AgentStatus": {
+        "type": "string",
+        "enum": [
+          "WAITING",
+          "RUNNING",
+          "COMPLETED",
+          "BLOCKED",
+          "FAILED"
+        ],
+        "title": "AgentStatus"
+      },
+      "Confidence": {
+        "type": "string",
+        "enum": [
+          "HIGH",
+          "MEDIUM",
+          "LOW"
+        ],
+        "title": "Confidence"
+      },
+      "Dispute": {
+        "properties": {
+          "dispute_id": {
+            "type": "string",
+            "title": "Dispute Id"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/DisputePosition"
+            },
+            "type": "array",
+            "title": "Positions"
+          },
+          "confirmed_constraint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed Constraint"
+          },
+          "resolved_by_human": {
+            "type": "boolean",
+            "title": "Resolved By Human",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "dispute_id",
+          "question",
+          "positions"
+        ],
+        "title": "Dispute"
+      },
+      "DisputePosition": {
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentName"
+          },
+          "position": {
+            "type": "string",
+            "title": "Position"
+          },
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "agent",
+          "position",
+          "evidence"
+        ],
+        "title": "DisputePosition"
+      },
+      "DisruptionAlert": {
+        "properties": {
+          "vessel_name": {
+            "type": "string",
+            "title": "Vessel Name"
+          },
+          "port_call": {
+            "type": "string",
+            "title": "Port Call"
+          },
+          "original_eta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Original Eta"
+          },
+          "revised_eta": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Revised Eta"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time"
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic",
+            "default": true
+          },
+          "delay_hours": {
+            "type": "integer",
+            "title": "Delay Hours",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "vessel_name",
+          "port_call",
+          "original_eta",
+          "revised_eta",
+          "event_time",
+          "delay_hours"
+        ],
+        "title": "DisruptionAlert"
+      },
+      "EventKind": {
+        "type": "string",
+        "enum": [
+          "RUN_STARTED",
+          "AGENT_STARTED",
+          "TOOL_CALLED",
+          "AGENT_COMPLETED",
+          "HANDOFF",
+          "DISPUTE_OPENED",
+          "HUMAN_DECISION",
+          "APPROVAL_REQUIRED",
+          "ACTION_DISPATCHED",
+          "ERROR",
+          "RUN_COMPLETED"
+        ],
+        "title": "EventKind"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "HealthResponse"
+      },
+      "PriorityEmphasis": {
+        "type": "string",
+        "enum": [
+          "CARGO_PROTECTION",
+          "CONGESTION_REDUCTION",
+          "BALANCED"
+        ],
+        "title": "PriorityEmphasis"
+      },
+      "RunCreated": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/WorkflowStage"
+          },
+          "events_url": {
+            "type": "string",
+            "title": "Events Url"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "mode",
+          "stage",
+          "events_url"
+        ],
+        "title": "RunCreated"
+      },
+      "RunMode": {
+        "type": "string",
+        "enum": [
+          "LIVE_STUB",
+          "LIVE_GEMINI",
+          "DEMO_REPLAY"
+        ],
+        "title": "RunMode"
+      },
+      "ScenarioControls": {
+        "properties": {
+          "delay_hours": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 6.0,
+            "title": "Delay Hours",
+            "default": 18
+          },
+          "priority_emphasis": {
+            "$ref": "#/components/schemas/PriorityEmphasis",
+            "default": "BALANCED"
+          },
+          "alternative_sailing_failure": {
+            "type": "boolean",
+            "title": "Alternative Sailing Failure",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ScenarioControls"
+      },
+      "ScenarioState": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "alert": {
+            "$ref": "#/components/schemas/DisruptionAlert"
+          },
+          "objective": {
+            "type": "string",
+            "title": "Objective"
+          },
+          "planning_horizon_hours": {
+            "type": "integer",
+            "title": "Planning Horizon Hours"
+          },
+          "controls": {
+            "$ref": "#/components/schemas/ScenarioControls"
+          },
+          "synthetic_notice": {
+            "type": "string",
+            "title": "Synthetic Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "alert",
+          "objective",
+          "planning_horizon_hours",
+          "controls",
+          "synthetic_notice"
+        ],
+        "title": "ScenarioState"
+      },
+      "TraceEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/WorkflowStage"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "objective": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective"
+          },
+          "input_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Summary"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool"
+          },
+          "decision_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Summary"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Confidence"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Assumptions"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "elapsed_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed Ms"
+          },
+          "next_handoff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parallel_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parallel Group"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "sequence",
+          "timestamp",
+          "kind",
+          "stage"
+        ],
+        "title": "TraceEvent"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkflowStage": {
+        "type": "string",
+        "enum": [
+          "READY",
+          "ASSESSING",
+          "DISPUTE",
+          "PLANNING",
+          "AWAITING_APPROVAL",
+          "EXECUTING",
+          "COMPLETE",
+          "FAILED"
+        ],
+        "title": "WorkflowStage"
+      },
+      "WorkflowState": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/RunMode"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/WorkflowStage"
+          },
+          "scenario": {
+            "$ref": "#/components/schemas/ScenarioState"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/AgentActivity"
+            },
+            "type": "array",
+            "title": "Activities"
+          },
+          "trace": {
+            "items": {
+              "$ref": "#/components/schemas/TraceEvent"
+            },
+            "type": "array",
+            "title": "Trace"
+          },
+          "active_dispute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Dispute"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "mode",
+          "stage",
+          "scenario",
+          "activities"
+        ],
+        "title": "WorkflowState"
+      }
+    }
+  }
+}

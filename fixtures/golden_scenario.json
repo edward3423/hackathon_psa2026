@@ -1,0 +1,21 @@
+{
+  "name": "MV ATLAS STAR 18-hour delay",
+  "description": "A synthetic inbound vessel delay threatens three onward connections and terminal yard capacity.",
+  "alert": {
+    "vessel_name": "MV ATLAS STAR",
+    "port_call": "SGSIN-PSA-2042",
+    "original_eta": "2026-09-14T06:00:00Z",
+    "revised_eta": "2026-09-15T00:00:00Z",
+    "event_time": "2026-09-13T18:00:00Z",
+    "synthetic": true
+  },
+  "objective": "Protect critical cargo, reduce missed connections, avoid severe yard congestion, and minimize illustrative disruption cost.",
+  "planning_horizon_hours": 72,
+  "controls": {
+    "delay_hours": 18,
+    "priority_emphasis": "BALANCED",
+    "alternative_sailing_failure": true
+  },
+  "synthetic_notice": "All vessels, containers, capacity values, costs, and actions are synthetic or illustrative."
+}
+

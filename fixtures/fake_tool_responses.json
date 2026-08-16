@@ -1,0 +1,27 @@
+{
+  "analyse_connections": {
+    "safe": 214,
+    "at_risk": 126,
+    "missed": 60,
+    "priority_reefers": 60,
+    "total_containers": 400
+  },
+  "simulate_yard": {
+    "peak_occupancy_percent": 94,
+    "peak_hour": "2026-09-15T11:00:00Z",
+    "reefer_plugs_required": 176,
+    "reefer_plugs_available": 150,
+    "reefer_shortage": 26
+  },
+  "find_alternative_sailings": {
+    "status": "CACHED_FALLBACK",
+    "stale_as_of": "2026-09-12T00:00:00Z",
+    "alternatives": 2
+  },
+  "compare_plans": {
+    "recommended": "OPTIMIZED_HYBRID",
+    "confidence": "MEDIUM",
+    "plans": 3
+  }
+}
+
