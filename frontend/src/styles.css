@@ -205,9 +205,9 @@ ul { margin: 0; padding-left: 18px; }
 /* Dispute overlay. The backdrop dims and blocks the main content, but the
    top bar and the scenario control strip are lifted above it (see below) so
    the presenter can always Reset mid-dispute (PRD 9.16). */
-.overlay-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: start center; padding: 230px 40px 40px; background: rgba(3, 7, 10, 0.78); }
+.overlay-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: start center; padding: 300px 40px 24px; background: rgba(3, 7, 10, 0.78); }
 .top-bar, .control-strip { position: relative; z-index: 50; background: var(--bg); }
-.dispute-overlay { width: min(880px, calc(100vw - 80px)); max-height: calc(100vh - 270px); overflow: auto; padding: 26px 28px; border: 1px solid var(--amber); background: var(--panel-raised); }
+.dispute-overlay { width: min(880px, calc(100vw - 80px)); max-height: calc(100vh - 324px); overflow: auto; padding: 26px 28px; border: 1px solid var(--amber); background: var(--panel-raised); }
 .dispute-overlay h2 { margin-top: 4px; font-size: 1.15rem; line-height: 1.4; }
 .dispute-positions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
 .dispute-position { padding: 13px 15px; border: 1px solid var(--line); background: #081118; }
