@@ -1,0 +1,3724 @@
+{
+  "seed": 42,
+  "terminal": "PSA Singapore - Synthetic Demo Terminal 1",
+  "vessels": [
+    {
+      "name": "MV ATLAS STAR",
+      "role": "INBOUND",
+      "port_call": "SGSIN-PSA-2042",
+      "eta": "2026-09-14T06:00:00Z",
+      "etd": "2026-09-14T22:00:00Z",
+      "connection_cutoff": null
+    },
+    {
+      "name": "MV MERIDIAN WAVE",
+      "role": "OUTBOUND",
+      "port_call": "SGSIN-PSA-2043",
+      "eta": "2026-09-14T20:00:00Z",
+      "etd": "2026-09-15T10:00:00Z",
+      "connection_cutoff": "2026-09-15T04:00:00Z"
+    },
+    {
+      "name": "MV CORAL EMPRESS",
+      "role": "OUTBOUND",
+      "port_call": "SGSIN-PSA-2044",
+      "eta": "2026-09-15T04:00:00Z",
+      "etd": "2026-09-15T18:00:00Z",
+      "connection_cutoff": "2026-09-15T12:00:00Z"
+    },
+    {
+      "name": "MV PACIFIC HARRIER",
+      "role": "OUTBOUND",
+      "port_call": "SGSIN-PSA-2045",
+      "eta": "2026-09-15T08:00:00Z",
+      "etd": "2026-09-15T22:00:00Z",
+      "connection_cutoff": "2026-09-15T16:00:00Z"
+    },
+    {
+      "name": "MV JADE HORIZON",
+      "role": "OUTBOUND",
+      "port_call": "SGSIN-PSA-2046",
+      "eta": "2026-09-16T10:00:00Z",
+      "etd": "2026-09-17T00:00:00Z",
+      "connection_cutoff": "2026-09-16T18:00:00Z"
+    },
+    {
+      "name": "MV AURORA BREEZE",
+      "role": "OUTBOUND",
+      "port_call": "SGSIN-PSA-2047",
+      "eta": "2026-09-17T04:00:00Z",
+      "etd": "2026-09-17T18:00:00Z",
+      "connection_cutoff": "2026-09-17T12:00:00Z"
+    }
+  ],
+  "yard_blocks": [
+    {
+      "block_id": "YB1",
+      "container_capacity": 480,
+      "reefer_plugs": 18,
+      "initial_containers": 310,
+      "initial_reefers_on_power": 10
+    },
+    {
+      "block_id": "YB2",
+      "container_capacity": 500,
+      "reefer_plugs": 14,
+      "initial_containers": 320,
+      "initial_reefers_on_power": 8
+    },
+    {
+      "block_id": "YB3",
+      "container_capacity": 460,
+      "reefer_plugs": 12,
+      "initial_containers": 280,
+      "initial_reefers_on_power": 6
+    },
+    {
+      "block_id": "YB4",
+      "container_capacity": 520,
+      "reefer_plugs": 0,
+      "initial_containers": 330,
+      "initial_reefers_on_power": 0
+    }
+  ],
+  "containers": [
+    {
+      "container_id": "CASU0000001",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000002",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000003",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000004",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000005",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000006",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000007",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000008",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000009",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000010",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000011",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000012",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000013",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000014",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000015",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000016",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000017",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000018",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000019",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000020",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000021",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000022",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000023",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000024",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000025",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000026",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000027",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000028",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000029",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000030",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000031",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000032",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000033",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000034",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000035",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000036",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000037",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000038",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000039",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000040",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000041",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000042",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000043",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000044",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000045",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000046",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000047",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000048",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000049",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000050",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000051",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000052",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000053",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000054",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000055",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000056",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000057",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000058",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000059",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000060",
+      "cargo_type": "PHARMA_REEFER",
+      "requires_power": true,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000061",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000062",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000063",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000064",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000065",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000066",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000067",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000068",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000069",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000070",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000071",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000072",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000073",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000074",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000075",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000076",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000077",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000078",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000079",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000080",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000081",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000082",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000083",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000084",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000085",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000086",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000087",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000088",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000089",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000090",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000091",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000092",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000093",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000094",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000095",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000096",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000097",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000098",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000099",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000100",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000101",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000102",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000103",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000104",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000105",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000106",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000107",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000108",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000109",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000110",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000111",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000112",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000113",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000114",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000115",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000116",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000117",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000118",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000119",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000120",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000121",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000122",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000123",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000124",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000125",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000126",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000127",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000128",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000129",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000130",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000131",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000132",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000133",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000134",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000135",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000136",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000137",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000138",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000139",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000140",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000141",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000142",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000143",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000144",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000145",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000146",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000147",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000148",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000149",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000150",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000151",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000152",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000153",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000154",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000155",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000156",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000157",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000158",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000159",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000160",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000161",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000162",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000163",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000164",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000165",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000166",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000167",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000168",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000169",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000170",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000171",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000172",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000173",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000174",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000175",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000176",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000177",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000178",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000179",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000180",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000181",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000182",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000183",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000184",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000185",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000186",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000187",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000188",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000189",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000190",
+      "cargo_type": "TIME_CRITICAL_MANUFACTURING",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000191",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000192",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000193",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000194",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000195",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000196",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000197",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000198",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000199",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000200",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000201",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000202",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000203",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000204",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000205",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000206",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000207",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000208",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000209",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000210",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000211",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000212",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000213",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000214",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000215",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000216",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000217",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000218",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000219",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000220",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000221",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000222",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000223",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000224",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000225",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000226",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000227",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000228",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000229",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000230",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000231",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000232",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000233",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000234",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000235",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV MERIDIAN WAVE",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000236",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000237",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000238",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000239",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000240",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000241",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000242",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000243",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000244",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000245",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000246",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000247",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000248",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000249",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000250",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000251",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000252",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000253",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000254",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000255",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000256",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000257",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000258",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000259",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000260",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000261",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000262",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000263",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000264",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000265",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000266",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000267",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000268",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000269",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000270",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000271",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000272",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000273",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000274",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000275",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000276",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000277",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000278",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000279",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000280",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV CORAL EMPRESS",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000281",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000282",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000283",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000284",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000285",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000286",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000287",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000288",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000289",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000290",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000291",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000292",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000293",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000294",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000295",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000296",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000297",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000298",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000299",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000300",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000301",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000302",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000303",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000304",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000305",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000306",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000307",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000308",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000309",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000310",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000311",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000312",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000313",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000314",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000315",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000316",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000317",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000318",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000319",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB4",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000320",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV PACIFIC HARRIER",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000321",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000322",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000323",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000324",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000325",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000326",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000327",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000328",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000329",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000330",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000331",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000332",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000333",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000334",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000335",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000336",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000337",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000338",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000339",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB2",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000340",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV JADE HORIZON",
+      "yard_block": "YB1",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000341",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000342",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000343",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000344",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000345",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000346",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000347",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000348",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000349",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000350",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000351",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 3.0
+    },
+    {
+      "container_id": "CASU0000352",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000353",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB1",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000354",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000355",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000356",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000357",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000358",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB3",
+      "handling_hours": 12.0
+    },
+    {
+      "container_id": "CASU0000359",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000360",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": "MV AURORA BREEZE",
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000361",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000362",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000363",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000364",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000365",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000366",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000367",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 5.0
+    },
+    {
+      "container_id": "CASU0000368",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000369",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000370",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000371",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000372",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 11.0
+    },
+    {
+      "container_id": "CASU0000373",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000374",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000375",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000376",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000377",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 13.0
+    },
+    {
+      "container_id": "CASU0000378",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000379",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000380",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000381",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000382",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000383",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 10.0
+    },
+    {
+      "container_id": "CASU0000384",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 9.0
+    },
+    {
+      "container_id": "CASU0000385",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000386",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000387",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000388",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000389",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000390",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000391",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 6.0
+    },
+    {
+      "container_id": "CASU0000392",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000393",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB4",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000394",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB3",
+      "handling_hours": 4.0
+    },
+    {
+      "container_id": "CASU0000395",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000396",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 8.0
+    },
+    {
+      "container_id": "CASU0000397",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000398",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 14.0
+    },
+    {
+      "container_id": "CASU0000399",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB2",
+      "handling_hours": 7.0
+    },
+    {
+      "container_id": "CASU0000400",
+      "cargo_type": "GENERAL_DRY",
+      "requires_power": false,
+      "inbound_vessel": "MV ATLAS STAR",
+      "onward_vessel": null,
+      "yard_block": "YB1",
+      "handling_hours": 3.0
+    }
+  ],
+  "alternative_sailings": [
+    {
+      "vessel_name": "MV NOVA CREST",
+      "replaces_onward_vessel": "MV MERIDIAN WAVE",
+      "departs": "2026-09-16T20:00:00Z",
+      "connection_cutoff": "2026-09-16T14:00:00Z",
+      "available_capacity": 70
+    },
+    {
+      "vessel_name": "MV DELTA CROWN",
+      "replaces_onward_vessel": "MV MERIDIAN WAVE",
+      "departs": "2026-09-18T08:00:00Z",
+      "connection_cutoff": "2026-09-18T02:00:00Z",
+      "available_capacity": 40
+    },
+    {
+      "vessel_name": "MV BALTIC SPRING",
+      "replaces_onward_vessel": "MV CORAL EMPRESS",
+      "departs": "2026-09-17T06:00:00Z",
+      "connection_cutoff": "2026-09-17T00:00:00Z",
+      "available_capacity": 60
+    },
+    {
+      "vessel_name": "MV SUNDA STRAIT",
+      "replaces_onward_vessel": "MV PACIFIC HARRIER",
+      "departs": "2026-09-17T20:00:00Z",
+      "connection_cutoff": "2026-09-17T14:00:00Z",
+      "available_capacity": 55
+    }
+  ],
+  "cost_rates": {
+    "dwell_per_container_hour": 4.0,
+    "reefer_risk_per_hour": 25.0,
+    "missed_connection_penalty": 1200.0,
+    "crane_hour": 600.0,
+    "rebooking_fee": 350.0
+  },
+  "synthetic_notice": "All vessels, containers, yard blocks, capacities, cutoffs, sailings, and cost rates in this fixture are synthetic and illustrative. They do not describe real PSA operations."
+}

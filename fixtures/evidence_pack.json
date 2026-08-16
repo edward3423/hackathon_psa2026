@@ -1,0 +1,55 @@
+{
+  "notice": "Reviewed public-context evidence pack for the retrieve_context tool. Facts are generic public background from official sources; approximate figures are marked approximate. This pack contains no operational data for the synthetic scenario.",
+  "facts": [
+    {
+      "fact": "PSA International operates a global network of port terminals and supply chain facilities across dozens of countries, with its flagship operations in Singapore.",
+      "source_title": "PSA International Annual and Sustainability Report 2025",
+      "source_url": "https://annualreport.globalpsa.com/"
+    },
+    {
+      "fact": "The Port of Singapore is one of the world's largest container transshipment hubs, where a large majority of containers handled arrive on one vessel and depart on another.",
+      "source_title": "PSA International Annual and Sustainability Report 2025",
+      "source_url": "https://annualreport.globalpsa.com/"
+    },
+    {
+      "fact": "Singapore's container throughput is on the order of 40 million TEUs (twenty-foot equivalent units) per year (approximate).",
+      "source_title": "MPA Port Statistics",
+      "source_url": "https://www.mpa.gov.sg/who-we-are/newsroom-resources/research-and-statistics/port-statistics"
+    },
+    {
+      "fact": "Singapore's total port cargo throughput is on the order of 600 million tonnes per year (approximate).",
+      "source_title": "MPA Port Statistics",
+      "source_url": "https://www.mpa.gov.sg/who-we-are/newsroom-resources/research-and-statistics/port-statistics"
+    },
+    {
+      "fact": "The Maritime and Port Authority of Singapore (MPA) publishes monthly vessel arrival statistics, reflecting a continuous flow of tens of thousands of vessel calls per year (approximate).",
+      "source_title": "MPA Vessel Arrivals, Monthly",
+      "source_url": "https://data.gov.sg/collections/394/view"
+    },
+    {
+      "fact": "Singapore is connected by liner shipping services to several hundred ports worldwide, which is why a single inbound delay can affect many onward connections (approximate).",
+      "source_title": "PSA International Annual and Sustainability Report 2025",
+      "source_url": "https://annualreport.globalpsa.com/"
+    },
+    {
+      "fact": "PSA Singapore is progressively consolidating container operations at Tuas Port, which is planned to handle up to about 65 million TEUs per year when fully developed (approximate).",
+      "source_title": "PSA Singapore Sustainability Report 2025",
+      "source_url": "https://www.singaporepsa.com/wp-content/uploads/2026/06/PSA-SG-Sustainability-Report-2025.pdf"
+    },
+    {
+      "fact": "PSA Singapore reports on energy efficiency and electrification of port equipment as part of its sustainability program, including powering refrigerated containers at the yard.",
+      "source_title": "PSA Singapore Sustainability Report 2025",
+      "source_url": "https://www.singaporepsa.com/wp-content/uploads/2026/06/PSA-SG-Sustainability-Report-2025.pdf"
+    },
+    {
+      "fact": "UN/LOCODE (United Nations Code for Trade and Transport Locations) assigns the code SGSIN to the Port of Singapore.",
+      "source_title": "UN/LOCODE",
+      "source_url": "https://unlocode.unece.org/publications/"
+    },
+    {
+      "fact": "UN/LOCODE provides standardized five-character location codes used across shipping documents and port systems to identify ports and other transport locations.",
+      "source_title": "UN/LOCODE",
+      "source_url": "https://unlocode.unece.org/publications/"
+    }
+  ]
+}
