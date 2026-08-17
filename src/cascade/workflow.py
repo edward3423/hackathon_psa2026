@@ -10,9 +10,11 @@ TraceEvent fields and RunResults.
 """
 
 import asyncio
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -32,6 +34,7 @@ from cascade.contracts import (
     DisputePosition,
     DisputeResolutionRequest,
     EventKind,
+    ModelExchange,
     RecoveryPlan,
     RunMode,
     RunResults,
@@ -56,6 +59,10 @@ AGENT_OBJECTIVES: dict[AgentName, str] = {
 
 MAX_REVISION_ROUNDS = 3
 REPLAY_LABEL = "DEMO REPLAY"
+
+# Per-run JSONL debug logs (gitignored). One file per run, written as events
+# are emitted, so a stuck or failed run can be analysed after the fact.
+RUN_LOG_DIR = Path(__file__).resolve().parents[2] / "logs" / "runs"
 
 Clock = Callable[[], datetime]
 
@@ -140,6 +147,16 @@ class WorkflowRun:
 
     # -- event log and subscriptions ----------------------------------------
 
+    def _drain_model_exchanges(self) -> list[ModelExchange]:
+        # Live brains buffer their raw calls; each trace event carries the
+        # exchanges made since the previous event. Scripted brains have none.
+        buffer = getattr(self.brain, "exchanges", None)
+        if not buffer:
+            return []
+        drained = list(buffer)
+        buffer.clear()
+        return drained
+
     async def _emit(self, **fields: Any) -> TraceEvent:
         # Always yield so concurrent agent tasks interleave deterministically.
         await asyncio.sleep(self.event_delay)
@@ -150,12 +167,32 @@ class WorkflowRun:
             sequence=len(self.trace) + 1,
             timestamp=self.clock(),
             stage=stage,
+            model_exchanges=self._drain_model_exchanges(),
             **fields,
         )
         async with self._cond:
             self.trace.append(event)
             self._cond.notify_all()
+        self._log_event(event)
         return event
+
+    def _log_event(self, event: TraceEvent) -> None:
+        # Per-run JSONL debug log (docs/notes.md). Logging must never break a
+        # run, so filesystem trouble is swallowed.
+        try:
+            RUN_LOG_DIR.mkdir(parents=True, exist_ok=True)
+            path = RUN_LOG_DIR / f"{self.run_id}.jsonl"
+            with path.open("a", encoding="utf-8") as handle:
+                if event.sequence == 1:
+                    header = {
+                        "run_id": self.run_id,
+                        "mode": self.mode.value,
+                        "controls": self.controls.model_dump(mode="json"),
+                    }
+                    handle.write(json.dumps({"run_header": header}) + "\n")
+                handle.write(event.model_dump_json() + "\n")
+        except OSError:
+            pass
 
     async def wait_events(self, index: int, timeout: float) -> tuple[list[TraceEvent], bool] | None:
         """New events after ``index``, or None on timeout (keep-alive)."""
@@ -503,6 +540,7 @@ class WorkflowRun:
         briefing = PlanBriefing(
             analysis=analysis,
             sailings=sailings,
+            facts=self.toolbox.planning_facts(analysis),
             confirmed_constraint=constraint,
             priority_emphasis=self.controls.priority_emphasis.value,
         )

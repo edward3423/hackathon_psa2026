@@ -11,6 +11,7 @@ documented there (verbatim responses, hashed prompts, no secrets).
 import hashlib
 import json
 import os
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypeVar
@@ -30,7 +31,7 @@ from cascade.agents.base import (
     summary_message,
 )
 from cascade.agents.scripted import ScriptedBrain
-from cascade.contracts import AgentName, RecoveryPlan
+from cascade.contracts import AgentName, ModelExchange, RecoveryPlan
 
 MODEL = "gemini-3.5-flash"
 
@@ -163,6 +164,7 @@ class GeminiBrain:
         self._recorder = recorder
         self._call_budget = call_budget
         self.api_calls = 0
+        self.exchanges: list[ModelExchange] = []
         self._client: Any = None
 
     @classmethod
@@ -228,8 +230,20 @@ class GeminiBrain:
                     "before another API request is spent."
                 )
             self.api_calls += 1
+            started = time.monotonic()
             response = client.models.generate_content(model=MODEL, contents=contents, config=config)
             text = response.text or ""
+            self.exchanges.append(
+                ModelExchange(
+                    provider="gemini",
+                    model=MODEL,
+                    effort=f"thinking_budget={THINKING_BUDGETS[agent]}",
+                    agent=agent,
+                    prompt=contents,
+                    response=text,
+                    duration_ms=int((time.monotonic() - started) * 1000),
+                )
+            )
             if self._recorder is not None:
                 self._recorder.record(agent, system_instruction, contents, text)
             try:
@@ -256,6 +270,10 @@ class CaptureProfileBrain:
     def __init__(self, live: GeminiBrain, scripted: AgentBrain | None = None) -> None:
         self.live = live
         self.scripted: AgentBrain = scripted if scripted is not None else ScriptedBrain()
+
+    @property
+    def exchanges(self) -> list[ModelExchange]:
+        return self.live.exchanges
 
     def summarize(self, step: WorkflowStep, facts: dict[str, Any]) -> AgentSummary:
         brain = self.live if step in LIVE_CAPTURE_STEPS else self.scripted

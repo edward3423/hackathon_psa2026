@@ -99,6 +99,26 @@ function TraceRow({ event }: { event: TraceEvent }) {
               <dd>{event.parallel_group}</dd>
             </div>
           )}
+          {(event.model_exchanges?.length ?? 0) > 0 && (
+            <div className="trace-exchanges">
+              <dt>Model calls</dt>
+              <dd>
+                {event.model_exchanges?.map((exchange, index) => (
+                  <details key={index} className="model-exchange">
+                    <summary>
+                      {exchange.model}
+                      {exchange.effort ? ` (${exchange.effort})` : ''} via {exchange.provider}
+                      {exchange.duration_ms != null ? ` in ${formatElapsed(exchange.duration_ms)}` : ''}
+                    </summary>
+                    <h4>Prompt</h4>
+                    <pre>{exchange.prompt}</pre>
+                    <h4>Response</h4>
+                    <pre>{exchange.response}</pre>
+                  </details>
+                ))}
+              </dd>
+            </div>
+          )}
         </dl>
       )}
     </li>

@@ -107,6 +107,18 @@ class AgentActivity(ContractModel):
     last_summary: str | None = None
 
 
+class ModelExchange(ContractModel):
+    """One live model call (prompt in, raw response out) behind a trace event."""
+
+    provider: str  # "claude-cli" | "gemini"
+    model: str
+    effort: str | None = None  # CLI effort level, or Gemini thinking budget
+    agent: AgentName
+    prompt: str
+    response: str
+    duration_ms: Annotated[int | None, Field(ge=0)] = None
+
+
 class TraceEvent(ContractModel):
     event_id: str
     sequence: Annotated[int, Field(ge=1)]
@@ -125,6 +137,7 @@ class TraceEvent(ContractModel):
     elapsed_ms: Annotated[int | None, Field(ge=0)] = None
     next_handoff: AgentName | None = None
     parallel_group: str | None = None
+    model_exchanges: list[ModelExchange] = Field(default_factory=list)
 
 
 class DisputePosition(ContractModel):
@@ -285,6 +298,26 @@ class ConnectionAnalysis(ContractModel):
     missed_count: Annotated[int, Field(ge=0)]
     groups: list[ConnectionGroupSummary]
     connections: list[ContainerConnection]
+
+
+class RushSlot(ContractModel):
+    """One container position in a group's fixed rush order."""
+
+    yard_block: str
+    requires_power: bool
+
+
+class PlanningFacts(ContractModel):
+    """Deterministic feasibility facts a live brain needs to allocate plans.
+
+    Rushing K containers from a group rushes exactly its first K slots in
+    rush_order_by_group (priority order, fixed by the engine); every powered
+    slot rushed consumes one free reefer plug in its yard block.
+    """
+
+    crane_surge_allowance: Annotated[int, Field(ge=0)]
+    free_plugs_by_block: dict[str, Annotated[int, Field(ge=0)]]
+    rush_order_by_group: dict[str, list[RushSlot]]
 
 
 class YardOccupancyPoint(ContractModel):

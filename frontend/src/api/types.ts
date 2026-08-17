@@ -28,6 +28,8 @@ export type Dispute = components['schemas']['Dispute']
 export type Confidence = components['schemas']['Confidence']
 export type EventKind = components['schemas']['EventKind']
 
+export type ModelExchange = components['schemas']['ModelExchange']
+
 export type DisputeResolutionRequest = components['schemas']['DisputeResolutionRequest']
 export type ApprovalDecision = components['schemas']['ApprovalDecision']
 export type ApprovalRequest = components['schemas']['ApprovalRequest']

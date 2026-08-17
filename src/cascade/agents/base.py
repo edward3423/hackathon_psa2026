@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from cascade.contracts import (
     AlternativeSailingResult,
     ConnectionAnalysis,
+    PlanningFacts,
     RecoveryPlan,
 )
 
@@ -74,6 +75,7 @@ class PlanBriefing:
     sailings: AlternativeSailingResult
     confirmed_constraint: str | None
     priority_emphasis: str
+    facts: PlanningFacts | None = None
 
 
 class AgentBrain(Protocol):
@@ -96,6 +98,37 @@ def summary_message(step: WorkflowStep, facts: dict[str, Any]) -> str:
     )
 
 
+def _feasibility_section(facts: PlanningFacts | None) -> str:
+    """Render the deterministic feasibility constraints a live brain must obey.
+
+    Without this a model plans blind: rush counts map onto fixed yard blocks
+    it cannot see, so plug rejections become unwinnable guessing (the failure
+    mode of 2026-08-17, see docs/notes.md).
+    """
+    if facts is None:
+        return ""
+    order_lines = [
+        f"  {group}: "
+        + ", ".join(f"{slot.yard_block}{'*' if slot.requires_power else ''}" for slot in slots)
+        for group, slots in facts.rush_order_by_group.items()
+    ]
+    return (
+        "\nDeterministic feasibility constraints (a plan violating any of these "
+        "is rejected):\n"
+        "- Total rushed containers across all actions must not exceed the crane "
+        f"surge allowance of {facts.crane_surge_allowance}.\n"
+        "- Rushing K containers from a group rushes exactly its first K slots in "
+        "the fixed order below. Every slot marked * consumes one free reefer plug "
+        "in its yard block; per block, plugs consumed must not exceed the free "
+        "plugs listed.\n"
+        f"- Free reefer plugs by block: {json.dumps(facts.free_plugs_by_block)}\n"
+        "- Rush order by group (yard block per slot, * = consumes a plug):\n"
+        + "\n".join(order_lines)
+        + "\n- Containers not rushed must be rebooked onto a sailing with enough "
+        "remaining capacity, or the group stays partly unresolved.\n"
+    )
+
+
 def proposal_message(briefing: PlanBriefing) -> str:
     """The user message every live brain sends to propose the three plans."""
     return (
@@ -105,6 +138,7 @@ def proposal_message(briefing: PlanBriefing) -> str:
         f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
         f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}\n"
         f"Priority emphasis: {briefing.priority_emphasis}"
+        f"{_feasibility_section(briefing.facts)}"
     )
 
 
@@ -119,6 +153,7 @@ def revision_message(
         f"Rejection reasons: {json.dumps(rejection_reasons)}\n"
         f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
         f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}"
+        f"{_feasibility_section(briefing.facts)}"
     )
 
 

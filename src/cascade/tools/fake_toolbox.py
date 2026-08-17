@@ -28,10 +28,12 @@ from cascade.contracts import (
     PlanComparison,
     PlanEvaluation,
     PlanMetrics,
+    PlanningFacts,
     PriorityEmphasis,
     RecoveryActionType,
     RecoveryPlan,
     ReeferShortage,
+    RushSlot,
     SailingLookupStatus,
     YardForecast,
     YardOccupancyPoint,
@@ -281,6 +283,23 @@ class FakeToolBox:
             )
         return AlternativeSailingResult(
             status=SailingLookupStatus.MOCK_SUCCESS, sailings=sailings, stale_notice=None
+        )
+
+    def planning_facts(self, connections: ConnectionAnalysis) -> PlanningFacts:
+        # Canned facts consistent with the canned analysis: the affected
+        # sample connections in rush order, plus block plug headroom that sums
+        # to the same 34-reefer rush cap the fake evaluate_plan enforces.
+        del connections
+        return PlanningFacts(
+            crane_surge_allowance=40,
+            free_plugs_by_block={"Y1": 14, "Y2": 12, "Y3": 8, "Y4": 0},
+            rush_order_by_group={
+                "MV MERIDIAN/PHARMA_REEFER": [RushSlot(yard_block="Y1", requires_power=True)],
+                "MV MERIDIAN/TIME_CRITICAL_MANUFACTURING": [
+                    RushSlot(yard_block="Y2", requires_power=False)
+                ],
+                "MV BLUE DART/GENERAL_DRY": [RushSlot(yard_block="Y3", requires_power=False)],
+            },
         )
 
     def evaluate_plan(

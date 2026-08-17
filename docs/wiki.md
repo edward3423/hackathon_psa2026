@@ -259,16 +259,36 @@ Run modes: LIVE_STUB = offline deterministic scripted run (default, CI).
 LIVE_GEMINI = real ADK agents; refused cleanly when GEMINI_API_KEY absent;
 higher thinking budget for Coordinator and Recovery. LIVE_CLAUDE = same
 brain seam through the local Claude Code CLI (claude -p headless,
-ClaudeBrain in agents/local_claude.py; 409 when the CLI is not on PATH;
-CASCADE_CLAUDE_MODEL overrides the CLI model; decision record in
-docs/notes.md) - the day-to-day live driver while the Gemini free tier
-stays at 20 requests/day. DEMO_REPLAY = replays
+ClaudeBrain in agents/local_claude.py; pinned to claude-sonnet-5 at low
+effort, CASCADE_CLAUDE_MODEL / CASCADE_CLAUDE_EFFORT override; 409 when the
+CLI is not on PATH; decision record in docs/notes.md) - the day-to-day live
+driver while the Gemini free tier stays at 20 requests/day. DEMO_REPLAY =
+replays
 fixtures/replay_events.json offline; approval interaction preserved; UI
 shows persistent exact-text "DEMO REPLAY". The UI "Agent brain" dropdown
 selects LIVE_STUB / LIVE_CLAUDE / LIVE_GEMINI for the Start run button.
 Shared live-brain user messages live in agents/base.py
 (summary_message/proposal_message/revision_message) so Gemini and Claude
 send byte-identical requests.
+
+Live-brain feasibility briefing: PlanBriefing.facts carries PlanningFacts
+(crane surge allowance, free plugs per block, per-group rush order with
+plug markers), computed by engine.plans.planning_facts via
+ToolBox.planning_facts and rendered into proposal/revision messages by
+_feasibility_section (agents/base.py). Without it live models loop on plug
+rejections they cannot reason about (docs/notes.md, 2026-08-17).
+
+Model-call transparency: live brains buffer every call as a ModelExchange
+(provider, model, effort, prompt, response, duration_ms); the stage machine
+drains the buffer into TraceEvent.model_exchanges at each emit, and the UI
+trace drawer renders them as collapsible prompt/response blocks. Each run
+also appends its events to logs/runs/<run_id>.jsonl (gitignored; first line
+is a run_header with mode and controls) - read this file when debugging a
+stuck or failed run.
+
+UI theme: light minimalist (white panels, hairline borders, single teal
+accent --accent #0e7490, darkened status colors); chart/graph inline colors
+in CascadeGraph.tsx and YardForecastPanel.tsx match styles.css tokens.
 
 Live capture (quota-aware): free-tier gemini-3.5-flash allows 20 requests
 per day, and a fully live golden run needs 15-21 calls. Recording uses

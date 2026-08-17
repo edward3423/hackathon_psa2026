@@ -221,3 +221,49 @@ def test_no_feasible_plan_yields_no_recommendation() -> None:
     assert comparison.recommended is None
     assert comparison.confidence is Confidence.MEDIUM
     assert "No plan is feasible" in comparison.rationale
+
+
+def test_planning_facts_expose_plug_headroom_and_rush_order() -> None:
+    # Two blocks with different free-plug headroom; reefers split across them
+    # and one dry container in the same group's vessel key space.
+    vessels = [
+        inbound_vessel_fixture(),
+        outbound_vessel("MV GONE", REVISED_ETA - timedelta(hours=2)),
+    ]
+    containers = [
+        make_container(
+            "R000",
+            cargo_type=CargoType.PHARMA_REEFER,
+            requires_power=True,
+            onward_vessel="MV GONE",
+            yard_block="B1",
+        ),
+        make_container(
+            "R001",
+            cargo_type=CargoType.PHARMA_REEFER,
+            requires_power=True,
+            onward_vessel="MV GONE",
+            yard_block="B2",
+        ),
+        make_container("D000", onward_vessel="MV GONE", yard_block="B1"),
+    ]
+    world = make_world(
+        containers,
+        vessels=vessels,
+        yard_blocks=[
+            make_block("B1", reefer_plugs=10, initial_reefers_on_power=7),
+            make_block("B2", reefer_plugs=4, initial_reefers_on_power=4),
+        ],
+    )
+    connections = analyse_connections(world, REVISED_ETA, EMPHASIS)
+
+    from cascade.engine.plans import planning_facts
+
+    facts = planning_facts(world, connections)
+    assert facts.crane_surge_allowance == CRANE_SURGE_ALLOWANCE_CONTAINERS
+    assert facts.free_plugs_by_block == {"B1": 3, "B2": 0}
+    reefer_slots = facts.rush_order_by_group["MV GONE/PHARMA_REEFER"]
+    assert [slot.yard_block for slot in reefer_slots] == ["B1", "B2"]
+    assert all(slot.requires_power for slot in reefer_slots)
+    dry_slots = facts.rush_order_by_group["MV GONE/GENERAL_DRY"]
+    assert [slot.requires_power for slot in dry_slots] == [False]
