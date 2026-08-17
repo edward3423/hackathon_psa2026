@@ -304,6 +304,9 @@ receipts).
 ## 9. Testing map
 
 - tests/test_contracts.py, test_api.py, test_adk_shell.py - foundation.
+- tests/test_recorded_gemini.py - offline replay of every committed
+  recording in fixtures/recorded_gemini/ against the live-brain schemas
+  (one-retry policy honored); fails if no recording is committed.
 - tests/test_fixtures.py - 9 tests: world validity, byte-determinism,
   counts, 60 reefers, 18h margin mix has all three classes, plugs < 60,
   referential integrity, sailing sanity.
