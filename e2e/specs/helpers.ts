@@ -4,7 +4,7 @@ export const REEFER_CONSTRAINT = 'Respect physical reefer plug capacity'
 
 /** Clear any dangling paused runs from earlier tests. */
 export async function resetBackend(request: APIRequestContext): Promise<void> {
-  await request.post('http://127.0.0.1:8000/api/reset')
+  await request.post('http://127.0.0.1:8620/api/reset')
 }
 
 /** Load the dashboard and wait for the scenario to render. */

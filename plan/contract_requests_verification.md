@@ -21,7 +21,7 @@ Blocks: `e2e/specs/golden-run.spec.ts`, `e2e/specs/timeout-fallback.spec.ts`
 its browser test passes, so the plan/approval/receipt UI itself works.
 
 Repro (no browser needed):
-1. `uv run uvicorn cascade.api:app --port 8000`
+1. `uv run uvicorn cascade.api:app --port 8620`
 2. `POST /api/runs` with default controls (LIVE_STUB, delay 18, BALANCED,
    failure toggle on or off - both reproduce).
 3. Wait for stage DISPUTE, then `POST /api/runs/{id}/dispute-resolution` with

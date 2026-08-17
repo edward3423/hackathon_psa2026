@@ -59,7 +59,7 @@ remain open; reconcile through Agent 1 before acting on them.
 | uv sync | Install Python deps into .venv |
 | npm install | Install workspace deps (root + frontend) |
 | npm run generate:types | Export openapi.json from the app, then regenerate frontend/src/api/schema.d.ts |
-| npm run dev | uvicorn on 8000 + vite on 5173, concurrently |
+| npm run dev | uvicorn on 8620 + vite on 5620, concurrently |
 | npm run check | ruff lint+format check, pytest, frontend vitest, tsc build - the full gate |
 | uv run pytest | Backend tests only |
 | uv run python scripts/generate_fixture.py | Regenerate fixtures/golden_world.json (must be byte-identical) |
@@ -70,8 +70,8 @@ Environment quirks:
 - Filesystem is D:\Projects (capital P); sessions may see D:\projects. Git
   resolves to the capitalized form; case-sensitive path comparisons break
   (this is why built-in worktree isolation failed; use manual worktrees).
-- Port 5173 is sometimes occupied by an unrelated app on this machine; e2e
-  uses 5174 --strictPort. Never let app logic depend on the frontend port.
+- Default ports 8000/5173 conflict with other servers on this machine, so the
+  stack uses 8620/5620 and e2e uses 5621 --strictPort. Never let app logic depend on the frontend port.
 - uv invocations in npm scripts use `--cache-dir .uv-cache`.
 - GEMINI_API_KEY lives in D:\projects\hackathon_psa2026\.env (gitignored).
   Never commit it; never make tests depend on it.
@@ -235,8 +235,8 @@ Status letters: M = merged on main; F = in flight on the named branch.
 
 ## 7. Runtime architecture
 
-React dashboard (vite, port 5173) -> REST + SSE -> FastAPI (uvicorn, port
-8000, src/cascade/api.py) -> coordinator-controlled stage machine wrapping
+React dashboard (vite, port 5620) -> REST + SSE -> FastAPI (uvicorn, port
+8620, src/cascade/api.py) -> coordinator-controlled stage machine wrapping
 Google ADK agents (gemini-3.5-flash) -> deterministic engine functions ->
 JSON fixtures + in-memory state. No database. Only live network dependency
 is the Gemini API.

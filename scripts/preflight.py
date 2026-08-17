@@ -5,7 +5,7 @@ Run from the repository root:
     uv run python scripts/preflight.py [--live]
 
 Checks, in order:
-  1. Ports 8000 and 5173 are free or occupied by our own services.
+  1. Ports 8620 and 5620 are free or occupied by our own services.
   2. Repository fixtures parse against the shared contracts.
   3. GEMINI_API_KEY presence in .env (warning only).
   4. With --live and a key present: one cheap Gemini generate call.
@@ -37,8 +37,8 @@ FAIL = "FAIL"
 WARN = "WARN"
 SKIP = "SKIP"
 
-BACKEND_PORT = 8000
-FRONTEND_PORT = 5173
+BACKEND_PORT = 8620
+FRONTEND_PORT = 5620
 GEMINI_TOKEN = "CASCADE_GEMINI_OK"
 DEFAULT_MODEL = "gemini-3.5-flash"
 

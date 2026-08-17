@@ -8,8 +8,8 @@ Owner: Agent 6 (Verification). Audience: the presenter operating the live demo.
 2. From the repository root run `uv run python scripts/preflight.py --live`.
    - Every hard check must PASS. Warnings about optional fixtures are acceptable.
    - If the live Gemini check fails, apply the replay fallback decision (section 4).
-3. Start the stack: `npm run dev` (backend on 8000, frontend on 5173).
-4. Open http://127.0.0.1:5173 in a maximized browser window at the demonstration
+3. Start the stack: `npm run dev` (backend on 8620, frontend on 5620).
+4. Open http://127.0.0.1:5620 in a maximized browser window at the demonstration
    screen size.
 5. Click Reset. Confirm:
    - alert shows MV ATLAS STAR with an 18 hour delay;

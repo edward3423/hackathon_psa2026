@@ -5,7 +5,7 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently -k -n api,web -c blue,green \"uv --cache-dir .uv-cache run uvicorn cascade.api:app --reload --port 8000\" \"npm --workspace frontend run dev\"",
+    "dev": "concurrently -k -n api,web -c blue,green \"uv --cache-dir .uv-cache run uvicorn cascade.api:app --reload --port 8620\" \"npm --workspace frontend run dev\"",
     "generate:openapi": "uv --cache-dir .uv-cache run python scripts/export_openapi.py",
     "generate:types": "npm run generate:openapi && npm --workspace frontend run generate:types",
     "lint": "uv --cache-dir .uv-cache run ruff check . && npm --workspace frontend run lint",

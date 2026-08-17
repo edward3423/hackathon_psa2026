@@ -15,8 +15,8 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     // The e2e frontend runs on a dedicated port so the suite is independent
-    // of any dev server already using the default 5173.
-    baseURL: 'http://127.0.0.1:5174',
+    // of the dev server on 5620.
+    baseURL: 'http://127.0.0.1:5621',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -28,16 +28,16 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'uv --cache-dir .uv-cache run uvicorn cascade.api:app --port 8000',
+      command: 'uv --cache-dir .uv-cache run uvicorn cascade.api:app --port 8620',
       cwd: repoRoot,
-      url: 'http://127.0.0.1:8000/api/health',
+      url: 'http://127.0.0.1:8620/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
     {
-      command: 'npm --workspace frontend run dev -- --port 5174 --strictPort',
+      command: 'npm --workspace frontend run dev -- --port 5621 --strictPort',
       cwd: repoRoot,
-      url: 'http://127.0.0.1:5174',
+      url: 'http://127.0.0.1:5621',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
