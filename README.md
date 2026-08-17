@@ -63,7 +63,7 @@ assumptions.
 ## Using the app
 
 1. Ask a technical teammate to start the app (instructions below), then
-   open `http://localhost:5173` in a web browser.
+   open `http://localhost:5620` in a web browser.
 2. Review the incoming disruption alert, adjust the scenario controls if
    you want, and press Start Run.
 3. Watch the agents work in the center of the screen. The map on the left
@@ -90,7 +90,7 @@ npm run generate:types
 npm run dev
 ```
 
-Then open `http://localhost:5173`. The live AI mode needs a `GEMINI_API_KEY`
+Then open `http://localhost:5620`. The live AI mode needs a `GEMINI_API_KEY`
 in a local `.env` file; without it the app still runs in offline modes.
 
 ## Good to know
