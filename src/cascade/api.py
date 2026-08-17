@@ -78,6 +78,17 @@ async def create_run(
                 "explicitly choose DEMO_REPLAY to replay the captured run instead."
             ),
         )
+    if selected_mode is RunMode.LIVE_CLAUDE:
+        from cascade.agents.local_claude import claude_cli_path
+
+        if claude_cli_path() is None:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "LIVE_CLAUDE requires the Claude Code CLI ('claude') on PATH. The "
+                    "local live path is unavailable; choose LIVE_STUB or DEMO_REPLAY."
+                ),
+            )
     controls = ScenarioControls(
         delay_hours=request.delay_hours,
         priority_emphasis=request.priority_emphasis,

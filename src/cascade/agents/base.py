@@ -7,6 +7,7 @@ the three fixed archetypes. ``ScriptedBrain`` keeps LIVE_STUB offline;
 the same seam.
 """
 
+import json
 import re
 from dataclasses import dataclass
 from enum import StrEnum
@@ -85,6 +86,40 @@ class AgentBrain(Protocol):
     def revise_plan(
         self, plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
     ) -> RecoveryPlan: ...
+
+
+def summary_message(step: WorkflowStep, facts: dict[str, Any]) -> str:
+    """The user message every live brain sends for a step narration."""
+    return (
+        f"Workflow step: {step.value}. Deterministic facts (the only figures you may "
+        f"quote): {json.dumps(facts, default=str)}. Produce the decision summary."
+    )
+
+
+def proposal_message(briefing: PlanBriefing) -> str:
+    """The user message every live brain sends to propose the three plans."""
+    return (
+        "Propose exactly three recovery plans (AGGRESSIVE_RUSH, STANDARD_REBOOK, "
+        "OPTIMIZED_HYBRID) for these deterministic facts.\n"
+        f"Connection groups: {briefing.analysis.model_dump_json(include={'groups'})}\n"
+        f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
+        f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}\n"
+        f"Priority emphasis: {briefing.priority_emphasis}"
+    )
+
+
+def revision_message(
+    plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
+) -> str:
+    """The user message every live brain sends to revise a rejected plan."""
+    return (
+        "Deterministic validation rejected this plan. Revise it so every rejection "
+        "reason is resolved while keeping the archetype and covering the same cargo.\n"
+        f"Plan: {plan.model_dump_json()}\n"
+        f"Rejection reasons: {json.dumps(rejection_reasons)}\n"
+        f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
+        f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}"
+    )
 
 
 def load_prompt(name: str) -> str:

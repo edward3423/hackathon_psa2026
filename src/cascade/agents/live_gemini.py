@@ -25,6 +25,9 @@ from cascade.agents.base import (
     PlanRevision,
     WorkflowStep,
     load_prompt,
+    proposal_message,
+    revision_message,
+    summary_message,
 )
 from cascade.agents.scripted import ScriptedBrain
 from cascade.contracts import AgentName, RecoveryPlan
@@ -50,7 +53,7 @@ LIVE_CAPTURE_STEPS: frozenset[WorkflowStep] = frozenset(
 HIGH_THINKING_BUDGET = 2048
 LOW_THINKING_BUDGET = 256
 
-_PROMPT_NAMES: dict[AgentName, str] = {
+PROMPT_NAMES: dict[AgentName, str] = {
     AgentName.COORDINATOR: "coordinator",
     AgentName.IMPACT: "impact",
     AgentName.YARD: "yard",
@@ -181,35 +184,16 @@ class GeminiBrain:
     # -- AgentBrain interface -------------------------------------------------
 
     def summarize(self, step: WorkflowStep, facts: dict[str, Any]) -> AgentSummary:
-        agent = STEP_AGENTS[step]
-        message = (
-            f"Workflow step: {step.value}. Deterministic facts (the only figures you may "
-            f"quote): {json.dumps(facts, default=str)}. Produce the decision summary."
-        )
-        return self._generate(agent, message, AgentSummary)
+        return self._generate(STEP_AGENTS[step], summary_message(step, facts), AgentSummary)
 
     def propose_plans(self, briefing: PlanBriefing) -> list[RecoveryPlan]:
-        message = (
-            "Propose exactly three recovery plans (AGGRESSIVE_RUSH, STANDARD_REBOOK, "
-            "OPTIMIZED_HYBRID) for these deterministic facts.\n"
-            f"Connection groups: {briefing.analysis.model_dump_json(include={'groups'})}\n"
-            f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
-            f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}\n"
-            f"Priority emphasis: {briefing.priority_emphasis}"
-        )
+        message = proposal_message(briefing)
         return self._generate(AgentName.RECOVERY, message, PlanProposalSet).plans
 
     def revise_plan(
         self, plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
     ) -> RecoveryPlan:
-        message = (
-            "Deterministic validation rejected this plan. Revise it so every rejection "
-            "reason is resolved while keeping the archetype and covering the same cargo.\n"
-            f"Plan: {plan.model_dump_json()}\n"
-            f"Rejection reasons: {json.dumps(rejection_reasons)}\n"
-            f"Alternative sailings: {briefing.sailings.model_dump_json()}\n"
-            f"Confirmed human constraint: {briefing.confirmed_constraint or 'none'}"
-        )
+        message = revision_message(plan, rejection_reasons, briefing)
         return self._generate(AgentName.RECOVERY, message, PlanRevision).plan
 
     # -- plumbing ---------------------------------------------------------------
@@ -228,7 +212,7 @@ class GeminiBrain:
         # feeds the validation error back to the agent.
         from google.genai import types
 
-        system_instruction = load_prompt(_PROMPT_NAMES[agent])
+        system_instruction = load_prompt(PROMPT_NAMES[agent])
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json",

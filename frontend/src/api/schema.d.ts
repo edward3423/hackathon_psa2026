@@ -528,7 +528,7 @@ export interface components {
          * RunMode
          * @enum {string}
          */
-        RunMode: "LIVE_STUB" | "LIVE_GEMINI" | "DEMO_REPLAY";
+        RunMode: "LIVE_STUB" | "LIVE_GEMINI" | "LIVE_CLAUDE" | "DEMO_REPLAY";
         /** RunResults */
         RunResults: {
             connection_analysis?: components["schemas"]["ConnectionAnalysis"] | null;
