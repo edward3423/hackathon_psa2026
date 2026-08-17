@@ -40,7 +40,7 @@ annotation cleanup and regenerated API types.
 | frontend/src/api/schema.d.ts | GENERATED from openapi.json. Never hand-edit | integration |
 | e2e/ | Self-contained Playwright project (own package.json, not in npm workspace) | verification (Agent 6) |
 | scripts/preflight.py | Demo preflight checks | verification |
-| fixtures/recorded_gemini/ | Recorded live-response format spec (recordings TBD) | verification |
+| fixtures/recorded_gemini/ | Recorded live-response format spec + capture-profile recording | verification |
 | scratch/ | Throwaway probes (gemini_test.py works and is the reference for live Gemini calls) | anyone |
 
 Branch layout: all five workstream branches (cascade/data-fixtures,
@@ -260,6 +260,23 @@ LIVE_GEMINI = real ADK agents; refused cleanly when GEMINI_API_KEY absent;
 higher thinking budget for Coordinator and Recovery. DEMO_REPLAY = replays
 fixtures/replay_events.json offline; approval interaction preserved; UI
 shows persistent exact-text "DEMO REPLAY".
+
+Live capture (quota-aware): free-tier gemini-3.5-flash allows 20 requests
+per day, and a fully live golden run needs 15-21 calls. Recording uses
+CaptureProfileBrain (live_gemini.py): live calls only for RECONCILE,
+HUMAN_CONSTRAINT, PLAN_COMPARISON, APPROVAL_REQUEST plus
+propose_plans/revise_plan (LIVE_CAPTURE_STEPS); all other narrations
+scripted. Hard cap CAPTURE_CALL_BUDGET = 18 API calls (GeminiCallBudgetError
+raised before exceeding). Activated by CASCADE_RECORD_GEMINI via
+build_live_brain(), which default_brain_factory uses for LIVE_GEMINI.
+Capture driver: uv run python scripts/capture_gemini.py (reads
+GEMINI_API_KEY from .env if unset; drives dispute + approval; finalizes the
+recording with scenario_controls). First recording committed:
+fixtures/recorded_gemini/golden__capture-profile__20260817.json (11
+exchanges, one visible schema retry on plan_comparison; the deterministic
+comparison of the live model's plans recommended STANDARD_REBOOK, not the
+scripted path's OPTIMIZED_HYBRID - live plan content legitimately differs,
+the engine still governs).
 
 Hard behavioral rules for agents (enforced by structure, restated in
 prompts): may not change calculated values, invent operational data,

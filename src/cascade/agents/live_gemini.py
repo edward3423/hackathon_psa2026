@@ -18,6 +18,7 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from cascade.agents.base import (
+    AgentBrain,
     AgentSummary,
     PlanBriefing,
     PlanProposalSet,
@@ -25,9 +26,27 @@ from cascade.agents.base import (
     WorkflowStep,
     load_prompt,
 )
+from cascade.agents.scripted import ScriptedBrain
 from cascade.contracts import AgentName, RecoveryPlan
 
 MODEL = "gemini-3.5-flash"
+
+# Free-tier gemini-3.5-flash allows only 20 requests per day, so a recording
+# run is hard-capped below that: better to abort loudly than to burn the whole
+# daily quota into 429s and leave a partial recording.
+CAPTURE_CALL_BUDGET = 18
+
+# Steps whose wording goes to the live model while recording. Everything else
+# is routine narration that the scripted brain words identically well; keeping
+# it local is what fits a full golden run inside the daily quota.
+LIVE_CAPTURE_STEPS: frozenset[WorkflowStep] = frozenset(
+    {
+        WorkflowStep.RECONCILE,
+        WorkflowStep.HUMAN_CONSTRAINT,
+        WorkflowStep.PLAN_COMPARISON,
+        WorkflowStep.APPROVAL_REQUEST,
+    }
+)
 HIGH_THINKING_BUDGET = 2048
 LOW_THINKING_BUDGET = 256
 
@@ -68,6 +87,10 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 class MissingGeminiKeyError(RuntimeError):
     """Raised when LIVE_GEMINI is requested without a GEMINI_API_KEY."""
+
+
+class GeminiCallBudgetError(RuntimeError):
+    """Raised before an API request would exceed the configured call budget."""
 
 
 class GeminiRecorder:
@@ -111,7 +134,10 @@ class GeminiRecorder:
             "recording_id": self.recording_id,
             "captured_at": datetime.now(UTC).isoformat(),
             "model": MODEL,
-            "notes": "Automated capture of a live golden run; review before committing.",
+            "notes": (
+                "Automated capture-profile recording: decision-critical calls are live, "
+                "routine narrations scripted (free-tier quota). Review before committing."
+            ),
             "exchanges": self.exchanges,
         }
         self._path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -120,13 +146,20 @@ class GeminiRecorder:
 class GeminiBrain:
     """Schema-validated live wording and plan allocations via gemini-3.5-flash."""
 
-    def __init__(self, api_key: str, recorder: GeminiRecorder | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        recorder: GeminiRecorder | None = None,
+        call_budget: int | None = None,
+    ) -> None:
         if not api_key:
             raise MissingGeminiKeyError(
                 "LIVE_GEMINI requires a GEMINI_API_KEY; refuse rather than impersonate."
             )
         self._api_key = api_key
         self._recorder = recorder
+        self._call_budget = call_budget
+        self.api_calls = 0
         self._client: Any = None
 
     @classmethod
@@ -138,10 +171,12 @@ class GeminiBrain:
                 "explicitly choose DEMO_REPLAY instead."
             )
         recorder = None
+        call_budget = None
         if os.environ.get("CASCADE_RECORD_GEMINI"):
             stamp = datetime.now(UTC).strftime("%Y%m%d")
-            recorder = GeminiRecorder(f"golden__full-workflow__{stamp}")
-        return cls(api_key=api_key, recorder=recorder)
+            recorder = GeminiRecorder(f"golden__capture-profile__{stamp}")
+            call_budget = CAPTURE_CALL_BUDGET
+        return cls(api_key=api_key, recorder=recorder, call_budget=call_budget)
 
     # -- AgentBrain interface -------------------------------------------------
 
@@ -203,6 +238,12 @@ class GeminiBrain:
         last_error: Exception | None = None
         contents = message
         for _ in range(2):
+            if self._call_budget is not None and self.api_calls >= self._call_budget:
+                raise GeminiCallBudgetError(
+                    f"Gemini call budget of {self._call_budget} reached; aborting "
+                    "before another API request is spent."
+                )
+            self.api_calls += 1
             response = client.models.generate_content(model=MODEL, contents=contents, config=config)
             text = response.text or ""
             if self._recorder is not None:
@@ -216,3 +257,38 @@ class GeminiBrain:
                     f"{error}\nRespond again with only the corrected JSON object."
                 )
         raise RuntimeError(f"Gemini output failed schema validation twice: {last_error}")
+
+
+class CaptureProfileBrain:
+    """Quota-saving hybrid brain used only while recording live exchanges.
+
+    Decision-critical calls (dispute reconciliation, human constraint, plan
+    proposal, revisions, comparison, approval request) go to the live model;
+    routine step narrations use the scripted wording. A golden run then costs
+    about 9 Gemini requests instead of 15-21, fitting the 20-per-day free tier
+    with retry headroom.
+    """
+
+    def __init__(self, live: GeminiBrain, scripted: AgentBrain | None = None) -> None:
+        self.live = live
+        self.scripted: AgentBrain = scripted if scripted is not None else ScriptedBrain()
+
+    def summarize(self, step: WorkflowStep, facts: dict[str, Any]) -> AgentSummary:
+        brain = self.live if step in LIVE_CAPTURE_STEPS else self.scripted
+        return brain.summarize(step, facts)
+
+    def propose_plans(self, briefing: PlanBriefing) -> list[RecoveryPlan]:
+        return self.live.propose_plans(briefing)
+
+    def revise_plan(
+        self, plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
+    ) -> RecoveryPlan:
+        return self.live.revise_plan(plan, rejection_reasons, briefing)
+
+
+def build_live_brain() -> AgentBrain:
+    """The LIVE_GEMINI brain: fully live, or the capture profile when recording."""
+    brain = GeminiBrain.create()
+    if os.environ.get("CASCADE_RECORD_GEMINI"):
+        return CaptureProfileBrain(brain)
+    return brain

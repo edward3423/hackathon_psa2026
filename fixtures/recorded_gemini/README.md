@@ -4,9 +4,23 @@ Owner: Agent 6 (Verification). This directory holds captured live Gemini
 responses so deterministic agent tests can replay them without network access
 (PRD section 16, "deterministic agent tests using recorded Gemini responses").
 
-Recordings are captured once the live Gemini path (Agent 4 workstream) lands,
-by running the golden scenario with recording enabled and committing the
+Capture with `uv run python scripts/capture_gemini.py` (requires
+GEMINI_API_KEY, read from the gitignored .env if not exported) and commit the
 reviewed output here.
+
+## Capture profile
+
+Free-tier gemini-3.5-flash allows 20 requests per day, while a fully live
+golden run needs 15-21 model calls. Recording therefore uses a capture
+profile (`CaptureProfileBrain` in src/cascade/agents/live_gemini.py): the
+decision-critical calls - dispute reconciliation, human constraint, plan
+proposal, plan revisions, plan comparison, approval request - go to the live
+model, and routine step narrations use the scripted brain. A golden run then
+costs about 9 requests, hard capped at 18 (`CAPTURE_CALL_BUDGET`).
+
+Consequence: recordings cover every LIVE model call of a capture-profile run,
+not of a fully live run. Replay harnesses must serve exchanges for exactly the
+steps in `LIVE_CAPTURE_STEPS` plus propose/revise calls.
 
 ## Expected format
 
@@ -14,7 +28,7 @@ One JSON file per recorded run, named:
 
     <scenario>__<agent-flow>__<yyyymmdd>.json
 
-Example: `golden__full-workflow__20260819.json`.
+Example: `golden__capture-profile__20260817.json`.
 
 Each file is a single JSON object:
 
