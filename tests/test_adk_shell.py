@@ -3,12 +3,17 @@ import pytest
 from cascade.agents import build_agent_shell
 from cascade.agents.base import PROMPTS_DIR, AgentSummary, load_prompt
 from cascade.agents.live_gemini import (
+    CAPTURE_CALL_BUDGET,
     HIGH_THINKING_BUDGET,
+    LIVE_CAPTURE_STEPS,
     LOW_THINKING_BUDGET,
     STEP_AGENTS,
     THINKING_BUDGETS,
+    CaptureProfileBrain,
     GeminiBrain,
+    GeminiCallBudgetError,
     MissingGeminiKeyError,
+    build_live_brain,
 )
 from cascade.agents.scripted import ScriptedBrain
 from cascade.contracts import AgentName
@@ -71,6 +76,53 @@ def test_thinking_budgets_follow_prd_reasoning_levels() -> None:
     # Every narration step maps to a named agent with a prompt file.
     for agent in STEP_AGENTS.values():
         assert agent in THINKING_BUDGETS
+
+
+def test_capture_profile_routes_only_decision_steps_to_the_live_brain() -> None:
+    from cascade.agents.base import WorkflowStep
+
+    class RecordingBrain:
+        def __init__(self, label: str) -> None:
+            self.label = label
+            self.summarized: list[WorkflowStep] = []
+
+        def summarize(self, step: WorkflowStep, facts: dict[str, object]) -> AgentSummary:
+            self.summarized.append(step)
+            return AgentSummary(decision_summary=self.label)
+
+    live = RecordingBrain("live")
+    scripted = RecordingBrain("scripted")
+    brain = CaptureProfileBrain(live, scripted=scripted)  # type: ignore[arg-type]
+
+    for step in WorkflowStep:
+        brain.summarize(step, {"delay_hours": 18, "vessel": "MV ATLAS STAR"})
+    assert set(scripted.summarized) == set(WorkflowStep) - set(LIVE_CAPTURE_STEPS)
+    assert set(live.summarized) == set(LIVE_CAPTURE_STEPS)
+    # Routine narration must not spend quota; decision steps must be live.
+    assert WorkflowStep.RUN_STARTED not in live.summarized
+    assert WorkflowStep.RECONCILE in live.summarized
+
+
+def test_gemini_call_budget_stops_before_spending_another_request() -> None:
+    brain = GeminiBrain(api_key="test-key-not-real", call_budget=0)
+    with pytest.raises(GeminiCallBudgetError):
+        brain._generate(AgentName.COORDINATOR, "message", AgentSummary)
+    assert brain.api_calls == 0
+
+
+def test_build_live_brain_uses_the_capture_profile_only_when_recording(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-not-real")
+    monkeypatch.delenv("CASCADE_RECORD_GEMINI", raising=False)
+    assert isinstance(build_live_brain(), GeminiBrain)
+
+    monkeypatch.setenv("CASCADE_RECORD_GEMINI", "1")
+    brain = build_live_brain()
+    assert isinstance(brain, CaptureProfileBrain)
+    assert brain.live._recorder is not None
+    assert brain.live._call_budget == CAPTURE_CALL_BUDGET
+    assert CAPTURE_CALL_BUDGET < 20  # the free-tier daily request limit
 
 
 def test_scripted_brain_summaries_are_schema_valid() -> None:

@@ -945,9 +945,9 @@ class WorkflowRun:
 
 def default_brain_factory(mode: RunMode) -> AgentBrain:
     if mode is RunMode.LIVE_GEMINI:
-        from cascade.agents.live_gemini import GeminiBrain
+        from cascade.agents.live_gemini import build_live_brain
 
-        return GeminiBrain.create()
+        return build_live_brain()
     return ScriptedBrain()
 
 

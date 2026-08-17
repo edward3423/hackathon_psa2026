@@ -1,0 +1,167 @@
+{
+  "recording_id": "golden__capture-profile__20260817",
+  "captured_at": "2026-08-17T03:41:22.832274+00:00",
+  "model": "gemini-3.5-flash",
+  "notes": "Automated capture-profile recording: decision-critical calls are live, routine narrations scripted (free-tier quota). Review before committing.",
+  "exchanges": [
+    {
+      "sequence": 1,
+      "agent": "Coordinator Agent",
+      "request": {
+        "system_instruction_sha256": "9a77fee2dc22510fa46871728c86cd5229f8899c9c1df80a031ffda692568f1c",
+        "contents_summary": "Workflow step: reconcile. Deterministic facts (the only figures you may quote): {}. Produce the decision summary.",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"decision_summary\": \"The reconciliation process is initiated, but no deterministic disruption or recovery figures have been provided in the current context.\",\n  \"assumptions\": [\n    \"Disruption details will be provided in subsequent workflow steps.\",\n    \"All operational recovery plans require human approval prior to dispatch.\"\n  ]\n}\n",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 2,
+      "agent": "Coordinator Agent",
+      "request": {
+        "system_instruction_sha256": "9a77fee2dc22510fa46871728c86cd5229f8899c9c1df80a031ffda692568f1c",
+        "contents_summary": "Workflow step: human_constraint. Deterministic facts (the only figures you may quote): {\"constraint\": \"Respect the physical reefer plug limit of 150; rush at most 34 pharmaceutical reefers and rebook ",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"decision_summary\": \"The operation must respect the physical reefer plug limit of 150, rushing at most 34 pharmaceutical reefers and rebooking the remaining units.\",\n  \"assumptions\": [\n    \"The physical reefer plug limit is strictly capped at 150.\",\n    \"A maximum of 34 pharmaceutical reefers can be rushed.\",\n    \"All pharmaceutical reefers exceeding the rush limit of 34 must be rebooked.\"\n  ]\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 3,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Propose exactly three recovery plans (AGGRESSIVE_RUSH, STANDARD_REBOOK, OPTIMIZED_HYBRID) for these deterministic facts.\nConnection groups: {\"groups\":[{\"onward_vessel\":\"MV AURORA BREEZE\",\"cargo_type\":",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\"plans\": [{\"archetype\": \"AGGRESSIVE_RUSH\", \"title\": \"Priority Rush & Capacity Allocation\", \"actions\": [{\"action\": \"RUSH\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 20, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Rush all missed and at-risk pharma reefers under constraint limits to Nova Crest.\"}, {\"action\": \"RUSH\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 40, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Rush time-critical manufacturing cargo to utilize remaining capacity on first alternative.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 40, \"target_sailing\": \"MV DELTA CROWN\", \"rationale\": \"Rebook dry cargo to Delta Crown.\"}, {\"action\": \"RUSH\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 3, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rush at-risk pharma to Baltic Spring.\"}, {\"action\": \"RUSH\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 19, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rush manufacturing cargo on Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 29, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook dry cargo using remaining capacity on Baltic Spring.\"}], \"assumptions\": [\"Pharma reefers are prioritized for earliest departures\", \"Vessel capacity constraints are strictly respected\"]}, {\"archetype\": \"STANDARD_REBOOK\", \"title\": \"Standard Alternative Rebooking\", \"actions\": [{\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 3, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook pharma to Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 19, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook manufacturing cargo to Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 29, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook dry cargo to Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 20, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Rebook pharma reefers to Nova Crest.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 40, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Rebook manufacturing cargo to Nova Crest.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 40, \"target_sailing\": \"MV DELTA CROWN\", \"rationale\": \"Rebook dry cargo to Delta Crown.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV PACIFIC HARRIER\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 9, \"target_sailing\": \"MV SUNDA STRAIT\", \"rationale\": \"Rebook at-risk manufacturing cargo to Sunda Strait.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV PACIFIC HARRIER\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 7, \"target_sailing\": \"MV SUNDA STRAIT\", \"rationale\": \"Rebook at-risk dry cargo to Sunda Strait.\"}], \"assumptions\": [\"All non-safe cargo is systematically rebooked based on priority\", \"Capacity on alternative vessels is sufficient to hold the rebooked cargo\"]}, {\"archetype\": \"OPTIMIZED_HYBRID\", \"title\": \"Optimized Priority Flow Plan\", \"actions\": [{\"action\": \"RUSH\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 20, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Prioritize and rush pharma reefers to the earliest available vessel.\"}, {\"action\": \"RUSH\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"PHARMA_REEFER\", \"container_count\": 3, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rush pharma reefers under physical plug constraint.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 40, \"target_sailing\": \"MV NOVA CREST\", \"rationale\": \"Rebook time-critical cargo to Nova Crest.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV MERIDIAN WAVE\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 40, \"target_sailing\": \"MV DELTA CROWN\", \"rationale\": \"Rebook general dry cargo to Delta Crown.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 19, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook manufacturing cargo to Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV CORAL EMPRESS\", \"cargo_type\": \"GENERAL_DRY\", \"container_count\": 29, \"target_sailing\": \"MV BALTIC SPRING\", \"rationale\": \"Rebook general dry cargo to Baltic Spring.\"}, {\"action\": \"REBOOK\", \"onward_vessel\": \"MV PACIFIC HARRIER\", \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\", \"container_count\": 9, \"target_sailing\": \"MV SUNDA STRAIT\", \"rationale\": \"Rebook at-risk manufacturing cargo to Sunda Strait.\"}], \"assumptions\": [\"Reefer limit of 150 is respected with at most 23 pharma reefers rushed\", \"Balanced approach splits priority between rushing reefers and rebooking manufacturing\"]}]}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 4,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Deterministic validation rejected this plan. Revise it so every rejection reason is resolved while keeping the archetype and covering the same cargo.\nPlan: {\"archetype\":\"AGGRESSIVE_RUSH\",\"title\":\"Prio",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"plan\": {\n    \"archetype\": \"AGGRESSIVE_RUSH\",\n    \"title\": \"Optimized Rush & Rebook Recovery Plan\",\n    \"actions\": [\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 20,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rebook pharma reefers to Nova Crest to stay within reefer plug limits and avoid crane surge.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rebook manufacturing cargo to Nova Crest to utilize remaining capacity.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV DELTA CROWN\",\n        \"rationale\": \"Rebook dry cargo to Delta Crown.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 3,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook pharma reefers to Baltic Spring to resolve YB3 plug constraint.\"\n      },\n      {\n        \"action\": \"RUSH\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 19,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rush manufacturing cargo under the crane surge allowance limit.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 29,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook dry cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 15,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook manufacturing cargo from Pacific Harrier to Sunda Strait.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 30,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook dry cargo from Pacific Harrier to Sunda Strait.\"\n      }\n    ],\n    \"assumptions\": [\n      \"Rebooking reefers instead of rushing resolves the YB3 block reefer plug bottleneck\",\n      \"Total rush volume is kept under 40 containers to respect the crane surge allowance\",\n      \"Sunda Strait provides sufficient capacity for Pacific Harrier cargo\"\n    ]\n  }\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 5,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Deterministic validation rejected this plan. Revise it so every rejection reason is resolved while keeping the archetype and covering the same cargo.\nPlan: {\"archetype\":\"OPTIMIZED_HYBRID\",\"title\":\"Opt",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"plan\": {\n    \"archetype\": \"OPTIMIZED_HYBRID\",\n    \"title\": \"Optimized Priority Flow Plan\",\n    \"actions\": [\n      {\n        \"action\": \"RUSH\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 20,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Prioritize and rush pharma reefers to the earliest available vessel.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 3,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook pharma reefers to mitigate physical yard plug limitations on YB3.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rebook time-critical cargo to Nova Crest.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV DELTA CROWN\",\n        \"rationale\": \"Rebook general dry cargo to Delta Crown.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 19,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook manufacturing cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 29,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook general dry cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 9,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook at-risk manufacturing cargo to Sunda Strait.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 15,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook general dry cargo on Pacific Harrier to ensure all affected groups receive an action.\"\n      }\n    ],\n    \"assumptions\": [\n      \"Reefer limit of 150 is respected by rebooking instead of rushing some reefers to resolve plug constraints on block YB3.\",\n      \"All affected cargo groups, including MV PACIFIC HARRIER general dry, are now actioned.\"\n    ]\n  }\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 6,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Deterministic validation rejected this plan. Revise it so every rejection reason is resolved while keeping the archetype and covering the same cargo.\nPlan: {\"archetype\":\"OPTIMIZED_HYBRID\",\"title\":\"Opt",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\"plan\": {\"archetype\":\"OPTIMIZED_HYBRID\",\"title\":\"Optimized Priority Flow Plan\",\"actions\":[{\"action\":\"RUSH\",\"onward_vessel\":\"MV MERIDIAN WAVE\",\"cargo_type\":\"PHARMA_REEFER\",\"container_count\":20,\"target_sailing\":\"MV NOVA CREST\",\"rationale\":\"Prioritize and rush pharma reefers to the earliest available vessel.\"},{\"action\":\"RUSH\",\"onward_vessel\":\"MV CORAL EMPRESS\",\"cargo_type\":\"PHARMA_REEFER\",\"container_count\":3,\"target_sailing\":\"MV BALTIC SPRING\",\"rationale\":\"Rush Coral Empress reefers to Baltic Spring to resolve the yard plug bottleneck on block YB3.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV MERIDIAN WAVE\",\"cargo_type\":\"TIME_CRITICAL_MANUFACTURING\",\"container_count\":40,\"target_sailing\":\"MV NOVA CREST\",\"rationale\":\"Rebook time-critical cargo to Nova Crest.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV MERIDIAN WAVE\",\"cargo_type\":\"GENERAL_DRY\",\"container_count\":40,\"target_sailing\":\"MV DELTA CROWN\",\"rationale\":\"Rebook general dry cargo to Delta Crown.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV CORAL EMPRESS\",\"cargo_type\":\"TIME_CRITICAL_MANUFACTURING\",\"container_count\":19,\"target_sailing\":\"MV BALTIC SPRING\",\"rationale\":\"Rebook manufacturing cargo to Baltic Spring.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV CORAL EMPRESS\",\"cargo_type\":\"GENERAL_DRY\",\"container_count\":29,\"target_sailing\":\"MV BALTIC SPRING\",\"rationale\":\"Rebook general dry cargo to Baltic Spring.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV PACIFIC HARRIER\",\"cargo_type\":\"TIME_CRITICAL_MANUFACTURING\",\"container_count\":9,\"target_sailing\":\"MV SUNDA STRAIT\",\"rationale\":\"Rebook at-risk manufacturing cargo to Sunda Strait.\"},{\"action\":\"REBOOK\",\"onward_vessel\":\"MV PACIFIC HARRIER\",\"cargo_type\":\"GENERAL_DRY\",\"container_count\":15,\"target_sailing\":\"MV SUNDA STRAIT\",\"rationale\":\"Rebook general dry cargo on Pacific Harrier to ensure all affected groups receive an action.\"}],\"assumptions\":[\"Reefer limit of 150 is respected by keeping rushed reefers under 34.\",\"Rushing the Coral Empress reefers clears them from the yard early, resolving the YB3 plug limit constraint of 6.\"]}/*  */]}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 7,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Deterministic validation rejected this plan. Revise it so every rejection reason is resolved while keeping the archetype and covering the same cargo.\nPlan: {\"archetype\":\"OPTIMIZED_HYBRID\",\"title\":\"Opt",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"plan\": {\n    \"archetype\": \"OPTIMIZED_HYBRID\",\n    \"title\": \"Optimized Priority Flow Plan\",\n    \"actions\": [\n      {\n        \"action\": \"RUSH\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 20,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Prioritize and rush pharma reefers to the earliest available vessel.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 9,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook all 9 pharma reefers to Baltic Spring to respect the physical yard plug limitation of 6 on YB3.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rebook time-critical cargo to Nova Crest.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV DELTA CROWN\",\n        \"rationale\": \"Rebook general dry cargo to Delta Crown.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 19,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook manufacturing cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 29,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook general dry cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 9,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook at-risk manufacturing cargo to Sunda Strait.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 15,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook general dry cargo on Pacific Harrier to ensure all affected groups receive an action.\"\n      }\n    ],\n    \"assumptions\": [\n      \"Reefer limit of 150 is respected by rushing 20 reefers and rebooking 9 reefers.\",\n      \"Yard plug constraint on block YB3 is resolved by rebooking all 9 reefers on CORAL EMPRESS to BALTIC SPRING, keeping the demand on YB3 within the limit of 6.\"\n    ]\n  }\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 8,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Deterministic validation rejected this plan. Revise it so every rejection reason is resolved while keeping the archetype and covering the same cargo.\nPlan: {\"archetype\":\"OPTIMIZED_HYBRID\",\"title\":\"Opt",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"plan\": {\n    \"archetype\": \"OPTIMIZED_HYBRID\",\n    \"title\": \"Optimized Priority Flow Plan\",\n    \"actions\": [\n      {\n        \"action\": \"RUSH\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 20,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Prioritize and rush pharma reefers to the earliest available vessel.\"\n      },\n      {\n        \"action\": \"RUSH\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 3,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rush 3 pharma reefers to MV Nova Crest to stay within the block YB3 physical capacity of 6 plugs.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"PHARMA_REEFER\",\n        \"container_count\": 6,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook exactly 6 pharma reefers to Baltic Spring to respect the physical yard plug limitation on YB3.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV NOVA CREST\",\n        \"rationale\": \"Rebook time-critical cargo to Nova Crest.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV MERIDIAN WAVE\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 40,\n        \"target_sailing\": \"MV DELTA CROWN\",\n        \"rationale\": \"Rebook general dry cargo to Delta Crown.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 19,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook manufacturing cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV CORAL EMPRESS\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 29,\n        \"target_sailing\": \"MV BALTIC SPRING\",\n        \"rationale\": \"Rebook general dry cargo to Baltic Spring.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"TIME_CRITICAL_MANUFACTURING\",\n        \"container_count\": 9,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook at-risk manufacturing cargo to Sunda Strait.\"\n      },\n      {\n        \"action\": \"REBOOK\",\n        \"onward_vessel\": \"MV PACIFIC HARRIER\",\n        \"cargo_type\": \"GENERAL_DRY\",\n        \"container_count\": 15,\n        \"target_sailing\": \"MV SUNDA STRAIT\",\n        \"rationale\": \"Rebook general dry cargo on Pacific Harrier to ensure all affected groups receive an action.\"\n      }\n    ],\n    \"assumptions\": [\n      \"Reefer limit of 150 is respected by rushing 23 reefers and rebooking 6 reefers.\",\n      \"Yard plug constraint on block YB3 is resolved by limiting rebooked reefers to Baltic Spring to 6, with the excess 3 reefers rushed to Nova Crest.\",\n      \"Human constraint of rushing at most 34 pharmaceutical reefers is respected (23 rushed in total).\"\n    ]\n  }\n}\n",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 9,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Workflow step: plan_comparison. Deterministic facts (the only figures you may quote): {\"recommended\": \"STANDARD_REBOOK\", \"rationale\": \"STANDARD_REBOOK is recommended: it protects 100 percent of critic",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"recommended_plan\": \"STANDARD_REBOOK\",\n  \"rationale\": \"STANDARD_REBOOK is recommended: it protects 100 percent of critical cargo, leaves 0 missed connections, peaks the yard at 85 percent, and costs 134293 (illustrative). 1 plan(s) were rejected as infeasible.\",\n  \"status\": \"completed\",\n  \"metrics\": {\n    \"critical_cargo_protection\": \"100%\",\n    \"missed_connections\": 0,\n    \"yard_peak_percent\": 85,\n    \"cost\": 134293\n  }\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 10,
+      "agent": "Recovery Agent",
+      "request": {
+        "system_instruction_sha256": "4da325d9c0c3528008bec5ac5e335ce04a73e06d25801f0d6d31ab41463d1b0e",
+        "contents_summary": "Workflow step: plan_comparison. Deterministic facts (the only figures you may quote): {\"recommended\": \"STANDARD_REBOOK\", \"rationale\": \"STANDARD_REBOOK is recommended: it protects 100 percent of critic",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"decision_summary\": \"STANDARD_REBOOK is recommended: it protects 100 percent of critical cargo, leaves 0 missed connections, peaks the yard at 85 percent, and costs 134293 (illustrative). 1 plan(s) were rejected as infeasible.\"\n}",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    },
+    {
+      "sequence": 11,
+      "agent": "Coordinator Agent",
+      "request": {
+        "system_instruction_sha256": "9a77fee2dc22510fa46871728c86cd5229f8899c9c1df80a031ffda692568f1c",
+        "contents_summary": "Workflow step: approval_request. Deterministic facts (the only figures you may quote): {\"recommended\": \"STANDARD_REBOOK\"}. Produce the decision summary.",
+        "tools_offered": []
+      },
+      "response": {
+        "text": "{\n  \"decision_summary\": \"Based on the evaluation of the system constraints, the recommended recovery strategy is STANDARD_REBOOK.\",\n  \"assumptions\": [\n    \"The recommended recovery strategy of STANDARD_REBOOK is feasible under current port operating constraints.\",\n    \"The deterministic simulation accurately represents the recovery outcome.\"\n  ]\n}\n",
+        "function_calls": [],
+        "finish_reason": "STOP"
+      }
+    }
+  ],
+  "scenario_controls": {
+    "delay_hours": 18,
+    "priority_emphasis": "BALANCED",
+    "alternative_sailing_failure": true
+  }
+}
