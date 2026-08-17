@@ -257,9 +257,18 @@ receipts -> RUN_COMPLETED; REJECTED: complete with zero actions.
 
 Run modes: LIVE_STUB = offline deterministic scripted run (default, CI).
 LIVE_GEMINI = real ADK agents; refused cleanly when GEMINI_API_KEY absent;
-higher thinking budget for Coordinator and Recovery. DEMO_REPLAY = replays
+higher thinking budget for Coordinator and Recovery. LIVE_CLAUDE = same
+brain seam through the local Claude Code CLI (claude -p headless,
+ClaudeBrain in agents/local_claude.py; 409 when the CLI is not on PATH;
+CASCADE_CLAUDE_MODEL overrides the CLI model; decision record in
+docs/notes.md) - the day-to-day live driver while the Gemini free tier
+stays at 20 requests/day. DEMO_REPLAY = replays
 fixtures/replay_events.json offline; approval interaction preserved; UI
-shows persistent exact-text "DEMO REPLAY".
+shows persistent exact-text "DEMO REPLAY". The UI "Agent brain" dropdown
+selects LIVE_STUB / LIVE_CLAUDE / LIVE_GEMINI for the Start run button.
+Shared live-brain user messages live in agents/base.py
+(summary_message/proposal_message/revision_message) so Gemini and Claude
+send byte-identical requests.
 
 Live capture (quota-aware): free-tier gemini-3.5-flash allows 20 requests
 per day, and a fully live golden run needs 15-21 calls. Recording uses

@@ -948,6 +948,10 @@ def default_brain_factory(mode: RunMode) -> AgentBrain:
         from cascade.agents.live_gemini import build_live_brain
 
         return build_live_brain()
+    if mode is RunMode.LIVE_CLAUDE:
+        from cascade.agents.local_claude import ClaudeBrain
+
+        return ClaudeBrain.create()
     return ScriptedBrain()
 
 

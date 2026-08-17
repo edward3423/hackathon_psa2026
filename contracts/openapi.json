@@ -1308,6 +1308,7 @@
         "enum": [
           "LIVE_STUB",
           "LIVE_GEMINI",
+          "LIVE_CLAUDE",
           "DEMO_REPLAY"
         ],
         "title": "RunMode"

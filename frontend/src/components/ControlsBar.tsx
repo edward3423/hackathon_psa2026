@@ -1,9 +1,13 @@
-import type { ScenarioControls } from '../api/types'
+import type { RunMode, ScenarioControls } from '../api/types'
+
+export type BrainMode = Extract<RunMode, 'LIVE_STUB' | 'LIVE_CLAUDE' | 'LIVE_GEMINI'>
 
 interface ControlsBarProps {
   controls: ScenarioControls
+  brainMode: BrainMode
   disabled: boolean
   onChange: (controls: ScenarioControls) => void
+  onBrainModeChange: (mode: BrainMode) => void
   onStart: () => void
   onStartReplay: () => void
   onReset: () => void
@@ -11,8 +15,10 @@ interface ControlsBarProps {
 
 export function ControlsBar({
   controls,
+  brainMode,
   disabled,
   onChange,
+  onBrainModeChange,
   onStart,
   onStartReplay,
   onReset,
@@ -49,6 +55,20 @@ export function ControlsBar({
           <option value="BALANCED">Balanced</option>
           <option value="CARGO_PROTECTION">Cargo protection</option>
           <option value="CONGESTION_REDUCTION">Congestion reduction</option>
+        </select>
+      </label>
+
+      <label>
+        Agent brain
+        <select
+          aria-label="Agent brain"
+          value={brainMode}
+          disabled={disabled}
+          onChange={(event) => onBrainModeChange(event.target.value as BrainMode)}
+        >
+          <option value="LIVE_STUB">Scripted (offline)</option>
+          <option value="LIVE_CLAUDE">Live Claude (local CLI)</option>
+          <option value="LIVE_GEMINI">Live Gemini (API key)</option>
         </select>
       </label>
 

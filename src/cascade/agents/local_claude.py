@@ -1,0 +1,144 @@
+"""Local Claude headless brain for LIVE_CLAUDE mode.
+
+Runs the same brain seam as GeminiBrain through the locally installed Claude
+Code CLI in headless mode (``claude -p``), so live agent wording and plan
+allocations work without spending the 20-per-day Gemini free-tier quota. The
+stage machine stays deterministic; this brain only produces schema-validated
+wording and plan allocations, with the same one-retry policy as the Gemini
+path. Creation refuses cleanly when the ``claude`` CLI is not on PATH so the
+API never silently impersonates a live run. Only synthetic scenario data is
+ever sent (same rule as the Gemini path).
+
+Decision record: docs/notes.md ("Local Claude fallback for live agent calls").
+"""
+
+import json
+import os
+import shutil
+import subprocess
+from collections.abc import Callable
+from typing import TypeVar
+
+from pydantic import BaseModel
+
+from cascade.agents.base import (
+    AgentSummary,
+    PlanBriefing,
+    PlanProposalSet,
+    PlanRevision,
+    WorkflowStep,
+    load_prompt,
+    proposal_message,
+    revision_message,
+    summary_message,
+)
+from cascade.agents.live_gemini import PROMPT_NAMES, STEP_AGENTS
+from cascade.contracts import AgentName, RecoveryPlan
+
+MODEL_ENV = "CASCADE_CLAUDE_MODEL"
+TIMEOUT_SECONDS = 300.0
+
+ModelT = TypeVar("ModelT", bound=BaseModel)
+
+
+class MissingClaudeCliError(RuntimeError):
+    """Raised when LIVE_CLAUDE is requested without the claude CLI on PATH."""
+
+
+def claude_cli_path() -> str | None:
+    """Absolute path of the Claude Code CLI, or None when not installed."""
+    return shutil.which("claude")
+
+
+def _run_cli(prompt: str) -> str:
+    path = claude_cli_path()
+    if path is None:
+        raise MissingClaudeCliError(
+            "The 'claude' CLI is not on PATH. The LIVE_CLAUDE path is unavailable; "
+            "explicitly choose LIVE_STUB or DEMO_REPLAY instead."
+        )
+    command = [path, "-p", "--output-format", "text"]
+    model = os.environ.get(MODEL_ENV)
+    if model:
+        command += ["--model", model]
+    completed = subprocess.run(
+        command,
+        input=prompt,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=TIMEOUT_SECONDS,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"claude -p exited with {completed.returncode}: {completed.stderr.strip()[:500]}"
+        )
+    return completed.stdout
+
+
+def _extract_json(text: str) -> str:
+    """Slice the first top-level JSON object out of possibly chatty output."""
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end <= start:
+        raise ValueError(f"No JSON object found in CLI output: {text.strip()[:200]!r}")
+    return text[start : end + 1]
+
+
+class ClaudeBrain:
+    """Schema-validated live wording and plan allocations via ``claude -p``."""
+
+    def __init__(self, runner: Callable[[str], str] | None = None) -> None:
+        self._runner = runner if runner is not None else _run_cli
+
+    @classmethod
+    def create(cls) -> "ClaudeBrain":
+        if claude_cli_path() is None:
+            raise MissingClaudeCliError(
+                "The 'claude' CLI is not on PATH. The LIVE_CLAUDE path is unavailable; "
+                "explicitly choose LIVE_STUB or DEMO_REPLAY instead."
+            )
+        return cls()
+
+    # -- AgentBrain interface -------------------------------------------------
+
+    def summarize(self, step: WorkflowStep, facts: dict[str, object]) -> AgentSummary:
+        return self._generate(STEP_AGENTS[step], summary_message(step, facts), AgentSummary)
+
+    def propose_plans(self, briefing: PlanBriefing) -> list[RecoveryPlan]:
+        message = proposal_message(briefing)
+        return self._generate(AgentName.RECOVERY, message, PlanProposalSet).plans
+
+    def revise_plan(
+        self, plan: RecoveryPlan, rejection_reasons: list[str], briefing: PlanBriefing
+    ) -> RecoveryPlan:
+        message = revision_message(plan, rejection_reasons, briefing)
+        return self._generate(AgentName.RECOVERY, message, PlanRevision).plan
+
+    # -- plumbing ---------------------------------------------------------------
+
+    def _generate(self, agent: AgentName, message: str, schema: type[ModelT]) -> ModelT:
+        # The CLI has no JSON response mode, so the target schema is stated
+        # explicitly and the reply is sliced to its JSON object before the
+        # same local pydantic validation the Gemini path uses, with one retry
+        # that feeds the validation error back.
+        system_instruction = load_prompt(PROMPT_NAMES[agent])
+        schema_json = json.dumps(schema.model_json_schema(), default=str)
+        prompt = (
+            f"{system_instruction}\n\n{message}\n\n"
+            "Respond with exactly one JSON object matching this JSON Schema. "
+            f"No markdown fences, no commentary:\n{schema_json}"
+        )
+        last_error: Exception | None = None
+        contents = prompt
+        for _ in range(2):
+            text = self._runner(contents)
+            try:
+                return schema.model_validate_json(_extract_json(text))
+            except ValueError as error:
+                last_error = error
+                contents = (
+                    f"{prompt}\n\nYour previous response failed schema validation with: "
+                    f"{error}\nRespond again with only the corrected JSON object."
+                )
+        raise RuntimeError(f"Claude CLI output failed schema validation twice: {last_error}")

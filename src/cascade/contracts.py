@@ -12,6 +12,7 @@ class ContractModel(BaseModel):
 class RunMode(StrEnum):
     LIVE_STUB = "LIVE_STUB"
     LIVE_GEMINI = "LIVE_GEMINI"
+    LIVE_CLAUDE = "LIVE_CLAUDE"
     DEMO_REPLAY = "DEMO_REPLAY"
 
 

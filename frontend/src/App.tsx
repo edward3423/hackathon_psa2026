@@ -4,9 +4,11 @@ import { getScenario } from './api/client'
 import type {
   ApprovalDecision,
   PlanArchetype,
+  RunMode,
   ScenarioControls,
   ScenarioState,
 } from './api/types'
+import type { BrainMode } from './components/ControlsBar'
 import { AgentActivityPanel } from './components/AgentActivityPanel'
 import { ApprovalBar } from './components/ApprovalBar'
 import { CascadeGraph } from './components/CascadeGraph'
@@ -32,6 +34,7 @@ function App() {
     new Set(),
   )
   const [approvalSubmitted, setApprovalSubmitted] = useState(false)
+  const [brainMode, setBrainMode] = useState<BrainMode>('LIVE_STUB')
 
   const stream = useRunStream()
   const { events, workflow, run, stage, streaming, error } = stream
@@ -100,7 +103,7 @@ function App() {
     setApprovalSubmitted(true)
   }
 
-  const startRun = (mode?: 'DEMO_REPLAY') => {
+  const startRun = (mode?: RunMode) => {
     setSelectedPlan(null)
     setResolvedDisputeIds(new Set())
     setDismissedDisputeEventIds(new Set())
@@ -136,9 +139,11 @@ function App() {
 
       <ControlsBar
         controls={controls}
+        brainMode={brainMode}
         disabled={streaming}
         onChange={setControls}
-        onStart={() => startRun()}
+        onBrainModeChange={setBrainMode}
+        onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
         onStartReplay={() => startRun('DEMO_REPLAY')}
         onReset={() => void resetRun()}
       />
