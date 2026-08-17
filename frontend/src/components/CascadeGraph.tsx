@@ -6,10 +6,10 @@ import type { ConnectionAnalysis, ConnectionStatus } from '../api/types'
 import { CARGO_LABEL, groupTotals, STATUS_LABEL } from '../lib/derive'
 
 const STATUS_COLOR: Record<ConnectionStatus, string> = {
-  SAFE: '#68b586',
-  AT_RISK: '#f1a33c',
-  MISSED: '#e35d5d',
-  RESOLVED: '#4fc3d7',
+  SAFE: '#15803d',
+  AT_RISK: '#92600a',
+  MISSED: '#b42318',
+  RESOLVED: '#0e7490',
 }
 
 interface CascadeGraphProps {
@@ -20,8 +20,8 @@ interface CascadeGraphProps {
 
 function vesselNodeStyle(accent: string): CSSProperties {
   return {
-    background: '#0e1b24',
-    color: '#d9e5eb',
+    background: '#ffffff',
+    color: '#1a2530',
     border: `1px solid ${accent}`,
     borderRadius: 2,
     fontSize: 12,
@@ -47,7 +47,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         },
         sourcePosition: 'right',
         targetPosition: 'left',
-        style: vesselNodeStyle('#f1a33c'),
+        style: vesselNodeStyle('#92600a'),
         draggable: false,
       } as Node,
     ]
@@ -77,7 +77,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         },
         sourcePosition: 'right',
         targetPosition: 'left',
-        style: vesselNodeStyle('#20313b'),
+        style: vesselNodeStyle('#d8dee4'),
         draggable: false,
       } as Node)
     })
@@ -103,7 +103,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         sourcePosition: 'right',
         targetPosition: 'left',
         style: {
-          background: '#081118',
+          background: '#f7f9fa',
           border: `1px solid ${color}`,
           borderRadius: 2,
           fontSize: 11,
@@ -176,7 +176,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
           minZoom={0.4}
           maxZoom={1.4}
         >
-          <Background color="#13222c" gap={22} />
+          <Background color="#e3e9ee" gap={22} />
         </ReactFlow>
       </div>
 

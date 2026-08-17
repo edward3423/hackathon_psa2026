@@ -17,6 +17,7 @@ from cascade.contracts import (
     MockedAction,
     PlanComparison,
     PlanEvaluation,
+    PlanningFacts,
     PriorityEmphasis,
     RecoveryPlan,
     SailingLookupStatus,
@@ -84,6 +85,9 @@ class EngineToolBox:
         return AlternativeSailingResult(
             status=SailingLookupStatus.MOCK_SUCCESS, sailings=sailings, stale_notice=None
         )
+
+    def planning_facts(self, connections: ConnectionAnalysis) -> PlanningFacts:
+        return cast(PlanningFacts, self._engine.plans.planning_facts(self._world, connections))
 
     def evaluate_plan(
         self,

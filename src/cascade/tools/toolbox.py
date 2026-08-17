@@ -17,6 +17,7 @@ from cascade.contracts import (
     MockedAction,
     PlanComparison,
     PlanEvaluation,
+    PlanningFacts,
     PriorityEmphasis,
     RecoveryPlan,
     YardForecast,
@@ -39,6 +40,8 @@ class ToolBox(Protocol):
     ) -> YardForecast: ...
 
     def find_alternative_sailings(self, force_timeout: bool) -> AlternativeSailingResult: ...
+
+    def planning_facts(self, connections: ConnectionAnalysis) -> PlanningFacts: ...
 
     def evaluate_plan(
         self,

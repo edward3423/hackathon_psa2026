@@ -84,48 +84,48 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
               </figcaption>
               <ResponsiveContainer width="100%" height={190}>
                 <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-                  <CartesianGrid stroke="#16242e" strokeDasharray="2 4" />
+                  <CartesianGrid stroke="#e2e8ee" strokeDasharray="2 4" />
                   <XAxis
                     dataKey="hour"
-                    stroke="#82939d"
+                    stroke="#66727c"
                     fontSize={11}
                     tickFormatter={(value: number) => `${value}h`}
                     interval="preserveStartEnd"
                   />
                   <YAxis
-                    stroke="#82939d"
+                    stroke="#66727c"
                     fontSize={11}
                     width={44}
                     domain={[0, Math.ceil(block.container_capacity * 1.1)]}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: '#0e1b24',
-                      border: '1px solid #20313b',
-                      color: '#d9e5eb',
+                      background: '#ffffff',
+                      border: '1px solid #d8dee4',
+                      color: '#1a2530',
                       fontSize: 12,
                     }}
                     labelFormatter={(value) => `Hour ${value}`}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11, color: '#82939d' }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: '#66727c' }} />
                   <ReferenceLine
                     y={congestion}
-                    stroke="#f1a33c"
+                    stroke="#92600a"
                     strokeDasharray="5 3"
                     label={{
                       value: '85% congested',
-                      fill: '#f1a33c',
+                      fill: '#92600a',
                       fontSize: 10,
                       position: 'insideBottomRight',
                     }}
                   />
                   <ReferenceLine
                     y={block.container_capacity}
-                    stroke="#e35d5d"
+                    stroke="#b42318"
                     strokeDasharray="5 3"
                     label={{
                       value: '100% capacity',
-                      fill: '#e35d5d',
+                      fill: '#b42318',
                       fontSize: 10,
                       position: 'insideTopLeft',
                       dy: -2,
@@ -135,7 +135,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     type="monotone"
                     dataKey="baseline"
                     name="Baseline"
-                    stroke="#82939d"
+                    stroke="#66727c"
                     strokeWidth={1.6}
                     dot={false}
                     isAnimationActive={false}
@@ -145,7 +145,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                       type="monotone"
                       dataKey="planned"
                       name={selectedPlan ? titleCase(selectedPlan) : 'Planned'}
-                      stroke="#4fc3d7"
+                      stroke="#0e7490"
                       strokeWidth={1.8}
                       dot={false}
                       isAnimationActive={false}

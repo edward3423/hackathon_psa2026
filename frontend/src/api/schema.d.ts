@@ -433,6 +433,25 @@ export interface components {
          * @enum {string}
          */
         MockedActionType: "TERMINAL_WORK_ORDER" | "REEFER_CHECK" | "CARRIER_NOTICE";
+        /**
+         * ModelExchange
+         * @description One live model call (prompt in, raw response out) behind a trace event.
+         */
+        ModelExchange: {
+            /** Provider */
+            provider: string;
+            /** Model */
+            model: string;
+            /** Effort */
+            effort?: string | null;
+            agent: components["schemas"]["AgentName"];
+            /** Prompt */
+            prompt: string;
+            /** Response */
+            response: string;
+            /** Duration Ms */
+            duration_ms?: number | null;
+        };
         /** PlanAction */
         PlanAction: {
             action: components["schemas"]["RecoveryActionType"];
@@ -610,6 +629,8 @@ export interface components {
             next_handoff?: components["schemas"]["AgentName"] | null;
             /** Parallel Group */
             parallel_group?: string | null;
+            /** Model Exchanges */
+            model_exchanges?: components["schemas"]["ModelExchange"][];
         };
         /** ValidationError */
         ValidationError: {

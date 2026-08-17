@@ -12,13 +12,16 @@ from cascade.contracts import (
     Confidence,
     ConnectionAnalysis,
     ConnectionStatus,
+    ContainerConnection,
     PlanArchetype,
     PlanComparison,
     PlanEvaluation,
     PlanMetrics,
+    PlanningFacts,
     PriorityEmphasis,
     RecoveryActionType,
     RecoveryPlan,
+    RushSlot,
     WorldFixture,
 )
 from cascade.engine._dispositions import Outcome, compute_dispositions
@@ -38,6 +41,46 @@ ARCHETYPE_ORDER: tuple[PlanArchetype, ...] = (
 
 _CRITICAL_CARGO = (CargoType.PHARMA_REEFER, CargoType.TIME_CRITICAL_MANUFACTURING)
 _AFFECTED = (ConnectionStatus.AT_RISK, ConnectionStatus.MISSED)
+
+
+def planning_facts(world: WorldFixture, connections: ConnectionAnalysis) -> PlanningFacts:
+    """Deterministic feasibility facts for plan proposal and revision.
+
+    Mirrors the exact semantics ``evaluate_plan`` enforces: rush actions
+    consume a group's containers in priority order (assign_plan_actions), and
+    each rushed powered container occupies one free plug in its own block.
+    Covers every group with at least one affected connection - the groups a
+    plan must act on.
+    """
+    containers = {container.container_id: container for container in world.containers}
+    groups: dict[tuple[str, CargoType], list[ContainerConnection]] = {}
+    affected_keys: set[tuple[str, CargoType]] = set()
+    for connection in connections.connections:
+        key = (connection.onward_vessel, connection.cargo_type)
+        groups.setdefault(key, []).append(connection)
+        if connection.status in _AFFECTED:
+            affected_keys.add(key)
+
+    rush_order: dict[str, list[RushSlot]] = {}
+    for key in sorted(affected_keys):
+        members = sorted(groups[key], key=lambda connection: connection.priority_rank)
+        rush_order[f"{key[0]}/{key[1].value}"] = [
+            RushSlot(
+                yard_block=containers[connection.container_id].yard_block,
+                requires_power=containers[connection.container_id].requires_power,
+            )
+            for connection in members
+        ]
+
+    free_plugs = {
+        block.block_id: max(0, block.reefer_plugs - block.initial_reefers_on_power)
+        for block in world.yard_blocks
+    }
+    return PlanningFacts(
+        crane_surge_allowance=CRANE_SURGE_ALLOWANCE_CONTAINERS,
+        free_plugs_by_block=free_plugs,
+        rush_order_by_group=rush_order,
+    )
 
 
 def evaluate_plan(

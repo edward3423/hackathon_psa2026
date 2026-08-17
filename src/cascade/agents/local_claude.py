@@ -9,6 +9,11 @@ path. Creation refuses cleanly when the ``claude`` CLI is not on PATH so the
 API never silently impersonates a live run. Only synthetic scenario data is
 ever sent (same rule as the Gemini path).
 
+Calls are pinned to Sonnet 5 at low effort (user decision, docs/notes.md);
+CASCADE_CLAUDE_MODEL / CASCADE_CLAUDE_EFFORT override. Every call is captured
+as a ModelExchange (prompt, raw response, model, effort, duration) which the
+stage machine drains into the next trace event and the per-run log file.
+
 Decision record: docs/notes.md ("Local Claude fallback for live agent calls").
 """
 
@@ -16,6 +21,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 from collections.abc import Callable
 from typing import TypeVar
 
@@ -33,9 +39,12 @@ from cascade.agents.base import (
     summary_message,
 )
 from cascade.agents.live_gemini import PROMPT_NAMES, STEP_AGENTS
-from cascade.contracts import AgentName, RecoveryPlan
+from cascade.contracts import AgentName, ModelExchange, RecoveryPlan
 
+DEFAULT_MODEL = "claude-sonnet-5"
+DEFAULT_EFFORT = "low"
 MODEL_ENV = "CASCADE_CLAUDE_MODEL"
+EFFORT_ENV = "CASCADE_CLAUDE_EFFORT"
 TIMEOUT_SECONDS = 300.0
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -50,6 +59,14 @@ def claude_cli_path() -> str | None:
     return shutil.which("claude")
 
 
+def cli_model() -> str:
+    return os.environ.get(MODEL_ENV) or DEFAULT_MODEL
+
+
+def cli_effort() -> str:
+    return os.environ.get(EFFORT_ENV) or DEFAULT_EFFORT
+
+
 def _run_cli(prompt: str) -> str:
     path = claude_cli_path()
     if path is None:
@@ -57,10 +74,16 @@ def _run_cli(prompt: str) -> str:
             "The 'claude' CLI is not on PATH. The LIVE_CLAUDE path is unavailable; "
             "explicitly choose LIVE_STUB or DEMO_REPLAY instead."
         )
-    command = [path, "-p", "--output-format", "text"]
-    model = os.environ.get(MODEL_ENV)
-    if model:
-        command += ["--model", model]
+    command = [
+        path,
+        "-p",
+        "--output-format",
+        "json",
+        "--model",
+        cli_model(),
+        "--effort",
+        cli_effort(),
+    ]
     completed = subprocess.run(
         command,
         input=prompt,
@@ -73,6 +96,15 @@ def _run_cli(prompt: str) -> str:
         raise RuntimeError(
             f"claude -p exited with {completed.returncode}: {completed.stderr.strip()[:500]}"
         )
+    # --output-format json wraps the reply: {"result": "...", ...}. Fall back
+    # to raw stdout if the wrapper shape ever changes.
+    try:
+        payload = json.loads(completed.stdout)
+        result = payload.get("result")
+        if isinstance(result, str):
+            return result
+    except ValueError:
+        pass
     return completed.stdout
 
 
@@ -90,6 +122,7 @@ class ClaudeBrain:
 
     def __init__(self, runner: Callable[[str], str] | None = None) -> None:
         self._runner = runner if runner is not None else _run_cli
+        self.exchanges: list[ModelExchange] = []
 
     @classmethod
     def create(cls) -> "ClaudeBrain":
@@ -117,6 +150,22 @@ class ClaudeBrain:
 
     # -- plumbing ---------------------------------------------------------------
 
+    def _call(self, agent: AgentName, prompt: str) -> str:
+        started = time.monotonic()
+        response = self._runner(prompt)
+        self.exchanges.append(
+            ModelExchange(
+                provider="claude-cli",
+                model=cli_model(),
+                effort=cli_effort(),
+                agent=agent,
+                prompt=prompt,
+                response=response,
+                duration_ms=int((time.monotonic() - started) * 1000),
+            )
+        )
+        return response
+
     def _generate(self, agent: AgentName, message: str, schema: type[ModelT]) -> ModelT:
         # The CLI has no JSON response mode, so the target schema is stated
         # explicitly and the reply is sliced to its JSON object before the
@@ -132,7 +181,7 @@ class ClaudeBrain:
         last_error: Exception | None = None
         contents = prompt
         for _ in range(2):
-            text = self._runner(contents)
+            text = self._call(agent, contents)
             try:
                 return schema.model_validate_json(_extract_json(text))
             except ValueError as error:

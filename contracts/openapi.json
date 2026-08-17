@@ -1037,6 +1037,63 @@
         ],
         "title": "MockedActionType"
       },
+      "ModelExchange": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effort"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentName"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "response": {
+            "type": "string",
+            "title": "Response"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "agent",
+          "prompt",
+          "response"
+        ],
+        "title": "ModelExchange",
+        "description": "One live model call (prompt in, raw response out) behind a trace event."
+      },
       "PlanAction": {
         "properties": {
           "action": {
@@ -1604,6 +1661,13 @@
               }
             ],
             "title": "Parallel Group"
+          },
+          "model_exchanges": {
+            "items": {
+              "$ref": "#/components/schemas/ModelExchange"
+            },
+            "type": "array",
+            "title": "Model Exchanges"
           }
         },
         "additionalProperties": false,
