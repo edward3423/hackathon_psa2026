@@ -5,7 +5,7 @@ must run before, and without, the data pipeline. Everything is seeded, so two
 calls with the same arguments produce equal objects.
 """
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 from random import Random
 
 from cascade.contracts import (
@@ -19,6 +19,7 @@ from cascade.contracts import (
     ServiceModelConfig,
     VesselArrival,
 )
+from cascade.engine.fleet.feed import day_start
 
 START = date(2024, 4, 1)
 
@@ -87,7 +88,7 @@ def make_arrival_day(
 ) -> ArrivalDay:
     """One day of calls spread uniformly over 24 hours, seeded sizes."""
     arrivals: list[VesselArrival] = []
-    midnight = datetime.combine(day, time.min)
+    midnight = day_start(day)
     for index in range(count):
         teu = max(150.0, rng.lognormvariate(0.0, 0.45) * teu_mean)
         arrivals.append(
@@ -169,7 +170,7 @@ def poisson_arrival_slice(
     exponential too and the queue is a textbook M/M/c.
     """
     rng = Random(seed)
-    midnight = datetime.combine(start, time.min)
+    midnight = day_start(start)
     by_date: dict[date, list[VesselArrival]] = {}
     offset_days = 0.0
     for index in range(vessels):

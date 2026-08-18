@@ -1,7 +1,7 @@
 {
   "hashes": {
     "data/raw/portwatch_singapore.csv": "3c98059ec448461f7d288dc8e73bb8e5adf5ca260e8509daafbe8fe4e9665962",
-    "fixtures/crisis_arrivals.json": "d3a0846aa127f1897fb0148a2dea0d4e39d3aaec5cb198527bd37e54cfcb25e9",
+    "fixtures/crisis_arrivals.json": "185330e9176a885a1039a89a51a2678cdc81998eea412d41435a0cdc7d265989",
     "fixtures/crisis_ground_truth.json": "7d65c44b6e8889ea8312ef5e0b873fec7579be3d123d12e6319058d4ab1e5395"
   },
   "generated_by": "scripts/build_crisis_fixture.py"

@@ -24,7 +24,7 @@ run reads nothing past the day it is currently simulating, so every entry has
 """
 
 from bisect import bisect_right
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Never
 
 from cascade.contracts import (
@@ -36,6 +36,17 @@ from cascade.contracts import (
     DateWindow,
     VesselArrival,
 )
+
+
+def day_start(day: date) -> datetime:
+    """Midnight UTC on ``day``.
+
+    Every fixture in this repository carries UTC-aware timestamps, so every
+    moment the engine constructs must be UTC-aware too - a naive one cannot be
+    compared with an arrival and raises at the point of comparison. This is the
+    single place the engine turns a calendar date into a moment.
+    """
+    return datetime.combine(day, time.min, tzinfo=UTC)
 
 
 class FutureReadError(Exception):

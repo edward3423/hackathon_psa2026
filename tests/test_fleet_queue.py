@@ -1,6 +1,6 @@
 """Queueing correctness for the fleet discrete-event engine (PRD 9.22)."""
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 from random import Random
 
 import pytest
@@ -35,6 +35,7 @@ from cascade.engine.fleet import (
     VesselRecord,
     build_daily_kpis,
     compute_metrics,
+    day_start,
     erlang_c_wait_days,
     service_hours,
     simulate,
@@ -62,14 +63,14 @@ class OnDayPolicy:
 
 
 def run(blind: BlindSlice, world: FleetWorldConfig, policy: object = None) -> SimulationOutcome:
-    feed = BlindFeed(blind, SimClock(datetime.combine(blind.window.start, time.min)))
+    feed = BlindFeed(blind, SimClock(day_start(blind.window.start)))
     chosen = FcfsPolicy() if policy is None else policy
     return simulate(world, feed, chosen, window=blind.window)  # type: ignore[arg-type]
 
 
 def one_day_slice(sizes: list[tuple[float, float]], *, spacing_minutes: int = 5) -> BlindSlice:
     """A single day whose calls arrive minutes apart, so they all queue up."""
-    midnight = datetime.combine(START, time.min)
+    midnight = day_start(START)
     arrivals = [
         VesselArrival(
             vessel_id=f"S-{index:02d}",
@@ -399,13 +400,13 @@ def make_counters(waits: list[float]) -> tuple[list[DayCounters], list[VesselRec
                 busy_berth_hours=48.0,
             )
         )
-        arrival = datetime.combine(day, time.min) - timedelta(days=wait)
+        arrival = day_start(day) - timedelta(days=wait)
         records.append(
             VesselRecord(
                 vessel_id=f"M-{index:02d}",
                 arrival=arrival,
-                berth_start=datetime.combine(day, time.min),
-                berth_end=datetime.combine(day, time.min) + timedelta(hours=12),
+                berth_start=day_start(day),
+                berth_end=day_start(day) + timedelta(hours=12),
                 teu=1000.0,
                 connection_teu=400.0,
             )

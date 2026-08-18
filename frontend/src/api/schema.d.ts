@@ -258,7 +258,17 @@ export interface components {
             /** Stale Notice */
             stale_notice?: string | null;
         };
-        /** AnchorComparison */
+        /**
+         * AnchorComparison
+         * @description A recorded scalar held next to what the baseline arm produced.
+         *
+         *     ``within_tolerance`` is context, not a grade. The simulation is driven by
+         *     Singapore's recorded arrival and volume series, and those series measure
+         *     throughput - which congestion suppresses - rather than the load that caused
+         *     it. The model therefore cannot be expected to reproduce the recorded crisis,
+         *     and these rows are published so the gap is visible instead of hidden. See
+         *     ``BenchmarkResult.notice``.
+         */
         AnchorComparison: {
             /** Anchor Key */
             anchor_key: string;
@@ -275,6 +285,11 @@ export interface components {
             tolerance: number;
             /** Within Tolerance */
             within_tolerance: boolean;
+            /**
+             * Interpretation
+             * @default
+             */
+            interpretation: string;
         };
         /**
          * ApprovalDecision

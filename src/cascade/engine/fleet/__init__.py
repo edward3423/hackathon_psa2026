@@ -19,7 +19,7 @@ from cascade.engine.fleet.events import (
     FleetPolicy,
     WaitingVessel,
 )
-from cascade.engine.fleet.feed import BlindFeed, FutureReadError, SimClock
+from cascade.engine.fleet.feed import BlindFeed, FutureReadError, SimClock, day_start
 from cascade.engine.fleet.metrics import (
     DailyKpiBuilder,
     DayCounters,
@@ -69,6 +69,7 @@ __all__ = [
     "build_daily_kpis",
     "calibrate",
     "compute_metrics",
+    "day_start",
     "decision_is_satisfied",
     "erlang_c_wait_days",
     "make_agentic_policy",

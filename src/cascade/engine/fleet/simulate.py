@@ -19,7 +19,7 @@ loop keeps running until the queue drains, so every arrival is accounted for.
 """
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from random import Random
 
 from cascade.contracts import (
@@ -31,7 +31,6 @@ from cascade.contracts import (
     FleetDecisionType,
     FleetPolicyView,
     FleetWorldConfig,
-    QueueDiscipline,
     RecordedDecision,
     VesselArrival,
 )
@@ -42,14 +41,12 @@ from cascade.engine.fleet.events import (
     FleetEvent,
     FleetEventKind,
     FleetPolicy,
+    WaitingQueue,
     WaitingVessel,
-    queue_key,
 )
-from cascade.engine.fleet.feed import BlindFeed
+from cascade.engine.fleet.feed import BlindFeed, day_start
 from cascade.engine.fleet.metrics import DailyKpiBuilder, DayCounters, VesselRecord
 from cascade.engine.fleet.service import service_hours
-
-MIDNIGHT = time.min
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,7 +73,7 @@ class _Run:
     rng: Random
     builder: DailyKpiBuilder = field(default_factory=DailyKpiBuilder)
     events: EventQueue = field(default_factory=EventQueue)
-    queue: list[WaitingVessel] = field(default_factory=list)
+    queue: WaitingQueue = field(default_factory=WaitingQueue)
     pending: dict[str, VesselArrival] = field(default_factory=dict)
     daily: list[DailyKpi] = field(default_factory=list)
     waits_today: list[float] = field(default_factory=list)
@@ -86,7 +83,6 @@ class _Run:
     counters: list[DayCounters] = field(default_factory=list)
     decisions: list[RecordedDecision] = field(default_factory=list)
     last_pulled: dict[FleetDecisionType, date] = field(default_factory=dict)
-    discipline: QueueDiscipline = QueueDiscipline.FCFS
     fast_connection: bool = False
     surge_level: int = 0
     day: date | None = None
@@ -102,11 +98,11 @@ class _Run:
     def close_day(self, boundary: datetime) -> None:
         if self.day is None:
             return
-        day_start = datetime.combine(self.day, MIDNIGHT)
+        opened = day_start(self.day)
         busy_hours = 0.0
         remaining: list[tuple[datetime, datetime]] = []
         for start, end in self.live:
-            overlap = min(end, boundary) - max(start, day_start)
+            overlap = min(end, boundary) - max(start, opened)
             busy_hours += max(0.0, overlap.total_seconds() / 3600.0)
             if end > boundary:
                 remaining.append((start, end))
@@ -137,12 +133,12 @@ class _Run:
         self.day_index = day_index
         if day > self.window.end:
             return
-        day_start = datetime.combine(day, MIDNIGHT)
-        horizon = day_start + timedelta(days=1)
+        opened = day_start(day)
+        horizon = opened + timedelta(days=1)
         self.feed.clock.advance_to(horizon)
-        for arrival in self.feed.arrivals_between(day_start, horizon):
+        for arrival in self.feed.arrivals_between(opened, horizon):
             self.events.push(
-                self.jitter(arrival, day_start),
+                self.jitter(arrival, opened),
                 FleetEventKind.ARRIVAL,
                 vessel_id=arrival.vessel_id,
             )
@@ -159,7 +155,7 @@ class _Run:
 
     def on_arrival(self, event: FleetEvent) -> None:
         arrival = self.pending.pop(str(event.vessel_id))
-        self.queue.append(
+        self.queue.push(
             WaitingVessel(
                 vessel_id=arrival.vessel_id,
                 arrival=event.time,
@@ -172,11 +168,7 @@ class _Run:
 
     def dispatch(self, now: datetime) -> None:
         while self.queue and self.pool.free > 0:
-            index = min(
-                range(len(self.queue)),
-                key=lambda i: queue_key(self.discipline, self.queue[i]),
-            )
-            vessel = self.queue.pop(index)
+            vessel = self.queue.pop()
             hours = service_hours(
                 teu=vessel.teu,
                 connection_teu=vessel.connection_teu,
@@ -222,7 +214,7 @@ class _Run:
             active_berths=self.pool.active,
             reserves_available=self.pool.available(),
             pending_activations=self.pool.pending(),
-            queue_discipline=self.discipline,
+            queue_discipline=self.queue.discipline,
             fast_connection_mode=self.fast_connection,
             workforce_surge_level=self.surge_level,
         )
@@ -238,14 +230,14 @@ class _Run:
                 reason, effective = outcome.reason, outcome.effective_date
                 if outcome.accepted and outcome.effective_date is not None:
                     self.events.push(
-                        datetime.combine(outcome.effective_date, MIDNIGHT),
+                        day_start(outcome.effective_date),
                         FleetEventKind.BERTH_ACTIVATED,
                         tranche_id=decision.tranche_id,
                     )
             elif decision.type is FleetDecisionType.SET_QUEUE_DISCIPLINE and (
                 decision.discipline is not None
             ):
-                self.discipline = decision.discipline
+                self.queue.discipline = decision.discipline
             elif decision.type is FleetDecisionType.FAST_CONNECTION_MODE:
                 self.fast_connection = bool(decision.enabled)
             elif decision.type is FleetDecisionType.WORKFORCE_SURGE:
@@ -291,7 +283,7 @@ def simulate(
     )
     days = (window.end - window.start).days + 1
     for offset in range(days + 1):
-        moment = datetime.combine(window.start + timedelta(days=offset), MIDNIGHT)
+        moment = day_start(window.start + timedelta(days=offset))
         run.events.push(moment, FleetEventKind.DAY_BOUNDARY)
         if offset < days:
             run.events.push(moment, FleetEventKind.POLICY_EPOCH)

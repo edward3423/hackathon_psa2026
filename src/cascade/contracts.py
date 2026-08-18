@@ -798,6 +798,16 @@ class ArmComparison(ContractModel):
 
 
 class AnchorComparison(ContractModel):
+    """A recorded scalar held next to what the baseline arm produced.
+
+    ``within_tolerance`` is context, not a grade. The simulation is driven by
+    Singapore's recorded arrival and volume series, and those series measure
+    throughput - which congestion suppresses - rather than the load that caused
+    it. The model therefore cannot be expected to reproduce the recorded crisis,
+    and these rows are published so the gap is visible instead of hidden. See
+    ``BenchmarkResult.notice``.
+    """
+
     anchor_key: str
     label: str
     recorded_value: float
@@ -806,6 +816,9 @@ class AnchorComparison(ContractModel):
     unit: str
     tolerance: float
     within_tolerance: bool
+    #: Why the simulated figure sits where it does relative to the recorded one.
+    #: Always populated, including when the row happens to fall inside tolerance.
+    interpretation: str = ""
 
 
 class BenchmarkConfig(ContractModel):

@@ -14,7 +14,7 @@ brain that fails hands the epoch to the deterministic scripted brain and the
 fallback is visible in the source label.
 """
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 
 import pytest
 from fleet_world import make_blind_slice, make_tranche, make_world_config
@@ -43,6 +43,7 @@ from cascade.engine.fleet import (
     SimClock,
     SimulationOutcome,
     compute_metrics,
+    day_start,
     simulate,
 )
 
@@ -101,7 +102,7 @@ def run_arm(
 ) -> tuple[SimulationOutcome, FleetMetrics]:
     """Run one arm. Every arm in this file goes through this one function."""
     span = window()
-    feed = BlindFeed(blind, SimClock(datetime.combine(span.start, time.min)))
+    feed = BlindFeed(blind, SimClock(day_start(span.start)))
     outcome = simulate(world, feed, policy, window=span)  # type: ignore[arg-type]
     metrics = compute_metrics(
         outcome.daily,

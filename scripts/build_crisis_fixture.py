@@ -10,14 +10,24 @@ from SEED; the system clock and the global random module are never used.
 What is recorded and what is synthesised
 ----------------------------------------
 RECORDED (IMF PortWatch, unmodified): the daily count of container port calls
-at the Port of Singapore, `ArrivalDay.portcalls_container`. One VesselArrival
-is emitted per recorded call, so the arrival COUNT on every day is real.
+at the Port of Singapore, `ArrivalDay.portcalls_container`, and the daily
+container volume estimate (`import_container` + `export_container`). One
+VesselArrival is emitted per recorded call, so the arrival COUNT on every day
+is real, and each day's TOTAL exchange tracks the recorded volume for that day.
 
-SYNTHESISED (seeded, fitted on the calibration window only): each call's TEU
-exchange, its transhipment share, and its time of day. No public source
-publishes per-vessel exchange volumes or berth-request timestamps for
-Singapore, so these are drawn from documented distributions rather than
-measured. They are labelled as such in `synthesis_notice`.
+SYNTHESISED (seeded, fitted on the calibration window only): how a day's total
+exchange is split across that day's calls, each call's transhipment share, and
+each call's time of day. No public source publishes per-vessel exchange volumes
+or berth-request timestamps for Singapore, so these are drawn from documented
+distributions rather than measured. They are labelled in `synthesis_notice`.
+
+Why the volume series matters: it is the only recorded signal in this dataset
+that distinguishes the crisis from a calm year. Across the blind window
+container volume per call runs about 21% above the same month of 2023, which is
+the recorded mechanism behind PSA's published +22% port stays. Port CALLS over
+the same window fell, because congestion suppresses the very throughput these
+series measure - so a fixture built from call counts alone makes June 2024, the
+worst month of the crisis, look like the quietest month in the record.
 
 Window separation
 -----------------
@@ -40,13 +50,21 @@ quay, which is exactly the quantity a vessel call exchanges, so:
 
     mean TEU per call = 39.01e6 / (total recorded container calls in 2023)
 
-Call sizes are drawn as lognormal(mu=0, sigma=SIZE_SIGMA) shape factors. The
-shape factors are rescaled by a single correction constant, chosen so the mean
-over the 2023 calendar-year draws equals the target above; the correction is
-then refined once after clamping to [MIN_TEU, MAX_TEU] so the clamp does not
-drag the mean off target. Both passes look only at 2023 draws. Multiplying the
-resulting mean call size by the recorded number of 2023 calls reproduces the
-published 39.01 million TEU to well under one percent.
+A call's TEU is `shape * size_scale * size_index[day]`:
+
+- `shape` is a lognormal(mu=0, sigma=SIZE_SIGMA) draw, giving the spread of
+  call sizes within a day.
+- `size_index[day]` is RECORDED: that day's container volume per call, divided
+  by the same ratio over the whole calibration window. It is 1.0 on average
+  across calibration and carries the blind window's real deviation from it.
+- `size_scale` is a single correction constant chosen so the mean over the 2023
+  calendar-year draws equals the target above; it is refined once after clamping
+  to [MIN_TEU, MAX_TEU] so the clamp does not drag the mean off target. Both
+  passes look only at 2023, and both are fitted on `shape * size_index` because
+  that product is what a call's TEU is built from.
+
+Multiplying the resulting mean call size by the recorded number of 2023 calls
+reproduces the published 39.01 million TEU to well under one percent.
 
 Transhipment share
 ------------------
@@ -151,14 +169,18 @@ SMOOTHING_WINDOW_DAYS = 21
 
 SYNTHESIS_NOTICE = (
     "Recorded: the daily container port-call count for the Port of Singapore "
-    "(portcalls_container) is IMF PortWatch data, unmodified, and one vessel "
-    "arrival is emitted per recorded call. Synthesised: each arrival's TEU "
-    "exchange, its transhipment share (connection_teu) and its time of day. "
-    "No public source publishes per-vessel exchange volumes or berth-request "
-    "timestamps for Singapore, so these are drawn from seeded distributions "
-    "fitted on the calibration window only (2023-01-01 to 2024-02-29) and "
-    "scaled so 2023 reproduces Singapore's published 39.01 million TEU. "
-    "March 2024 is excluded from both slices as a buffer."
+    "(portcalls_container) and the daily container volume estimate are IMF "
+    "PortWatch data, unmodified. One vessel arrival is emitted per recorded "
+    "call, and each day's total TEU exchange tracks that day's recorded volume "
+    "- which is what carries the crisis into the blind window, since volume per "
+    "call ran about 21% above 2023 across it. Synthesised: how a day's total "
+    "exchange splits across its calls, each arrival's transhipment share "
+    "(connection_teu) and its time of day. No public source publishes "
+    "per-vessel exchange volumes or berth-request timestamps for Singapore, so "
+    "these are drawn from seeded distributions fitted on the calibration window "
+    "only (2023-01-01 to 2024-02-29) and scaled so 2023 reproduces Singapore's "
+    "published 39.01 million TEU. March 2024 is excluded from both slices as a "
+    "buffer."
 )
 
 HISTORICAL_CURVE_METHOD = (
@@ -257,18 +279,29 @@ def read_curated_anchors() -> tuple[list[GroundTruthAnchor], float]:
 # --- Recorded input ---------------------------------------------------------
 
 
-def read_portcalls() -> dict[date, int]:
-    """Recorded daily container port calls for Singapore, straight from the CSV."""
+def read_portcalls() -> tuple[dict[date, int], dict[date, float]]:
+    """Recorded daily container port calls and container volume, from the CSV.
+
+    Both series are recorded PortWatch estimates. The volume series is what
+    makes the blind window differ from the calibration window in the way 2024
+    actually differed: container volume per call runs about 21% above the same
+    month of 2023 across the crisis, which is the recorded mechanism behind
+    PSA's published +22% port stays. Reading calls alone - as an earlier
+    version of this script did - throws that signal away and leaves the blind
+    window statistically indistinguishable from a calm year.
+    """
     calls: dict[date, int] = {}
+    volume: dict[date, float] = {}
     with RAW_CSV.open(encoding="utf-8", newline="") as handle:
         for row in csv.DictReader(handle):
             day = date.fromisoformat(row["date"])
             if day in calls:
                 raise ValueError(f"duplicate row for {day} in {RAW_CSV}")
             calls[day] = int(row["portcalls_container"])
+            volume[day] = float(row["import_container"]) + float(row["export_container"])
     if not calls:
         raise ValueError(f"{RAW_CSV} contains no rows")
-    return calls
+    return calls, volume
 
 
 def window_days(window: DateWindow) -> list[date]:
@@ -308,6 +341,24 @@ def fit_size_scale(shapes_2023: list[float]) -> float:
     return scale
 
 
+def size_indices(
+    calls: dict[date, int], volume: dict[date, float], calibration_days: list[date]
+) -> dict[date, float]:
+    """Recorded container volume per call, relative to the calibration window.
+
+    A value of 1.20 means calls that day carried 20% more boxes than the
+    pre-crisis average call. The denominator is a single calibration-window
+    figure, so the index is 1.0 on average across calibration and carries the
+    blind window's real deviation from it. Nothing here is fitted to a 2024
+    outcome: both series are recorded, and the reference period is the same
+    pre-crisis window everything else is fitted on.
+    """
+    total_volume = sum(volume[day] for day in calibration_days)
+    total_calls = sum(calls[day] for day in calibration_days)
+    baseline = total_volume / total_calls
+    return {day: (volume[day] / calls[day]) / baseline if calls[day] else 1.0 for day in calls}
+
+
 def day_of_week_factors(calls: dict[date, int], days: list[date]) -> list[float]:
     """Mean calls per weekday over the given days, relative to their overall mean."""
     totals: dict[int, list[int]] = defaultdict(list)
@@ -327,6 +378,7 @@ def build_day(
     portcalls: int,
     shapes: list[float],
     size_scale: float,
+    size_index: float,
     dow_factors: list[float],
     share_rng: random.Random,
     time_rng: random.Random,
@@ -337,7 +389,7 @@ def build_day(
     midnight = datetime.combine(day, datetime.min.time(), tzinfo=UTC)
     arrivals: list[VesselArrival] = []
     for index, (offset, shape) in enumerate(sorted(zip(seconds, shapes, strict=True)), start=1):
-        teu = _clamp(shape * size_scale, MIN_TEU, MAX_TEU)
+        teu = _clamp(shape * size_scale * size_index, MIN_TEU, MAX_TEU)
         share = _clamp(
             share_rng.gauss(CONNECTION_SHARE_MEAN, CONNECTION_SHARE_SD),
             CONNECTION_SHARE_MIN,
@@ -354,7 +406,7 @@ def build_day(
     return ArrivalDay(date=day, portcalls_container=portcalls, arrivals=arrivals)
 
 
-def build_arrivals(calls: dict[date, int]) -> ArrivalStreamFixture:
+def build_arrivals(calls: dict[date, int], volume: dict[date, float]) -> ArrivalStreamFixture:
     calibration_days = require_coverage(calls, CALIBRATION_WINDOW)
     blind_days = require_coverage(calls, BLIND_WINDOW)
     overlap = set(calibration_days) & set(blind_days)
@@ -372,8 +424,12 @@ def build_arrivals(calls: dict[date, int]) -> ArrivalStreamFixture:
         day: [size_rng.lognormvariate(0.0, SIZE_SIGMA) for _ in range(calls[day])]
         for day in calibration_days
     }
+    indices = size_indices(calls, volume, calibration_days)
+    # Fit on shape times recorded index, because that product is what a call's
+    # TEU is now built from. Fitting on the bare shapes would leave 2023
+    # throughput off by the mean index of that year.
     shapes_2023 = [
-        shape
+        shape * indices[day]
         for day in calibration_days
         if day.year == BASELINE_YEAR
         for shape in calibration_shapes[day]
@@ -387,6 +443,7 @@ def build_arrivals(calls: dict[date, int]) -> ArrivalStreamFixture:
             calls[day],
             calibration_shapes[day],
             size_scale,
+            indices[day],
             dow_factors,
             share_rng,
             time_rng,
@@ -399,6 +456,7 @@ def build_arrivals(calls: dict[date, int]) -> ArrivalStreamFixture:
             calls[day],
             [size_rng.lognormvariate(0.0, SIZE_SIGMA) for _ in range(calls[day])],
             size_scale,
+            indices[day],
             dow_factors,
             share_rng,
             time_rng,
@@ -540,8 +598,8 @@ def build_manifest(fixtures_dir: Path) -> FixtureManifest:
 
 
 def build_all(fixtures_dir: Path) -> None:
-    calls = read_portcalls()
-    _write(fixtures_dir / ARRIVALS_PATH.name, render(build_arrivals(calls)))
+    calls, volume = read_portcalls()
+    _write(fixtures_dir / ARRIVALS_PATH.name, render(build_arrivals(calls, volume)))
     _write(fixtures_dir / GROUND_TRUTH_PATH.name, render(build_ground_truth(calls)))
     _write(fixtures_dir / MANIFEST_PATH.name, render(build_manifest(fixtures_dir)))
 

@@ -8,20 +8,20 @@ and every read that did happen is on the record.
 import ast
 import importlib.util
 from collections.abc import Iterable
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 
 import pytest
 from fleet_world import make_blind_slice
 
 from cascade.contracts import ArrivalDay, AuditVerdict, VesselArrival
-from cascade.engine.fleet import BlindFeed, FutureReadError, SimClock
+from cascade.engine.fleet import BlindFeed, FutureReadError, SimClock, day_start
 
 FIXTURE_MODULE = "cascade.fixtures"
 
 
 def make_feed(day_count: int = 5) -> tuple[BlindFeed, SimClock, datetime]:
     blind = make_blind_slice(day_count=day_count)
-    start = datetime.combine(blind.window.start, time.min)
+    start = day_start(blind.window.start)
     clock = SimClock(start)
     return BlindFeed(blind, clock), clock, start
 

@@ -663,6 +663,11 @@
           "within_tolerance": {
             "type": "boolean",
             "title": "Within Tolerance"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "default": ""
           }
         },
         "additionalProperties": false,
@@ -677,7 +682,8 @@
           "tolerance",
           "within_tolerance"
         ],
-        "title": "AnchorComparison"
+        "title": "AnchorComparison",
+        "description": "A recorded scalar held next to what the baseline arm produced.\n\n``within_tolerance`` is context, not a grade. The simulation is driven by\nSingapore's recorded arrival and volume series, and those series measure\nthroughput - which congestion suppresses - rather than the load that caused\nit. The model therefore cannot be expected to reproduce the recorded crisis,\nand these rows are published so the gap is visible instead of hidden. See\n``BenchmarkResult.notice``."
       },
       "ApprovalDecision": {
         "type": "string",
