@@ -20,6 +20,7 @@ Three honesty rules are enforced here rather than asserted in prose:
    pass/fail. Nothing in this module tunes anything to close a gap.
 """
 
+import math
 import time
 from datetime import date
 from typing import TYPE_CHECKING
@@ -290,6 +291,40 @@ def _simulated_arm(
     )
 
 
+def _ordinal(when: date | None) -> float | None:
+    return None if when is None else float(when.toordinal())
+
+
+def recovery_rank(days_above_threshold: int, recovered_at: float | None) -> float:
+    """How well an arm came through the crisis, lower being better.
+
+    ``recovery_date`` alone cannot answer this. It is the first sustained quiet
+    run *after the peak*, which says nothing about whether the peak was ever a
+    problem: an arm that never crossed the two-day threshold has its recovery
+    date land the day after its peak, and gets ``None`` only when that peak
+    happens to fall within the sustain window of the last day. Ranking on it
+    directly therefore put an arm that never breached at all - the best
+    outcome available - level with one that breached and never came back, and
+    made the comparison turn on where in the window a harmless peak fell.
+
+    The three cases are ranked explicitly instead:
+
+    - never breached, so there was nothing to recover from: best,
+    - breached and recovered: ranked by how early,
+    - breached and still above the threshold at the end: worst.
+
+    ``recovered_at`` is any increasing measure of when recovery happened - a
+    date ordinal here, a day index in the sweep. It is a bare number rather
+    than a ``date`` so that this function is the single definition of a
+    recovery win for both callers; two rules would eventually disagree.
+    """
+    if days_above_threshold == 0:
+        return -1.0
+    if recovered_at is None:
+        return math.inf
+    return recovered_at
+
+
 def _compare(arm: ArmResult, base: ArmResult) -> ArmComparison:
     """One head-to-head. Positive deltas always mean ``arm`` did better."""
     peak_delta = base.metrics.peak_wait_days - arm.metrics.peak_wait_days
@@ -306,13 +341,10 @@ def _compare(arm: ArmResult, base: ArmResult) -> ArmComparison:
         mean_wait_delta_days=base.metrics.mean_wait_days - arm.metrics.mean_wait_days,
         wait_cost_delta_usd=base.metrics.wait_cost_usd - arm.metrics.wait_cost_usd,
         wins_on_peak=arm.metrics.peak_wait_days < base.metrics.peak_wait_days,
-        # Recovering when the baseline never does is a win; never recovering is
-        # not, and neither is a tie.
         wins_on_recovery=(
-            arm.metrics.recovery_date is not None
-            and (
-                base.metrics.recovery_date is None
-                or arm.metrics.recovery_date < base.metrics.recovery_date
+            recovery_rank(arm.metrics.days_above_two_day_wait, _ordinal(arm.metrics.recovery_date))
+            < recovery_rank(
+                base.metrics.days_above_two_day_wait, _ordinal(base.metrics.recovery_date)
             )
         ),
     )
@@ -367,32 +399,45 @@ def _anchor_comparisons(
     return comparisons
 
 
+#: The knobs the robustness sweep turns, and the value each is held at while
+#: the service model is being fitted. Stripping them is not an optimisation, it
+#: is the point of the sweep: calibrating a port that has been made 15% slower
+#: would simply refit ``efficiency`` upward until the fitted world produced the
+#: same throughput again, cancelling the perturbation and leaving a "robustness"
+#: run that perturbs nothing. The fit is therefore always the same fit, and the
+#: perturbation is applied to the world the arms actually run in.
+#:
+#: ``seed`` is neutralised for a different reason: calibration runs FCFS over a
+#: fixed stream with jitter off, so the seed cannot reach the fitted parameters
+#: at all, and letting it into the key would defeat the memo for exactly the
+#: multi-seed sweep it exists to serve.
+_CALIBRATION_NEUTRAL: dict[str, object] = {
+    "seed": 0,
+    "service_rate_multiplier": 1.0,
+    "arrival_jitter_hours": 0.0,
+    "berth_delta": 0,
+    "activation_lead_override_days": None,
+}
+
+
 #: Fitted worlds, keyed by everything the fit depends on. Calibration is a
 #: coordinate search over a 425-day window and costs tens of seconds, but its
-#: inputs are a pinned fixture and a config, so a sweep of 25 seeds would
-#: otherwise pay for the identical fit 25 times. The key includes the fixture
-#: hash, so regenerating the fixtures invalidates it rather than silently
-#: serving a fit of the old data.
+#: inputs are a pinned fixture and a neutralised world, so a sweep of 25 seeds
+#: across a parameter grid would otherwise pay for the identical fit hundreds of
+#: times. The key includes the fixture hash, so regenerating the fixtures
+#: invalidates it rather than silently serving a fit of the old data.
 _CALIBRATION_CACHE: dict[tuple[str, str], CalibrationReport] = {}
 
 
 def _calibrate_cached(
     slice_: CalibrationSlice, world: FleetWorldConfig, hashes: dict[str, str]
 ) -> CalibrationReport:
-    """``calibrate``, memoised on the fixture hash and the world it fits.
-
-    The seed is excluded from the key deliberately: calibration runs FCFS over
-    a fixed stream and the seed only drives arrival jitter, which the fitted
-    parameters are insensitive to. Including it would defeat the cache for
-    exactly the sweep it exists to serve.
-    """
-    key = (
-        hashes.get(f"fixtures/{CRISIS_ARRIVALS_FILE}", ""),
-        world.model_copy(update={"seed": 0}).model_dump_json(),
-    )
+    """``calibrate``, memoised on the fixture hash and the world it fits."""
+    base = world.model_copy(update=_CALIBRATION_NEUTRAL)
+    key = (hashes.get(f"fixtures/{CRISIS_ARRIVALS_FILE}", ""), base.model_dump_json())
     cached = _CALIBRATION_CACHE.get(key)
     if cached is None:
-        cached = calibrate(slice_, world)
+        cached = calibrate(slice_, base)
         _CALIBRATION_CACHE[key] = cached
     return cached
 
@@ -412,7 +457,16 @@ def run_benchmark(config: BenchmarkConfig) -> BenchmarkResult:
         update={
             "seed": config.seed,
             "service": report.fitted,
-            "berth_delta": report.effective_berths - config.world.berths.active_berths,
+            # The calibrated effective count, plus whatever the config asked
+            # for on top. Adding rather than replacing is what lets a sweep
+            # cell run the port one berth short: the calibration owns the
+            # fitted part of this number, ``world.berth_delta`` owns the
+            # perturbation, and neither can silently overwrite the other.
+            "berth_delta": (
+                report.effective_berths
+                - config.world.berths.active_berths
+                + config.world.berth_delta
+            ),
         }
     )
 

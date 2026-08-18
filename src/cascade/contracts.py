@@ -854,6 +854,11 @@ class SweepCell(ContractModel):
     arm: FleetArm
     peak_wait_days: float
     recovery_day_index: int | None = None
+    #: Needed to score the cell, not merely to describe it. A ``None`` recovery
+    #: index means "never recovered" only if the arm was ever in breach; with a
+    #: zero count here it means there was nothing to recover from, which is the
+    #: best outcome rather than the worst. See ``benchmark.recovery_rank``.
+    days_above_two_day_wait: int = 0
     mean_wait_days: float
 
 

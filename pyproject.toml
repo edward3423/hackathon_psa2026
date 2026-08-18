@@ -32,6 +32,11 @@ testpaths = ["tests"]
 filterwarnings = [
     "ignore:BaseAgentConfig is deprecated.*:DeprecationWarning",
 ]
+# Marked, not deselected. `slow` tests run in the default suite; the marker
+# exists so a tight edit loop can say `-m "not slow"` deliberately.
+markers = [
+    "slow: pays for a full benchmark calibration (tens of seconds on a cold run)",
+]
 
 [tool.ruff]
 target-version = "py312"
