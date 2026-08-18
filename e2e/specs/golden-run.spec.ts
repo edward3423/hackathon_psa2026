@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 import {
   approvePlan,
   expectNoDispatchArtifacts,
+  navigateTo,
   openDashboard,
   resetBackend,
   resolveReeferDispute,
@@ -36,11 +37,12 @@ test('golden run: parallel analysis, dispute resolution, three plans, approval, 
   await resolveReeferDispute(page)
 
   // Exactly three recovery plans with a visible recommendation (PRD 9.8/9.9).
+  await navigateTo(page, 'Recovery')
   const planCards = page.getByRole('article', { name: /^Recovery plan:/ })
   await expect(planCards).toHaveCount(3, { timeout: 30_000 })
   const recommendedCard = planCards.filter({ hasText: 'Recommended' })
   await expect(recommendedCard).toHaveCount(1)
-  await expect(recommendedCard).toContainText(/optimized[ _]hybrid/i)
+  await expect(recommendedCard).toContainText(/rush critical cargo and rebook the rest/i)
 
   // Approval gate: still nothing dispatch-like before the human approves.
   await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
@@ -50,6 +52,7 @@ test('golden run: parallel analysis, dispute resolution, three plans, approval, 
   await approvePlan(page, 'OPTIMIZED_HYBRID')
 
   // Mocked receipts appear only after approval (PRD 9.15).
+  await navigateTo(page, 'Execution')
   await expect(page.getByText('EXECUTION RECEIPTS (MOCKED)')).toBeVisible({ timeout: 30_000 })
   await expect(page.locator('.receipt-list .receipt-status').first()).toHaveText('ACCEPTED')
   await expect(stageReadout(page)).toHaveText('COMPLETE', { timeout: 30_000 })

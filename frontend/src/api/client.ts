@@ -14,10 +14,43 @@ import type {
  */
 export const API_BASE: string = import.meta.env.VITE_API_BASE ?? ''
 
+export class ApiError extends Error {
+  readonly status: number
+  readonly detail: unknown
+
+  constructor(path: string, status: number, detail: unknown) {
+    const detailMessage =
+      typeof detail === 'string'
+        ? detail
+        : detail === undefined || detail === null
+          ? `Request to ${path} failed with status ${status}.`
+          : JSON.stringify(detail)
+    super(detailMessage)
+    this.name = 'ApiError'
+    this.status = status
+    this.detail = detail
+  }
+}
+
+async function errorDetail(response: Response): Promise<unknown> {
+  const body = await response.text()
+  if (!body) return response.statusText || undefined
+
+  try {
+    const parsed = JSON.parse(body) as unknown
+    if (typeof parsed === 'object' && parsed !== null && 'detail' in parsed) {
+      return (parsed as { detail: unknown }).detail
+    }
+    return parsed
+  } catch {
+    return body
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, init)
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with status ${response.status}.`)
+    throw new ApiError(path, response.status, await errorDetail(response))
   }
   return (await response.json()) as T
 }
@@ -52,19 +85,16 @@ export function getRun(runId: string): Promise<WorkflowState> {
 export function postDisputeResolution(
   runId: string,
   body: DisputeResolutionRequest,
-): Promise<unknown> {
-  return postJson(`/api/runs/${runId}/dispute-resolution`, body)
+): Promise<WorkflowState> {
+  return postJson<WorkflowState>(`/api/runs/${runId}/dispute-resolution`, body)
 }
 
-export function postApproval(runId: string, body: ApprovalRequest): Promise<unknown> {
-  return postJson(`/api/runs/${runId}/approval`, body)
+export function postApproval(runId: string, body: ApprovalRequest): Promise<WorkflowState> {
+  return postJson<WorkflowState>(`/api/runs/${runId}/approval`, body)
 }
 
 export async function resetDemo(): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/reset`, { method: 'POST' })
-  if (!response.ok) {
-    throw new Error(`Reset failed with status ${response.status}.`)
-  }
+  await request<ScenarioState>('/api/reset', { method: 'POST' })
 }
 
 /** Resolve a possibly relative SSE URL against the configured API base. */
