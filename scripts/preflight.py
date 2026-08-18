@@ -30,7 +30,14 @@ from pydantic import TypeAdapter, ValidationError
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from cascade.contracts import ScenarioState, TraceEvent, WorldFixture  # noqa: E402
+from cascade.contracts import (  # noqa: E402
+    ArrivalStreamFixture,
+    FixtureManifest,
+    GroundTruthFixture,
+    ScenarioState,
+    TraceEvent,
+    WorldFixture,
+)
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -119,6 +126,11 @@ def check_fixtures() -> list[CheckResult]:
         ("replay_events.json", trace_list, True),
         ("golden_world.json", TypeAdapter(WorldFixture), False),
         ("evidence_pack.json", None, False),
+        # Act 2 crisis benchmark. Not required: the golden demo runs without
+        # them, and they arrive with the crisis-data workstream.
+        ("crisis_arrivals.json", TypeAdapter(ArrivalStreamFixture), False),
+        ("crisis_ground_truth.json", TypeAdapter(GroundTruthFixture), False),
+        ("crisis_manifest.json", TypeAdapter(FixtureManifest), False),
     ]
     return [
         _validate_fixture(fixtures_dir / filename, adapter, required)
