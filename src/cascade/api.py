@@ -5,17 +5,27 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from cascade import __version__
+from cascade.benchmark_run import (
+    PLAYBACK_NOTICE,
+    BenchmarkRun,
+    BenchmarkStore,
+    created_response,
+)
 from cascade.contracts import (
     ApprovalRequest,
+    BenchmarkCreated,
+    BenchmarkEvent,
+    BenchmarkState,
+    CreateBenchmarkRequest,
     DisputeResolutionRequest,
     HealthResponse,
     RunCreated,
     RunMode,
     ScenarioControls,
     ScenarioState,
-    TraceEvent,
     WorkflowStage,
     WorkflowState,
 )
@@ -41,6 +51,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 store = RunStore(event_delay=0.05)
+# Act 2 lives in its own store. RunStore assumes one single-vessel workflow at a
+# time; benchmarks are independent and must not inherit that assumption.
+benchmark_store = BenchmarkStore(day_delay=0.04)
 
 
 class CreateRunRequest(ScenarioControls):
@@ -67,6 +80,7 @@ def get_scenario() -> ScenarioState:
 
 
 _MODE_QUERY = Query(default=None, description="Overrides the body mode field.")
+_SINCE_QUERY = Query(default=0, ge=0, description="Skip events already received over SSE.")
 
 
 @app.post("/api/runs", response_model=RunCreated, status_code=201, tags=["workflow"])
@@ -111,8 +125,8 @@ async def create_run(
     )
 
 
-def _sse(event_name: str, payload: TraceEvent | dict[str, str]) -> str:
-    data = payload.model_dump(mode="json") if isinstance(payload, TraceEvent) else payload
+def _sse(event_name: str, payload: BaseModel | dict[str, str]) -> str:
+    data = payload.model_dump(mode="json") if isinstance(payload, BaseModel) else payload
     return f"event: {event_name}\ndata: {json.dumps(data)}\n\n"
 
 
@@ -179,7 +193,70 @@ async def decide_approval(run_id: str, request: ApprovalRequest) -> WorkflowStat
     return get_run(run_id)
 
 
+# --- Act 2: crisis benchmark ------------------------------------------------
+
+
+def _get_benchmark_or_404(benchmark_id: str) -> BenchmarkRun:
+    run = benchmark_store.get(benchmark_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Benchmark not found")
+    return run
+
+
+@app.post("/api/benchmarks", response_model=BenchmarkCreated, status_code=201, tags=["benchmark"])
+async def create_benchmark(request: CreateBenchmarkRequest) -> BenchmarkCreated:
+    return created_response(benchmark_store.create(request))
+
+
+async def _stream_benchmark(run: BenchmarkRun) -> AsyncIterator[str]:
+    yield _sse(
+        "notice",
+        {"benchmark_id": run.benchmark_id, "playback_notice": PLAYBACK_NOTICE},
+    )
+    index = 0
+    while True:
+        update = await run.wait_events(index, timeout=KEEPALIVE_SECONDS)
+        if update is None:
+            yield ": keep-alive\n\n"
+            continue
+        events, finished = update
+        for event in events:
+            index += 1
+            yield _sse("benchmark", event)
+        if finished and index == len(run.events):
+            yield _sse("stream_end", {"benchmark_id": run.benchmark_id, "stage": run.stage.value})
+            return
+
+
+@app.get("/api/benchmarks/{benchmark_id}/events", tags=["benchmark"])
+def stream_benchmark(benchmark_id: str) -> StreamingResponse:
+    run = _get_benchmark_or_404(benchmark_id)
+    return StreamingResponse(
+        _stream_benchmark(run),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/api/benchmarks/{benchmark_id}", response_model=BenchmarkState, tags=["benchmark"])
+def get_benchmark(benchmark_id: str, since: int = _SINCE_QUERY) -> BenchmarkState:
+    run = _get_benchmark_or_404(benchmark_id)
+    # A full run carries thousands of DAY_TICK events. `since` lets a client that
+    # already streamed them fetch the final result without re-downloading them.
+    events: list[BenchmarkEvent] = run.events[since:]
+    return BenchmarkState(
+        benchmark_id=run.benchmark_id,
+        stage=run.stage,
+        config=run.config,
+        events=events,
+        result=run.result,
+        playback_notice=PLAYBACK_NOTICE,
+        error=run.error,
+    )
+
+
 @app.post("/api/reset", response_model=ScenarioState, tags=["scenario"])
 def reset_demo() -> ScenarioState:
     store.reset()
+    benchmark_store.reset()
     return scenario_with_controls()
