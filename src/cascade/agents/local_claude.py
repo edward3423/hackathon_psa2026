@@ -28,18 +28,29 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from cascade.agents.base import (
+    FLEET_PROMPT_NAME,
     AgentSummary,
     PlanBriefing,
     PlanProposalSet,
     PlanRevision,
     WorkflowStep,
+    fleet_strategy_is_well_formed,
+    fleet_strategy_message,
     load_prompt,
     proposal_message,
     revision_message,
     summary_message,
 )
 from cascade.agents.live_gemini import PROMPT_NAMES, STEP_AGENTS
-from cascade.contracts import AgentName, ModelExchange, RecoveryPlan
+from cascade.agents.scripted import ScriptedFleetBrain
+from cascade.contracts import (
+    AgentName,
+    DecisionSource,
+    FleetPolicyView,
+    FleetStrategy,
+    ModelExchange,
+    RecoveryPlan,
+)
 
 DEFAULT_MODEL = "claude-sonnet-5"
 DEFAULT_EFFORT = "low"
@@ -123,6 +134,10 @@ class ClaudeBrain:
     def __init__(self, runner: Callable[[str], str] | None = None) -> None:
         self._runner = runner if runner is not None else _run_cli
         self.exchanges: list[ModelExchange] = []
+        # Act 2 only: the deterministic brain this adapter falls back to, and
+        # the source label of the most recent fleet strategy epoch.
+        self._fleet_fallback = ScriptedFleetBrain()
+        self.last_decision_source: DecisionSource = DecisionSource.SCRIPTED
 
     @classmethod
     def create(cls) -> "ClaudeBrain":
@@ -148,6 +163,31 @@ class ClaudeBrain:
         message = revision_message(plan, rejection_reasons, briefing)
         return self._generate(AgentName.RECOVERY, message, PlanRevision).plan
 
+    # -- FleetBrain interface (Act 2) ------------------------------------------
+
+    def assess_week(self, view: FleetPolicyView) -> FleetStrategy:
+        """One fleet strategy epoch, with a visible scripted fallback.
+
+        Same contract as the Gemini adapter: any failure - CLI error, timeout,
+        unparseable output, schema violation, or a decision missing the payload
+        its menu entry requires - hands the epoch to ``ScriptedFleetBrain`` and
+        sets ``last_decision_source`` to ``SCRIPTED_FALLBACK``.
+        """
+        try:
+            strategy = self._generate(
+                AgentName.COORDINATOR,
+                fleet_strategy_message(view),
+                FleetStrategy,
+                prompt_name=FLEET_PROMPT_NAME,
+            )
+            if not fleet_strategy_is_well_formed(strategy):
+                raise ValueError("fleet strategy contains a decision without its required payload")
+        except Exception:
+            self.last_decision_source = DecisionSource.SCRIPTED_FALLBACK
+            return self._fleet_fallback.assess_week(view)
+        self.last_decision_source = DecisionSource.MODEL
+        return strategy
+
     # -- plumbing ---------------------------------------------------------------
 
     def _call(self, agent: AgentName, prompt: str) -> str:
@@ -166,12 +206,23 @@ class ClaudeBrain:
         )
         return response
 
-    def _generate(self, agent: AgentName, message: str, schema: type[ModelT]) -> ModelT:
+    def _generate(
+        self,
+        agent: AgentName,
+        message: str,
+        schema: type[ModelT],
+        *,
+        prompt_name: str | None = None,
+    ) -> ModelT:
         # The CLI has no JSON response mode, so the target schema is stated
         # explicitly and the reply is sliced to its JSON object before the
         # same local pydantic validation the Gemini path uses, with one retry
         # that feeds the validation error back.
-        system_instruction = load_prompt(PROMPT_NAMES[agent])
+        #
+        # `prompt_name` overrides the per-agent Act 1 prompt; it exists so the
+        # Act 2 fleet strategy epoch can reuse this whole call path with its own
+        # versioned prompt. Omitted, behaviour is exactly as before.
+        system_instruction = load_prompt(prompt_name or PROMPT_NAMES[agent])
         schema_json = json.dumps(schema.model_json_schema(), default=str)
         prompt = (
             f"{system_instruction}\n\n{message}\n\n"

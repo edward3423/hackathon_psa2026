@@ -147,7 +147,6 @@ def test_the_feed_cannot_reach_the_fixture_loader() -> None:
 
 
 def test_policies_module_cannot_reach_the_fixture_loader() -> None:
-    module = "cascade.engine.fleet.policies"
-    if importlib.util.find_spec(module) is None:
-        pytest.skip("policies module not written yet")
-    assert FIXTURE_MODULE not in reachable_modules(module)
+    reachable = reachable_modules("cascade.engine.fleet.policies")
+    assert "cascade.contracts" in reachable, "sanity: the walk does follow import edges"
+    assert FIXTURE_MODULE not in reachable

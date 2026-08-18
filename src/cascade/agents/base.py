@@ -9,6 +9,7 @@ the same seam.
 
 import json
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -19,8 +20,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from cascade.contracts import (
     AlternativeSailingResult,
     ConnectionAnalysis,
+    DailyKpi,
+    FleetDecision,
+    FleetDecisionType,
+    FleetPolicyView,
+    FleetStrategy,
     PlanningFacts,
     RecoveryPlan,
+    ReserveBerthTranche,
 )
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
@@ -164,3 +171,121 @@ def load_prompt(name: str) -> str:
     if not re.search(r"^version:\s*\d+", text, flags=re.MULTILINE):
         raise ValueError(f"Prompt {name} is missing a version header")
     return text
+
+
+# ---------------------------------------------------------------------------
+# Act 2: the fleet-scale brain seam.
+#
+# A second, independent seam beside ``AgentBrain``. It does not extend it and
+# nothing above changes: the golden single-vessel workflow never calls a
+# ``FleetBrain`` and the fleet benchmark never calls an ``AgentBrain``.
+#
+# The invariant is the same one Act 1 lives by, tightened: a fleet brain may
+# only pick entries from an enumerated decision menu and write prose. Every
+# numeric effect (berths, service hours, waits, dates) is computed by the
+# engine, and every decision is independently re-validated by
+# ``validate_fleet_decision`` before it can take effect.
+# ---------------------------------------------------------------------------
+
+FLEET_PROMPT_NAME = "fleet_strategy"
+
+# How much recent history a brain is shown. A run is ~150 days; sending all of
+# it would bury the signal and grow the prompt without bound. Two weeks covers
+# the trailing rolling-wait trend and the last strategy epoch.
+FLEET_HISTORY_DAYS = 14
+
+
+class FleetBrain(Protocol):
+    """Weekly strategy seam for the fleet benchmark.
+
+    Implementations return a ``FleetStrategy``: at most four decisions from the
+    enumerated menu, plus a summary. They never return a figure the engine then
+    uses; the engine reads only ``type`` and the enum/bool/level payload.
+    """
+
+    def assess_week(self, view: FleetPolicyView) -> FleetStrategy: ...
+
+
+def _kpi_line(kpi: DailyKpi) -> str:
+    return (
+        f"  {kpi.date} (day {kpi.day_index}): arrivals {kpi.arrivals}, "
+        f"berthings {kpi.berthings}, queue {kpi.queue_length}, "
+        f"rolling 3-day wait {kpi.rolling_wait_days:.2f} d, "
+        f"berths {kpi.active_berths}, utilisation {kpi.utilisation:.2f}"
+    )
+
+
+def _reserve_line(tranche: ReserveBerthTranche) -> str:
+    window = (
+        "" if tranche.available_from is None else f", not available before {tranche.available_from}"
+    )
+    return (
+        f"  {tranche.tranche_id}: {tranche.berths} berths, "
+        f"{tranche.activation_lead_days}-day activation lead{window} ({tranche.label})"
+    )
+
+
+def fleet_strategy_message(view: FleetPolicyView) -> str:
+    """The user message every live fleet brain sends for one strategy epoch.
+
+    Renders only the deterministic facts in ``view`` - the sole figures a model
+    may quote - and restates the menu with its exact bounds. Recent history is
+    truncated to ``FLEET_HISTORY_DAYS`` so the prompt stays bounded over a
+    150-day run.
+    """
+    recent = view.history[-FLEET_HISTORY_DAYS:]
+    reserves = view.reserves_available
+    pending = view.pending_activations
+    tranche_ids = ", ".join(tranche.tranche_id for tranche in reserves) or "none"
+    return (
+        f"Strategy epoch for {view.today} (day index {view.day_index}).\n\n"
+        "Deterministic facts - the only figures you may quote:\n"
+        f"Recent daily KPIs (last {len(recent)} closed days, oldest first):\n"
+        + ("\n".join(_kpi_line(kpi) for kpi in recent) or "  none yet")
+        + "\n\nCurrent levers in force:\n"
+        f"  active berths: {view.active_berths}\n"
+        f"  queue discipline: {view.queue_discipline.value}\n"
+        f"  fast connection mode: {'on' if view.fast_connection_mode else 'off'}\n"
+        f"  workforce surge level: {view.workforce_surge_level}\n"
+        "\nReserve berth tranches you may still activate:\n"
+        + ("\n".join(_reserve_line(tranche) for tranche in reserves) or "  none remaining")
+        + "\n\nActivations already scheduled (capacity not online yet):\n"
+        + (
+            "\n".join(
+                f"  {item.tranche_id}: {item.berths} berths, effective {item.effective_date}"
+                for item in pending
+            )
+            or "  none"
+        )
+        + "\n\nDecision menu - you may return at most four decisions, and nothing else:\n"
+        f"  ACTIVATE_RESERVE_BERTHS: tranche_id must be one of [{tranche_ids}]. The berths "
+        "arrive after that tranche's activation lead, never today.\n"
+        "  SET_QUEUE_DISCIPLINE: discipline must be FCFS, CONNECTION_WEIGHTED or "
+        "PRIORITY_DISCHARGE, and must differ from the discipline in force.\n"
+        "  FAST_CONNECTION_MODE: enabled must be true or false, and must differ from the "
+        "mode in force.\n"
+        "  WORKFORCE_SURGE: surge_level must be an integer 0, 1 or 2, and must differ from "
+        "the level in force.\n"
+        "  HOLD: no payload. Return exactly this when no lever should move.\n"
+        "\nYou may not state any figure that does not appear above. You choose which levers "
+        "to pull; the engine computes every consequence and independently re-validates each "
+        "decision, rejecting and logging anything outside these bounds."
+    )
+
+
+def fleet_strategy_is_well_formed(strategy: FleetStrategy) -> bool:
+    """Whether every decision carries the payload its type requires.
+
+    The schema alone cannot express "ACTIVATE_RESERVE_BERTHS needs a
+    tranche_id", so a model can return a type-valid but empty decision. A live
+    adapter treats that as a failed call and falls back rather than shipping a
+    decision the engine is certain to reject.
+    """
+    required: dict[FleetDecisionType, Callable[[FleetDecision], bool]] = {
+        FleetDecisionType.ACTIVATE_RESERVE_BERTHS: lambda d: bool(d.tranche_id),
+        FleetDecisionType.SET_QUEUE_DISCIPLINE: lambda d: d.discipline is not None,
+        FleetDecisionType.FAST_CONNECTION_MODE: lambda d: d.enabled is not None,
+        FleetDecisionType.WORKFORCE_SURGE: lambda d: d.surge_level is not None,
+        FleetDecisionType.HOLD: lambda d: True,
+    }
+    return all(required[decision.type](decision) for decision in strategy.decisions)

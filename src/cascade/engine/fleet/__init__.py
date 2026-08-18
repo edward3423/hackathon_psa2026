@@ -27,11 +27,28 @@ from cascade.engine.fleet.metrics import (
     build_daily_kpis,
     compute_metrics,
 )
+from cascade.engine.fleet.policies import (
+    EXCEPTION_MIN_GAP_DAYS,
+    EXCEPTION_WAIT_DAYS,
+    INTENT_TTL_DAYS,
+    STRATEGY_EPOCH_DAYS,
+    AgenticFleetPolicy,
+    ReactiveBaselinePolicy,
+    StrategyEpoch,
+    brain_decision_source,
+    decision_is_satisfied,
+    make_agentic_policy,
+)
 from cascade.engine.fleet.service import service_hours
 from cascade.engine.fleet.simulate import SimulationOutcome, simulate
 
 __all__ = [
+    "EXCEPTION_MIN_GAP_DAYS",
+    "EXCEPTION_WAIT_DAYS",
+    "INTENT_TTL_DAYS",
+    "STRATEGY_EPOCH_DAYS",
     "ActivationOutcome",
+    "AgenticFleetPolicy",
     "BerthPool",
     "BlindFeed",
     "DailyKpiBuilder",
@@ -42,14 +59,19 @@ __all__ = [
     "FleetEventKind",
     "FleetPolicy",
     "FutureReadError",
+    "ReactiveBaselinePolicy",
     "SimClock",
     "SimulationOutcome",
+    "StrategyEpoch",
     "VesselRecord",
     "WaitingVessel",
+    "brain_decision_source",
     "build_daily_kpis",
     "calibrate",
     "compute_metrics",
+    "decision_is_satisfied",
     "erlang_c_wait_days",
+    "make_agentic_policy",
     "service_hours",
     "simulate",
     "validate_fleet_decision",
