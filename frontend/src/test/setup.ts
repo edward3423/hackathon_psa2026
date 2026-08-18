@@ -1,4 +1,12 @@
 import '@testing-library/jest-dom/vitest'
+import { configure } from '@testing-library/react'
+
+// Every workspace in App.tsx is `lazy()`, so a `findBy*` that lands on a page
+// waits for a dynamic import as well as a render. Testing Library's 1 s default
+// loses that race on a loaded machine roughly once in ten runs, which reads as
+// a flaky assertion rather than as the slow chunk it is. Waiting longer costs
+// nothing when the element does appear; a genuine failure still fails.
+configure({ asyncUtilTimeout: 5000 })
 
 // Polyfills required by @xyflow/react and recharts in jsdom.
 

@@ -406,12 +406,18 @@ function App() {
         <main className="app-content" id="main-content">
           <Suspense fallback={<p className="page-loading">Loading workspace...</p>}>
             {renderPage()}
-            <OperationsTimeline
-              cursorHour={cursorHour}
-              onCursorChange={setCursorHour}
-              stage={stage}
-              events={events}
-            />
+            {/* The timeline scrubs the 72 hours of one Act 1 vessel run. It is
+                sticky to the bottom of the viewport, so on the Act 2 benchmark -
+                a 153-day fleet replay it cannot address - it is not merely
+                meaningless but sits on top of the chart. */}
+            {activePage !== 'benchmark' && (
+              <OperationsTimeline
+                cursorHour={cursorHour}
+                onCursorChange={setCursorHour}
+                stage={stage}
+                events={events}
+              />
+            )}
           </Suspense>
         </main>
       </div>
