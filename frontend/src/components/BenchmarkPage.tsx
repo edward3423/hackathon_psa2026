@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import { Play, ShieldCheck, ShieldAlert } from 'lucide-react'
 import {
   CartesianGrid,
@@ -60,8 +60,22 @@ function days(value: number | null | undefined): string {
   return value === null || value === undefined ? 'not reached' : `${value.toFixed(2)} d`
 }
 
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
 function signed(value: number, unit: string): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)} ${unit}`
+}
+
+/**
+ * An arm that never crossed the two-day threshold has nothing to recover from,
+ * and saying "not reached" about it would read as a failure rather than as the
+ * best possible outcome.
+ */
+function recoveryLabel(metrics: ArmResult['metrics']): string {
+  if (metrics.days_above_two_day_wait === 0) return 'never above 2 d'
+  return metrics.recovery_date ? shortDate(metrics.recovery_date) : 'not reached'
 }
 
 function ArmTiles({ arm }: { arm: ArmResult }) {
@@ -83,18 +97,33 @@ function ArmTiles({ arm }: { arm: ArmResult }) {
         </div>
         <div>
           <dt>Recovered to 2 d</dt>
-          <dd>{arm.metrics.recovery_date ? shortDate(arm.metrics.recovery_date) : 'not reached'}</dd>
-          <span>{arm.metrics.days_above_two_day_wait} days above 2 d</span>
+          <dd>{recoveryLabel(arm.metrics)}</dd>
+          <span>{plural(arm.metrics.days_above_two_day_wait, 'day')} above 2 d</span>
         </div>
         <div>
           <dt>Mean wait</dt>
           <dd>{days(arm.metrics.mean_wait_days)}</dd>
-          <span>port stay {arm.metrics.mean_port_stay_hours.toFixed(1)} h</span>
+          {/* The reconstruction is a wait curve and nothing else. Its port-stay
+              fields arrive as zero because the backend refuses to invent them,
+              so they are reported as absent rather than drawn as 0.0. */}
+          <span>
+            {arm.is_simulation
+              ? `port stay ${arm.metrics.mean_port_stay_hours.toFixed(1)} h`
+              : 'port stay not reconstructed'}
+          </span>
         </div>
         <div>
           <dt>Port-stay inflation</dt>
-          <dd>{arm.metrics.port_stay_inflation_pct.toFixed(1)}%</dd>
-          <span>vs its own 2023 baseline</span>
+          <dd>
+            {arm.is_simulation
+              ? `${arm.metrics.port_stay_inflation_pct.toFixed(1)}%`
+              : 'not reconstructed'}
+          </dd>
+          <span>
+            {arm.is_simulation
+              ? 'vs its own 2023 baseline'
+              : 'no port-stay series exists for this curve'}
+          </span>
         </div>
       </dl>
       {arm.caveat && <p className="benchmark-caveat">{arm.caveat}</p>}
@@ -110,8 +139,10 @@ function AnchorTable({ anchors }: { anchors: AnchorComparison[] }) {
         <div>
           <h3 id="benchmark-anchors-title">Simulated against recorded anchors</h3>
           <p className="panel-description">
-            Published 2024 figures on the left; what the blind simulation produced on the right. A
-            miss is shown as a miss.
+            Published 2024 figures on the left; what the blind simulation produced on the right.
+            These rows are context, not a score. The model is not expected to reproduce the
+            recorded crisis, so each row states which way it should miss and why - including the
+            row that lands inside tolerance for the wrong reason.
           </p>
         </div>
       </header>
@@ -121,24 +152,33 @@ function AnchorTable({ anchors }: { anchors: AnchorComparison[] }) {
             <th scope="col">Anchor</th>
             <th scope="col">Recorded</th>
             <th scope="col">Simulated</th>
-            <th scope="col">Within tolerance</th>
+            <th scope="col">Gap</th>
           </tr>
         </thead>
         <tbody>
           {anchors.map((anchor) => (
-            <tr key={anchor.anchor_key}>
-              <th scope="row">{anchor.label}</th>
-              <td>
-                {anchor.recorded_value} {anchor.unit}
-                <span className="benchmark-cell-note">{anchor.recorded_provenance}</span>
-              </td>
-              <td>
-                {anchor.simulated_value.toFixed(2)} {anchor.unit}
-              </td>
-              <td className={anchor.within_tolerance ? 'status-healthy' : 'status-isolated'}>
-                {anchor.within_tolerance ? 'YES' : `NO (+/- ${anchor.tolerance})`}
-              </td>
-            </tr>
+            <Fragment key={anchor.anchor_key}>
+              <tr className="benchmark-anchor-row">
+                <th scope="row">{anchor.label}</th>
+                <td>
+                  {anchor.recorded_value} {anchor.unit}
+                  <span className="benchmark-cell-note">{anchor.recorded_provenance}</span>
+                </td>
+                <td>
+                  {anchor.simulated_value.toFixed(2)} {anchor.unit}
+                </td>
+                <td>
+                  {signed(anchor.simulated_value - anchor.recorded_value, anchor.unit)}
+                  <span className="benchmark-cell-note">
+                    {anchor.within_tolerance ? 'inside' : 'outside'} +/- {anchor.tolerance}{' '}
+                    {anchor.unit}
+                  </span>
+                </td>
+              </tr>
+              <tr className="benchmark-anchor-reading">
+                <td colSpan={4}>{anchor.interpretation}</td>
+              </tr>
+            </Fragment>
           ))}
         </tbody>
       </table>
@@ -206,6 +246,12 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
         </button>
       </header>
 
+      {result?.notice && (
+        <aside className="benchmark-scope-notice" aria-labelledby="benchmark-scope-title">
+          <h3 id="benchmark-scope-title">What this benchmark claims</h3>
+          <p>{result.notice}</p>
+        </aside>
+      )}
       {playbackNotice && (
         <p className={`benchmark-notice ${offline ? 'is-offline' : ''}`}>{playbackNotice}</p>
       )}

@@ -1,5 +1,6 @@
 import type {
   AlternativeSailingResult,
+  AnchorComparison,
   ArmResult,
   BenchmarkResult,
   ConnectionAnalysis,
@@ -647,6 +648,33 @@ export const OFFLINE_OPENING_STEPS: OfflineStep[] = [
 // hand-shaped illustrations, not the simulator's output: the page labels itself
 // OFFLINE ILLUSTRATION whenever it is showing them, and the real run replaces
 // every figure the moment the backend answers.
+//
+// The shapes are kept in the same relation as the real benchmark's: the
+// reconstructed 2024 curve peaks at 7 days, and the two simulated arms peak
+// far below it because the recorded arrival stream measures throughput, which
+// congestion suppresses. An offline mock that had the simulation matching the
+// recorded peak would rehearse a claim the benchmark explicitly does not make.
+
+/** The honesty statement the backend attaches to every result, mirrored here. */
+const BENCHMARK_NOTICE =
+  'A controlled policy comparison, not a reproduction of history. The reactive baseline ' +
+  'and CASCADE arms are discrete-event simulations of the recorded 2024 arrival stream, ' +
+  'run blind: no arm can read a day it has not yet reached. They share one world, one ' +
+  'calibration and one stream, and differ only in policy, so the comparison between them ' +
+  'is the result this benchmark stands behind. The recorded arm is a reconstruction, not a ' +
+  'measurement. The simulation does not reproduce the recorded 2024 congestion and is not ' +
+  'claimed to: the recorded daily port calls and volumes measure throughput, ' +
+  'which congestion suppresses. The recorded anchors are published alongside the simulated ' +
+  'figures so that gap stays visible.'
+
+/**
+ * Shown in place of the backend's playback notice when the API is unreachable.
+ * Kept separate from `BenchmarkResult.notice`: one says how the curves were
+ * obtained, the other says what the benchmark does and does not claim.
+ */
+export const OFFLINE_BENCHMARK_NOTICE =
+  'OFFLINE ILLUSTRATION. The API is unreachable, so these curves are hand-shaped ' +
+  'placeholders, not simulator output.'
 
 const BENCHMARK_DAYS = 153
 const BENCHMARK_START = Date.UTC(2024, 3, 1)
@@ -656,6 +684,8 @@ interface ArmShape {
   label: string
   base: number
   peak: number
+  /** Level the curve decays towards after the peak. */
+  settle: number
   peakDay: number
   riseWidth: number
   fallWidth: number
@@ -667,15 +697,19 @@ const BENCHMARK_SHAPES: ArmShape[] = [
     label: 'Recorded 2024 (reconstructed)',
     base: 0.4,
     peak: 7.0,
+    settle: 0.9,
     peakDay: 55,
     riseWidth: 16,
     fallWidth: 22,
   },
   {
+    // The reactive arm never adds capacity, so it plateaus instead of
+    // recovering. Its peak is nowhere near the reconstructed 7 days.
     arm: 'REACTIVE_BASELINE',
     label: 'Reactive baseline',
     base: 0.4,
-    peak: 6.4,
+    peak: 2.02,
+    settle: 2.02,
     peakDay: 60,
     riseWidth: 18,
     fallWidth: 30,
@@ -684,7 +718,8 @@ const BENCHMARK_SHAPES: ArmShape[] = [
     arm: 'CASCADE_AGENTIC',
     label: 'CASCADE agentic',
     base: 0.4,
-    peak: 3.4,
+    peak: 1.55,
+    settle: 0.5,
     peakDay: 52,
     riseWidth: 15,
     fallWidth: 14,
@@ -696,10 +731,12 @@ function benchmarkDate(index: number): string {
 }
 
 function shapedWait(shape: ArmShape, index: number): number {
-  const width = index <= shape.peakDay ? shape.riseWidth : shape.fallWidth
+  const rising = index <= shape.peakDay
+  const width = rising ? shape.riseWidth : shape.fallWidth
+  const floor = rising ? shape.base : shape.settle
   const offset = index - shape.peakDay
   const bump = Math.exp(-(offset * offset) / (2 * width * width))
-  return Number((shape.base + (shape.peak - shape.base) * bump).toFixed(2))
+  return Number((floor + (shape.peak - floor) * bump).toFixed(2))
 }
 
 function mockDaily(shape: ArmShape): DailyKpi[] {
@@ -726,7 +763,12 @@ function mockMetrics(daily: DailyKpi[]): FleetMetrics {
   const peak = daily.reduce((best, day) =>
     day.rolling_wait_days > best.rolling_wait_days ? day : best,
   )
-  const recovered = daily.find((day) => day.day_index > peak.day_index && day.rolling_wait_days <= 2)
+  // An arm that never crossed the two-day threshold has nothing to recover
+  // from; reporting a recovery date for it would invent an event.
+  const breached = daily.some((day) => day.rolling_wait_days > 2)
+  const recovered = breached
+    ? daily.find((day) => day.day_index > peak.day_index && day.rolling_wait_days <= 2)
+    : undefined
   const mean = daily.reduce((total, day) => total + day.rolling_wait_days, 0) / daily.length
   return {
     peak_wait_days: peak.rolling_wait_days,
@@ -752,7 +794,12 @@ function mockArm(shape: ArmShape): ArmResult {
     provenance: historical ? 'RECONSTRUCTED' : 'SIMULATED',
     is_simulation: !historical,
     daily,
-    metrics: mockMetrics(daily),
+    // The reconstruction is a wait curve and nothing else, so its port-stay
+    // fields are left at zero exactly as the backend leaves them, rather than
+    // shaped into a number no source supports.
+    metrics: historical
+      ? { ...mockMetrics(daily), mean_port_stay_hours: 0, port_stay_inflation_pct: 0 }
+      : mockMetrics(daily),
     decisions: [],
     blind_audit: historical
       ? null
@@ -762,6 +809,64 @@ function mockArm(shape: ArmShape): ArmResult {
       ? 'Reconstructed from IMF PortWatch daily port calls, anchored to published 2024 figures.'
       : null,
   }
+}
+
+/**
+ * Recorded anchors held next to what the reactive baseline produced. Each row
+ * carries the reason it lands where it does, written from the structure of the
+ * model rather than from the numbers, so a row that happens to fall inside
+ * tolerance still says why that is not agreement.
+ */
+function mockAnchors(baseline: ArmResult): AnchorComparison[] {
+  const lastDay = baseline.daily[baseline.daily.length - 1]
+  const rows: Array<Omit<AnchorComparison, 'within_tolerance'>> = [
+    {
+      anchor_key: 'peak_berthing_delay_days',
+      label: 'Peak berthing delay at Singapore, late May 2024',
+      recorded_value: 7,
+      recorded_provenance: 'RECORDED',
+      simulated_value: baseline.metrics.peak_wait_days,
+      unit: 'days',
+      tolerance: 2,
+      interpretation:
+        'Expected to under-predict. The recorded peak was driven largely by vessels ' +
+        'arriving off-schedule - 90% in 2024 against 77% in 2023 - and PortWatch records ' +
+        'the day a ship arrived, not the day it was due, so that bunching is absent from ' +
+        'the stream the simulation is fed.',
+    },
+    {
+      anchor_key: 'recovered_wait_days',
+      label: 'Average wait time at the port after mitigation',
+      recorded_value: 2,
+      recorded_provenance: 'RECORDED',
+      simulated_value: lastDay.rolling_wait_days,
+      unit: 'days',
+      tolerance: 1,
+      interpretation:
+        'Read with care. This is the baseline wait on the last day of the window, not a ' +
+        'recovery: the reactive arm never recovers, because it never adds capacity. The ' +
+        'recorded port recovered because PSA reactivated Keppel berths and hired around ' +
+        '1,500 staff. Proximity to the recorded figure here is coincidence, not agreement.',
+    },
+    {
+      anchor_key: 'port_stay_inflation_pct',
+      label: 'Vessel port stays at PSA versus the same period in 2023',
+      recorded_value: 22,
+      recorded_provenance: 'RECORDED',
+      simulated_value: baseline.metrics.port_stay_inflation_pct,
+      unit: 'percent',
+      tolerance: 12,
+      interpretation:
+        'Expected to over-predict. The simulated figure compounds the recorded rise in ' +
+        'volume per call with the congestion feedback in the model, while the recorded ' +
+        '+22% is the net outcome at a port that was actively adding capacity throughout ' +
+        'the period.',
+    },
+  ]
+  return rows.map((row) => ({
+    ...row,
+    within_tolerance: Math.abs(row.simulated_value - row.recorded_value) <= row.tolerance,
+  }))
 }
 
 export const MOCK_BENCHMARK_RESULT: BenchmarkResult = (() => {
@@ -814,17 +919,18 @@ export const MOCK_BENCHMARK_RESULT: BenchmarkResult = (() => {
             100
           ).toFixed(1),
         ),
-        recovery_days_saved: 24,
+        // The reactive arm never recovers, so there is no recovery gap to
+        // quote; the page says so rather than inventing a day count.
+        recovery_days_saved: null,
         mean_wait_delta_days: Number((cascade.mean_wait_days - baseline.mean_wait_days).toFixed(2)),
         wait_cost_delta_usd: cascade.wait_cost_usd - baseline.wait_cost_usd,
         wins_on_peak: true,
         wins_on_recovery: true,
       },
     ],
-    anchor_comparisons: [],
+    anchor_comparisons: mockAnchors(arms[1]),
     fixture_hashes: {},
     runtime_ms: 0,
-    notice:
-      'OFFLINE ILLUSTRATION. The API is unreachable, so these curves are hand-shaped placeholders, not simulator output.',
+    notice: BENCHMARK_NOTICE,
   }
 })()

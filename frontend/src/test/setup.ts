@@ -1,9 +1,54 @@
 import '@testing-library/jest-dom/vitest'
 
-// Polyfills required by @xyflow/react in jsdom.
+// Polyfills required by @xyflow/react and recharts in jsdom.
 
+/** jsdom lays nothing out, so measured elements are given a plausible box. */
+const MEASURED_BOX = { width: 800, height: 320 }
+
+/** Only an explicit pixel size is a size; `100%` measures nothing in jsdom. */
+function pixels(value: string, fallback: number): number {
+  return value.endsWith('px') ? parseFloat(value) || fallback : fallback
+}
+
+function measuredRect(target: Element): DOMRectReadOnly {
+  const element = target as HTMLElement
+  const width = pixels(element.style.width, MEASURED_BOX.width)
+  const height = pixels(element.style.height, MEASURED_BOX.height)
+  return {
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: width,
+    bottom: height,
+    width,
+    height,
+    toJSON: () => ({}),
+  }
+}
+
+/**
+ * Reports a size once on observe. Recharts' ResponsiveContainer renders
+ * nothing at all until it has measured its box, so a no-op observer would
+ * leave every chart test asserting against an empty container.
+ */
 class ResizeObserverPolyfill {
-  observe() {}
+  constructor(private readonly callback: ResizeObserverCallback) {}
+
+  observe(target: Element) {
+    const contentRect = measuredRect(target)
+    const entry = {
+      target,
+      contentRect,
+      borderBoxSize: [{ inlineSize: contentRect.width, blockSize: contentRect.height }],
+      contentBoxSize: [{ inlineSize: contentRect.width, blockSize: contentRect.height }],
+      devicePixelContentBoxSize: [
+        { inlineSize: contentRect.width, blockSize: contentRect.height },
+      ],
+    } as unknown as ResizeObserverEntry
+    this.callback([entry], this as unknown as ResizeObserver)
+  }
+
   unobserve() {}
   disconnect() {}
 }
@@ -26,13 +71,13 @@ Object.defineProperties(globalThis.HTMLElement.prototype, {
   offsetHeight: {
     configurable: true,
     get() {
-      return parseFloat((this as HTMLElement).style.height) || 600
+      return pixels((this as HTMLElement).style.height, 600)
     },
   },
   offsetWidth: {
     configurable: true,
     get() {
-      return parseFloat((this as HTMLElement).style.width) || 800
+      return pixels((this as HTMLElement).style.width, MEASURED_BOX.width)
     },
   },
 })

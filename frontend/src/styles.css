@@ -3632,6 +3632,32 @@ time,
   cursor: default;
 }
 
+/* The benchmark's central honesty statement. Sits directly under the header so
+   nobody reads the chart before reading what it does and does not claim. */
+.benchmark-scope-notice {
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-left-width: 2px;
+  border-radius: 3px;
+  background: var(--panel-muted);
+}
+
+.benchmark-scope-notice h3 {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.benchmark-scope-notice p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.73rem;
+  line-height: 1.6;
+}
+
 .benchmark-notice,
 .benchmark-error {
   margin: 0;
@@ -3837,6 +3863,21 @@ time,
 .benchmark-table td {
   color: var(--ink);
   font-family: var(--mono);
+}
+
+/* The anchor rows are context, not a grade, so the gap column is never
+   coloured pass/fail. The reading sits under its row and carries the reason. */
+.benchmark-anchor-row th,
+.benchmark-anchor-row td {
+  border-bottom: 0;
+}
+
+.benchmark-anchor-reading td {
+  padding-top: 0;
+  color: var(--muted);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 0.68rem;
+  line-height: 1.55;
 }
 
 .benchmark-cell-note {

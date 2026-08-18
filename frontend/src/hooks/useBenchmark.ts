@@ -9,7 +9,7 @@ import type {
   CreateBenchmarkRequest,
   FleetArm,
 } from '../api/types'
-import { MOCK_BENCHMARK_RESULT } from '../data/demo'
+import { MOCK_BENCHMARK_RESULT, OFFLINE_BENCHMARK_NOTICE } from '../data/demo'
 
 /**
  * Deliberately separate from `useRunStream`. That hook models one single-vessel
@@ -241,7 +241,7 @@ export function useBenchmark(): BenchmarkStream {
         openStream(benchmark)
       } catch (cause: unknown) {
         if (canUseOfflineFallback(cause)) {
-          setPlaybackNotice(MOCK_BENCHMARK_RESULT.notice)
+          setPlaybackNotice(OFFLINE_BENCHMARK_NOTICE)
           startOffline()
           return
         }
