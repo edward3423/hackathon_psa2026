@@ -55,6 +55,32 @@ function seriesFromResult(result: BenchmarkResult): ArmSeries {
   return series
 }
 
+/**
+ * The decisions a completed result carries, keyed by the day they were taken,
+ * so offline playback can release them in step with the lines instead of
+ * dropping the panel that explains what CASCADE actually did.
+ */
+function decisionEventsByDay(result: BenchmarkResult): Map<number, BenchmarkEvent[]> {
+  const byDay = new Map<number, BenchmarkEvent[]>()
+  let sequence = 0
+  for (const arm of result.arms) {
+    for (const decision of arm.decisions ?? []) {
+      sequence += 1
+      const event: BenchmarkEvent = {
+        event_id: `offline-decision-${sequence}`,
+        sequence,
+        timestamp: `${decision.date}T00:00:00Z`,
+        kind: 'DECISION_TAKEN',
+        arm: arm.arm,
+        decision,
+        message: decision.decision.rationale,
+      }
+      byDay.set(decision.day_index, [...(byDay.get(decision.day_index) ?? []), event])
+    }
+  }
+  return byDay
+}
+
 export interface BenchmarkStream {
   created: BenchmarkCreated | null
   stage: BenchmarkStage
@@ -151,9 +177,12 @@ export function useBenchmark(): BenchmarkStream {
     setDayIndex(-1)
 
     const full = seriesFromResult(MOCK_BENCHMARK_RESULT)
+    const decisionsByDay = decisionEventsByDay(MOCK_BENCHMARK_RESULT)
     const longest = Math.max(...Object.values(full).map((points) => points.length), 0)
     for (let index = 0; index < longest; index += 1) {
       const timer = setTimeout(() => {
+        const due = decisionsByDay.get(index)
+        if (due) setDecisions((current) => [...current, ...due])
         setSeries((current) => {
           const next: ArmSeries = { ...current }
           for (const [arm, points] of Object.entries(full)) {

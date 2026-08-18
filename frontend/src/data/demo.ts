@@ -11,6 +11,7 @@ import type {
   MockedAction,
   PlanComparison,
   PriorityEmphasis,
+  RecordedDecision,
   ScenarioState,
   TraceEvent,
   WorkflowStage,
@@ -726,6 +727,13 @@ const BENCHMARK_SHAPES: ArmShape[] = [
   },
 ]
 
+/** The controller reviews policy weekly, so most epochs end in a HOLD. */
+const CASCADE_EPOCH_DAYS = 7
+const RESERVE_DECISION_DAY = 28
+/** Conservative Keppel reactivation lead, the same one the engine enforces. */
+const RESERVE_LEAD_DAYS = 14
+const RESERVE_EFFECTIVE_DAY = RESERVE_DECISION_DAY + RESERVE_LEAD_DAYS
+
 function benchmarkDate(index: number): string {
   return new Date(BENCHMARK_START + index * 86_400_000).toISOString().slice(0, 10)
 }
@@ -752,11 +760,66 @@ function mockDaily(shape: ArmShape): DailyKpi[] {
       queue_length: queue,
       mean_wait_days: wait,
       rolling_wait_days: wait,
-      active_berths: shape.arm === 'CASCADE_AGENTIC' && index > 45 ? 46 : 42,
+      // Derived from the reserve decision below rather than stated twice, so
+      // the extra berths appear exactly when the mock says they were ordered.
+      active_berths:
+        shape.arm === 'CASCADE_AGENTIC' && index >= RESERVE_EFFECTIVE_DAY ? 46 : 42,
       teu_waiting: queue * 1500,
       utilisation: Number(Math.min(0.99, 0.72 + wait * 0.03).toFixed(2)),
     }
   })
+}
+
+/**
+ * The offline demo used to drop the decision panel entirely, which read as
+ * "CASCADE did nothing" rather than "the backend is unreachable". These are the
+ * weekly epochs of the agentic arm: three levers and a HOLD on every other
+ * week, the same shape the scripted controller produces on a real run.
+ */
+function mockDecisions(daily: DailyKpi[]): RecordedDecision[] {
+  const decisions: RecordedDecision[] = []
+  for (let index = 0; index < daily.length; index += CASCADE_EPOCH_DAYS) {
+    const common = { date: daily[index].date, day_index: index, accepted: true, source: 'SCRIPTED' as const }
+    if (index === RESERVE_DECISION_DAY) {
+      decisions.push({
+        ...common,
+        agent: 'Yard Agent',
+        decision: {
+          type: 'ACTIVATE_RESERVE_BERTHS',
+          tranche_id: 'keppel-reserve-1',
+          rationale: `Rolling wait is climbing; ordering the Keppel tranche now so it is live in ${RESERVE_LEAD_DAYS} days.`,
+        },
+        effective_date: daily[RESERVE_EFFECTIVE_DAY].date,
+      })
+    } else if (index === 35) {
+      decisions.push({
+        ...common,
+        agent: 'Recovery Agent',
+        decision: {
+          type: 'SET_QUEUE_DISCIPLINE',
+          discipline: 'CONNECTION_WEIGHTED',
+          rationale: 'Backlog is deep enough that connection risk, not arrival order, decides the cost of waiting.',
+        },
+      })
+    } else if (index === 42) {
+      decisions.push({
+        ...common,
+        agent: 'Execution Agent',
+        decision: {
+          type: 'FAST_CONNECTION_MODE',
+          enabled: true,
+          rationale: 'Transhipment boxes are missing their onward sailings; expedite delivery for the connection window.',
+        },
+      })
+    } else {
+      decisions.push({
+        ...common,
+        agent: 'Coordinator Agent',
+        decision: { type: 'HOLD', rationale: 'Queue within tolerance; no lever justified this week.' },
+      })
+    }
+  }
+  return decisions
 }
 
 function mockMetrics(daily: DailyKpi[]): FleetMetrics {
@@ -800,7 +863,7 @@ function mockArm(shape: ArmShape): ArmResult {
     metrics: historical
       ? { ...mockMetrics(daily), mean_port_stay_hours: 0, port_stay_inflation_pct: 0 }
       : mockMetrics(daily),
-    decisions: [],
+    decisions: shape.arm === 'CASCADE_AGENTIC' ? mockDecisions(daily) : [],
     blind_audit: historical
       ? null
       : { total_reads: 153, max_lookahead_seconds: 0, violations: 0, verdict: 'PASS' },

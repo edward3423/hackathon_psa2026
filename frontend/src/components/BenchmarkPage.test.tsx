@@ -180,6 +180,38 @@ describe('Crisis Benchmark page', () => {
     expect(row.previousElementSibling).toHaveTextContent('inside +/- 1')
   })
 
+  it('collapses repeated holds so the decisions that changed something stand out', async () => {
+    await playOfflineBenchmark()
+
+    const taken = CASCADE.decisions ?? []
+    const holds = taken.filter((decision) => decision.decision.type === 'HOLD')
+    const levers = taken.filter((decision) => decision.decision.type !== 'HOLD')
+    expect(holds.length).toBeGreaterThan(5)
+    expect(levers.length).toBeGreaterThan(0)
+
+    const rows = document.querySelectorAll('.benchmark-decision-list li')
+    // Far fewer rows than epochs, but every epoch still accounted for: the
+    // levers each get their own row and the holds around them collapse.
+    expect(rows.length).toBeLessThan(taken.length)
+    expect(rows.length).toBeGreaterThanOrEqual(levers.length)
+
+    const list = document.querySelector('.benchmark-decision-list')!
+    for (const lever of levers) {
+      expect(list).toHaveTextContent(lever.decision.type)
+      expect(list).toHaveTextContent(lever.decision.rationale)
+    }
+
+    // A collapsed run says how many epochs it stands for and over what span,
+    // so nothing is quietly hidden.
+    const counted = [...document.querySelectorAll('.benchmark-decision-repeat')]
+    expect(counted.length).toBeGreaterThan(0)
+    const summed = counted.reduce(
+      (total, chip) => total + Number(chip.textContent!.replace(/\D/g, '')),
+      0,
+    )
+    expect(summed + (rows.length - counted.length)).toBe(taken.length)
+  })
+
   it('states the headline gain as one pinned run rather than a general claim', async () => {
     await playOfflineBenchmark()
 

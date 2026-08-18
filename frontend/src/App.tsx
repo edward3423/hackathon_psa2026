@@ -352,6 +352,11 @@ function App() {
     }
   }
 
+  // Act 2 is a different demonstration, not a different view of the Act 1 run.
+  // The vessel header, the scenario controls and the run scrubber all describe
+  // one delayed ship, so none of them belong over a five-month fleet replay.
+  const actTwo = activePage === 'benchmark'
+
   return (
     <div className={`app-shell${showApproval ? ' with-approval' : ''}`}>
       <Sidebar
@@ -374,23 +379,27 @@ function App() {
           offline={offlineActive}
           transportState={transportState}
           eventCount={events.length}
+          showRunContext={!actTwo}
+          subtitle={actTwo ? 'Red Sea 2024 blind replay benchmark' : undefined}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
         />
 
-        <ControlsBar
-          controls={controls}
-          brainMode={brainMode}
-          disabled={streaming}
-          onChange={setControls}
-          onBrainModeChange={setBrainMode}
-          onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
-          onStartReplay={() => startRun('DEMO_REPLAY')}
-          onReset={() => void resetRun()}
-          scenarioPresets={SCENARIO_PRESETS}
-          selectedScenarioId={selectedScenarioId}
-          onScenarioSelect={selectScenario}
-        />
+        {!actTwo && (
+          <ControlsBar
+            controls={controls}
+            brainMode={brainMode}
+            disabled={streaming}
+            onChange={setControls}
+            onBrainModeChange={setBrainMode}
+            onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
+            onStartReplay={() => startRun('DEMO_REPLAY')}
+            onReset={() => void resetRun()}
+            scenarioPresets={SCENARIO_PRESETS}
+            selectedScenarioId={selectedScenarioId}
+            onScenarioSelect={selectScenario}
+          />
+        )}
 
         {scenarioError && (
           <p className="offline-banner" role="status">
@@ -410,7 +419,7 @@ function App() {
                 sticky to the bottom of the viewport, so on the Act 2 benchmark -
                 a 153-day fleet replay it cannot address - it is not merely
                 meaningless but sits on top of the chart. */}
-            {activePage !== 'benchmark' && (
+            {!actTwo && (
               <OperationsTimeline
                 cursorHour={cursorHour}
                 onCursorChange={setCursorHour}

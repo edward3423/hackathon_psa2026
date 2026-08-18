@@ -29,6 +29,16 @@ interface TopBarProps {
     | 'OFFLINE'
     | 'ENDED'
   eventCount: number
+  /**
+   * Everything below the masthead describes one single-vessel run: the vessel
+   * under disruption, its objective, the workflow stage rail and the run's
+   * transport state. Act 2 replays a fleet across five months and has none of
+   * those, so it asks for the masthead alone rather than being given an idle
+   * stage rail and a vessel it is not about.
+   */
+  showRunContext?: boolean
+  /** What this page is, when it is not the single-vessel scenario. */
+  subtitle?: string
   onOpenNavigation: () => void
   onStageSelect?: (stage: WorkflowStage) => void
 }
@@ -42,6 +52,8 @@ export function TopBar({
   offline,
   transportState,
   eventCount,
+  showRunContext = true,
+  subtitle,
   onOpenNavigation,
   onStageSelect,
 }: TopBarProps) {
@@ -91,111 +103,122 @@ export function TopBar({
 
         <div className="page-identity">
           <h1>CASCADE</h1>
-          <p className="scenario-readout">{scenario.name}</p>
+          <p className="scenario-readout">{subtitle ?? scenario.name}</p>
         </div>
 
-        <div className="top-status-grid" aria-label="System status summary">
-          <div>
-            <span>Simulated port time</span>
-            <strong>{formatDateTime(scenario.alert.event_time)}</strong>
-          </div>
-          <div>
-            <span>Run ID</span>
-            <strong className="run-id">{run?.run_id ?? 'NOT STARTED'}</strong>
-          </div>
-          <div>
-            <span>Agent mode</span>
-            <strong>
-              {run?.mode === 'DEMO_REPLAY'
-                ? 'Recorded simulation'
-                : run
-                  ? spaced(run.mode).replace('LIVE ', '')
-                  : 'Scripted simulation'}
-            </strong>
-          </div>
-          <div>
-            <span>Agent status</span>
-            <strong className="inline-status">
-              <Bot size={14} aria-hidden="true" />
-              {agentStatus}
-            </strong>
-          </div>
-          <div>
-            <span>Event stream</span>
-            <strong className="inline-status">
-              {offline ? (
-                <WifiOff size={14} aria-hidden="true" />
-              ) : (
-                <Wifi size={14} aria-hidden="true" />
-              )}
-              {connectionLabel}
-            </strong>
-          </div>
-        </div>
+        {showRunContext && (
+          <>
+            <div className="top-status-grid" aria-label="System status summary">
+              <div>
+                <span>Simulated port time</span>
+                <strong>{formatDateTime(scenario.alert.event_time)}</strong>
+              </div>
+              <div>
+                <span>Run ID</span>
+                <strong className="run-id">{run?.run_id ?? 'NOT STARTED'}</strong>
+              </div>
+              <div>
+                <span>Agent mode</span>
+                <strong>
+                  {run?.mode === 'DEMO_REPLAY'
+                    ? 'Recorded simulation'
+                    : run
+                      ? spaced(run.mode).replace('LIVE ', '')
+                      : 'Scripted simulation'}
+                </strong>
+              </div>
+              <div>
+                <span>Agent status</span>
+                <strong className="inline-status">
+                  <Bot size={14} aria-hidden="true" />
+                  {agentStatus}
+                </strong>
+              </div>
+              <div>
+                <span>Event stream</span>
+                <strong className="inline-status">
+                  {offline ? (
+                    <WifiOff size={14} aria-hidden="true" />
+                  ) : (
+                    <Wifi size={14} aria-hidden="true" />
+                  )}
+                  {connectionLabel}
+                </strong>
+              </div>
+            </div>
 
-        <div className="run-state" aria-live="polite">
-          <span>Workflow</span>
-          <strong>{spaced(stage)}</strong>
-          <small>{eventCount} trace {eventCount === 1 ? 'record' : 'records'}</small>
-        </div>
+            <div className="run-state" aria-live="polite">
+              <span>Workflow</span>
+              <strong>{spaced(stage)}</strong>
+              <small>{eventCount} trace {eventCount === 1 ? 'record' : 'records'}</small>
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="disruption-strip" role="status">
-        <div className="disruption-primary">
-          <Radio size={17} aria-hidden="true" />
-          <span>Active disruption</span>
-          <strong className="alert-vessel">{scenario.alert.vessel_name}</strong>
-        </div>
-        <dl className="alert-figures">
-          <div>
-            <dt>Delay</dt>
-            <dd>{delayHours} h</dd>
+      {showRunContext && (
+        <>
+          <div className="disruption-strip" role="status">
+            <div className="disruption-primary">
+              <Radio size={17} aria-hidden="true" />
+              <span>Active disruption</span>
+              <strong className="alert-vessel">{scenario.alert.vessel_name}</strong>
+            </div>
+            <dl className="alert-figures">
+              <div>
+                <dt>Delay</dt>
+                <dd>{delayHours} h</dd>
+              </div>
+              <div>
+                <dt>Revised ETA</dt>
+                <dd>{formatDateTime(scenario.alert.revised_eta)}</dd>
+              </div>
+              <div>
+                <dt>Port call</dt>
+                <dd>{scenario.alert.port_call}</dd>
+              </div>
+            </dl>
+            <div className="demo-assurance">
+              <ShieldCheck size={16} aria-hidden="true" />
+              <span>DEMO ENVIRONMENT</span>
+            </div>
           </div>
-          <div>
-            <dt>Revised ETA</dt>
-            <dd>{formatDateTime(scenario.alert.revised_eta)}</dd>
-          </div>
-          <div>
-            <dt>Port call</dt>
-            <dd>{scenario.alert.port_call}</dd>
-          </div>
-        </dl>
-        <div className="demo-assurance">
-          <ShieldCheck size={16} aria-hidden="true" />
-          <span>DEMO ENVIRONMENT</span>
-        </div>
-      </div>
 
-      <p className="objective-line">
-        <span>Objective</span>
-        {scenario.objective}
-      </p>
+          <p className="objective-line">
+            <span>Objective</span>
+            {scenario.objective}
+          </p>
 
-      <ol className="stage-track" aria-label="Workflow stages">
-        {STAGES.map((stageName, index) => (
-          <li key={stageName}>
-            <button
-              type="button"
-              className={
-                stage === 'FAILED'
-                  ? 'stage-step failed'
-                  : index < stageIndex
-                    ? 'stage-step done'
-                    : index === stageIndex
-                      ? 'stage-step current'
-                      : 'stage-step'
-              }
-              aria-current={index === stageIndex ? 'step' : undefined}
-              onClick={() => onStageSelect?.(stageName)}
-            >
-              <span className="stage-marker" aria-hidden="true" />
-              {spaced(stageName)}
-            </button>
-          </li>
-        ))}
-      </ol>
+          <ol className="stage-track" aria-label="Workflow stages">
+            {STAGES.map((stageName, index) => (
+              <li key={stageName}>
+                <button
+                  type="button"
+                  className={
+                    stage === 'FAILED'
+                      ? 'stage-step failed'
+                      : index < stageIndex
+                        ? 'stage-step done'
+                        : index === stageIndex
+                          ? 'stage-step current'
+                          : 'stage-step'
+                  }
+                  aria-current={index === stageIndex ? 'step' : undefined}
+                  onClick={() => onStageSelect?.(stageName)}
+                >
+                  <span className="stage-marker" aria-hidden="true" />
+                  {spaced(stageName)}
+                </button>
+              </li>
+            ))}
+          </ol>
 
-      <p className="synthetic-notice">Synthetic data: {scenario.synthetic_notice}</p>
+          {/* Act 1's notice, and true only of Act 1. The benchmark is driven by a
+              recorded arrival stream, so it carries its own provenance footer
+              rather than being described as synthetic here. */}
+          <p className="synthetic-notice">Synthetic data: {scenario.synthetic_notice}</p>
+        </>
+      )}
     </header>
   )
 }

@@ -78,6 +78,80 @@ function recoveryLabel(metrics: ArmResult['metrics']): string {
   return metrics.recovery_date ? shortDate(metrics.recovery_date) : 'not reached'
 }
 
+type DecisionEvent = BenchmarkStream['decisions'][number]
+
+interface DecisionRun {
+  key: string
+  type: string
+  /** The latest rationale in the run; the only one for a run of one. */
+  message: string
+  accepted: boolean
+  rejectionReason: string | null
+  firstDate: string
+  lastDate: string
+  count: number
+}
+
+/**
+ * What a decision *is*, ignoring the reading that prompted it. Two HOLDs are
+ * the same decision even though their rationales quote a different rolling
+ * wait, and it is the sameness of the decision that makes a row redundant.
+ */
+function decisionIdentity(decision: NonNullable<DecisionEvent['decision']>): string {
+  const it = decision.decision
+  return [
+    it.type,
+    it.tranche_id ?? '',
+    it.discipline ?? '',
+    it.enabled ?? '',
+    it.surge_level ?? '',
+    decision.accepted,
+    decision.rejection_reason ?? '',
+  ].join('|')
+}
+
+/**
+ * Consecutive identical decisions become one row.
+ *
+ * The controller reviews policy every epoch across five months, and on most of
+ * them the honest answer is HOLD. Drawn one per line that is twenty-odd
+ * indistinguishable rows burying the two decisions that actually changed how
+ * the port ran, which inverts what the panel is for. Collapsing a run keeps
+ * every epoch accounted for - the count and the span say how many and when -
+ * while letting a real decision stand out by being the only thing near it.
+ *
+ * Only consecutive runs collapse, so the sequence stays in order and a repeat
+ * after a change is never folded into the run before it.
+ */
+function collapseDecisions(events: DecisionEvent[]): DecisionRun[] {
+  const runs: DecisionRun[] = []
+  let previousIdentity: string | null = null
+  for (const event of events) {
+    const decision = event.decision
+    if (!decision) continue
+    const identity = decisionIdentity(decision)
+    const previous = runs[runs.length - 1]
+    if (previous && identity === previousIdentity) {
+      previous.lastDate = decision.date
+      previous.message = event.message
+      previous.count += 1
+      continue
+    }
+    previousIdentity = identity
+    runs.push({
+      key: event.event_id,
+      type: decision.decision.type,
+      message: event.message,
+      accepted: decision.accepted,
+      rejectionReason: decision.rejection_reason ?? null,
+      firstDate: decision.date,
+      lastDate: decision.date,
+      count: 1,
+    })
+  }
+  return runs
+}
+
 function ArmTiles({ arm }: { arm: ArmResult }) {
   const style = ARM_STYLE[arm.arm]
   return (
@@ -220,6 +294,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
     () => [...new Set(decisions.map((event) => event.decision?.date).filter(Boolean))] as string[],
     [decisions],
   )
+  const decisionRuns = useMemo(() => collapseDecisions(decisions), [decisions])
   const headline = result?.comparisons.find(
     (comparison) =>
       comparison.arm === 'CASCADE_AGENTIC' && comparison.versus === 'REACTIVE_BASELINE',
@@ -370,18 +445,29 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
             </div>
           </header>
           <ol className="benchmark-decision-list">
-            {decisions.map((event) => (
-              <li key={event.event_id} data-accepted={event.decision?.accepted ? 'yes' : 'no'}>
+            {decisionRuns.map((run) => (
+              <li key={run.key} data-accepted={run.accepted ? 'yes' : 'no'}>
                 <span className="benchmark-decision-date">
-                  {event.decision ? shortDate(event.decision.date) : ''}
+                  {run.count === 1
+                    ? shortDate(run.firstDate)
+                    : `${shortDate(run.firstDate)} - ${shortDate(run.lastDate)}`}
                 </span>
                 <div>
-                  <strong>{event.decision?.decision.type}</strong>
-                  <p>{event.message}</p>
-                  {event.decision?.rejection_reason && (
-                    <p className="benchmark-decision-rejected">
-                      Rejected: {event.decision.rejection_reason}
-                    </p>
+                  <strong>{run.type}</strong>
+                  {run.count > 1 && (
+                    <span className="benchmark-decision-repeat">{plural(run.count, 'epoch')}</span>
+                  )}
+                  {/* The rationale of a repeated decision is a status readout
+                      that moves a little each week without the decision
+                      changing, so a collapsed run shows the last one as a
+                      sample rather than implying it stood for all of them. */}
+                  <p>
+                    {run.count === 1
+                      ? run.message
+                      : `No change at any of these reviews. Latest reading: ${run.message}`}
+                  </p>
+                  {run.rejectionReason && (
+                    <p className="benchmark-decision-rejected">Rejected: {run.rejectionReason}</p>
                   )}
                 </div>
               </li>
