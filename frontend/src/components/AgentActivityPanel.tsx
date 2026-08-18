@@ -1,3 +1,11 @@
+import {
+  BrainCircuit,
+  ClipboardCheck,
+  Container,
+  Network,
+  Route,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 
 import type { AgentActivity, TraceEvent } from '../api/types'
@@ -10,22 +18,36 @@ interface AgentActivityPanelProps {
   streaming: boolean
 }
 
-function AgentCard({ view, index }: { view: AgentView; index: number }) {
+const AGENT_ICON: Record<AgentView['agent'], LucideIcon> = {
+  'Coordinator Agent': Network,
+  'Impact Agent': Container,
+  'Yard Agent': BrainCircuit,
+  'Recovery Agent': Route,
+  'Execution Agent': ClipboardCheck,
+}
+
+function AgentCard({ view }: { view: AgentView }) {
   const [expanded, setExpanded] = useState(false)
   const showDetail = expanded || view.status === 'COMPLETED'
+  const Icon = AGENT_ICON[view.agent]
+  const activeTool = view.toolsCalled.at(-1)
+  const statusLabel = view.status === 'RUNNING' && activeTool ? 'CALLING TOOL' : view.status
 
   return (
     <article
       className={`agent-card ${view.status.toLowerCase()}${view.parallelGroup ? ' parallel' : ''}`}
+      aria-label={`${view.agent}: ${statusLabel}`}
     >
       <header>
-        <div className="agent-index">{String(index + 1).padStart(2, '0')}</div>
+        <div className="agent-symbol" aria-hidden="true">
+          <Icon size={18} />
+        </div>
         <div>
           <h3>{view.agent}</h3>
           <p>{view.objective}</p>
         </div>
         <div className="agent-badges">
-          <span className="agent-status">{view.status}</span>
+          <span className="agent-status"><i aria-hidden="true" />{statusLabel}</span>
           {view.confidence && (
             <span className={`confidence-chip ${view.confidence.toLowerCase()}`}>
               {view.confidence}
@@ -35,8 +57,10 @@ function AgentCard({ view, index }: { view: AgentView; index: number }) {
       </header>
 
       {view.parallelGroup && (
-        <p className="parallel-tag">PARALLEL / {view.parallelGroup}</p>
+        <p className="parallel-tag">Parallel analysis: {view.parallelGroup}</p>
       )}
+
+      {view.status === 'RUNNING' && activeTool && <code className="active-tool">{activeTool}</code>}
 
       <p className="agent-result">
         {view.result ?? view.lastSummary ?? 'Waiting for coordinator handoff.'}
@@ -120,8 +144,10 @@ export function AgentActivityPanel({ events, activities, streaming }: AgentActiv
     <section className="activity-panel" aria-labelledby="activity-title">
       <div className="panel-heading">
         <div>
-          <p className="section-label">LIVE ORCHESTRATION</p>
-          <h2 id="activity-title">Agent activity</h2>
+          <h2 id="activity-title">Agent control room</h2>
+          <p className="panel-description">
+            Five specialists share evidence and hand off decisions through the workflow.
+          </p>
         </div>
         <span className={streaming ? 'live-indicator active' : 'live-indicator'}>
           {streaming ? 'STREAMING' : 'IDLE'}
@@ -129,8 +155,8 @@ export function AgentActivityPanel({ events, activities, streaming }: AgentActiv
       </div>
 
       <div className="agent-stack">
-        {views.map((view, index) => (
-          <AgentCard key={view.agent} view={view} index={index} />
+        {views.map((view) => (
+          <AgentCard key={view.agent} view={view} />
         ))}
       </div>
     </section>

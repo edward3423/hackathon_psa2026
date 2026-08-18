@@ -29,15 +29,16 @@ test('timeout path: visible error, labeled cached fallback, MEDIUM confidence, a
   await resolveReeferDispute(page)
 
   // The timeout is surfaced as a labeled cached-fallback callout (PRD 9.12).
-  const fallback = page.locator('.fallback-callout')
+  const fallback = page.locator('.sailing-fallback-notice')
   await expect(fallback).toBeVisible({ timeout: 30_000 })
-  await expect(fallback).toContainText('SAILING LOOKUP TIMEOUT - CACHED FALLBACK')
+  await expect(fallback).toContainText('Sailing lookup timed out')
+  await expect(fallback).toContainText('Cached sailing data was used')
   await expect(fallback).toContainText(/timed out/i)
   await expect(fallback).toContainText(/stale/i)
-  await expect(fallback).toContainText('MEDIUM')
+  await expect(fallback).toContainText(/medium confidence/i)
 
   // The trace records the tool error itself, not just the summary callout.
-  await page.getByRole('button', { name: /EXECUTION TRACE/ }).click()
+  await page.getByRole('button', { name: /execution trace/i }).click()
   const errorRow = page.locator('.trace-list li', { hasText: 'find_alternative_sailings' })
   await expect(errorRow.first()).toContainText(/timed out/i)
 

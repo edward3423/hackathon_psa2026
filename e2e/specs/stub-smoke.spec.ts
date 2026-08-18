@@ -29,7 +29,7 @@ test('stub run streams trace events and pauses at the dispute', async ({ page })
 
   // Expand the trace drawer up front; the modal dispute overlay would block
   // the toggle once the workflow pauses.
-  await page.getByRole('button', { name: /EXECUTION TRACE/ }).click()
+  await page.getByRole('button', { name: /execution trace/i }).click()
 
   await startRun(page)
 
