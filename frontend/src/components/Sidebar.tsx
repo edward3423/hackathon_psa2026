@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   History,
   LayoutDashboard,
+  LineChart,
   PanelLeftClose,
   PanelLeftOpen,
   Route,
@@ -31,6 +32,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'recovery', label: 'Recovery', icon: Route },
   { id: 'execution', label: 'Execution', icon: ClipboardCheck },
   { id: 'replay', label: 'Replay', icon: History },
+  { id: 'benchmark', label: 'Crisis Benchmark', icon: LineChart },
   { id: 'system', label: 'System', icon: Activity },
 ]
 

@@ -1,5 +1,8 @@
 import type {
   ApprovalRequest,
+  BenchmarkCreated,
+  BenchmarkState,
+  CreateBenchmarkRequest,
   DisputeResolutionRequest,
   RunCreated,
   RunMode,
@@ -91,6 +94,19 @@ export function postDisputeResolution(
 
 export function postApproval(runId: string, body: ApprovalRequest): Promise<WorkflowState> {
   return postJson<WorkflowState>(`/api/runs/${runId}/approval`, body)
+}
+
+export function createBenchmark(body: CreateBenchmarkRequest): Promise<BenchmarkCreated> {
+  return postJson<BenchmarkCreated>('/api/benchmarks', body)
+}
+
+/**
+ * Fetch benchmark state. `since` skips events the caller already streamed; a
+ * full run carries thousands of day ticks and only the final result is needed
+ * once the stream has ended.
+ */
+export function getBenchmark(benchmarkId: string, since = 0): Promise<BenchmarkState> {
+  return request<BenchmarkState>(`/api/benchmarks/${benchmarkId}?since=${since}`)
 }
 
 export async function resetDemo(): Promise<void> {

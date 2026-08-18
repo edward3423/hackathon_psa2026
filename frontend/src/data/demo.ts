@@ -1,7 +1,12 @@
 import type {
   AlternativeSailingResult,
+  ArmResult,
+  BenchmarkResult,
   ConnectionAnalysis,
+  DailyKpi,
   Dispute,
+  FleetArm,
+  FleetMetrics,
   MockedAction,
   PlanComparison,
   PriorityEmphasis,
@@ -20,6 +25,7 @@ export type PageId =
   | 'agents'
   | 'execution'
   | 'replay'
+  | 'benchmark'
   | 'system'
 
 export interface ScenarioPreset {
@@ -633,3 +639,192 @@ export const OFFLINE_OPENING_STEPS: OfflineStep[] = [
     },
   },
 ]
+
+// --- Act 2 offline fallback -------------------------------------------------
+//
+// The Crisis Benchmark page has to stay legible when the API is unreachable
+// (the same offline-fallback convention as the mocks above). These curves are
+// hand-shaped illustrations, not the simulator's output: the page labels itself
+// OFFLINE ILLUSTRATION whenever it is showing them, and the real run replaces
+// every figure the moment the backend answers.
+
+const BENCHMARK_DAYS = 153
+const BENCHMARK_START = Date.UTC(2024, 3, 1)
+
+interface ArmShape {
+  arm: FleetArm
+  label: string
+  base: number
+  peak: number
+  peakDay: number
+  riseWidth: number
+  fallWidth: number
+}
+
+const BENCHMARK_SHAPES: ArmShape[] = [
+  {
+    arm: 'HISTORICAL',
+    label: 'Recorded 2024 (reconstructed)',
+    base: 0.4,
+    peak: 7.0,
+    peakDay: 55,
+    riseWidth: 16,
+    fallWidth: 22,
+  },
+  {
+    arm: 'REACTIVE_BASELINE',
+    label: 'Reactive baseline',
+    base: 0.4,
+    peak: 6.4,
+    peakDay: 60,
+    riseWidth: 18,
+    fallWidth: 30,
+  },
+  {
+    arm: 'CASCADE_AGENTIC',
+    label: 'CASCADE agentic',
+    base: 0.4,
+    peak: 3.4,
+    peakDay: 52,
+    riseWidth: 15,
+    fallWidth: 14,
+  },
+]
+
+function benchmarkDate(index: number): string {
+  return new Date(BENCHMARK_START + index * 86_400_000).toISOString().slice(0, 10)
+}
+
+function shapedWait(shape: ArmShape, index: number): number {
+  const width = index <= shape.peakDay ? shape.riseWidth : shape.fallWidth
+  const offset = index - shape.peakDay
+  const bump = Math.exp(-(offset * offset) / (2 * width * width))
+  return Number((shape.base + (shape.peak - shape.base) * bump).toFixed(2))
+}
+
+function mockDaily(shape: ArmShape): DailyKpi[] {
+  return Array.from({ length: BENCHMARK_DAYS }, (_, index) => {
+    const wait = shapedWait(shape, index)
+    const queue = Math.round(wait * 12)
+    return {
+      date: benchmarkDate(index),
+      day_index: index,
+      arrivals: 14,
+      berthings: 14,
+      departures: 14,
+      queue_length: queue,
+      mean_wait_days: wait,
+      rolling_wait_days: wait,
+      active_berths: shape.arm === 'CASCADE_AGENTIC' && index > 45 ? 46 : 42,
+      teu_waiting: queue * 1500,
+      utilisation: Number(Math.min(0.99, 0.72 + wait * 0.03).toFixed(2)),
+    }
+  })
+}
+
+function mockMetrics(daily: DailyKpi[]): FleetMetrics {
+  const peak = daily.reduce((best, day) =>
+    day.rolling_wait_days > best.rolling_wait_days ? day : best,
+  )
+  const recovered = daily.find((day) => day.day_index > peak.day_index && day.rolling_wait_days <= 2)
+  const mean = daily.reduce((total, day) => total + day.rolling_wait_days, 0) / daily.length
+  return {
+    peak_wait_days: peak.rolling_wait_days,
+    peak_wait_date: peak.date,
+    recovery_date: recovered?.date ?? null,
+    days_above_two_day_wait: daily.filter((day) => day.rolling_wait_days > 2).length,
+    mean_wait_days: Number(mean.toFixed(2)),
+    mean_port_stay_hours: Number((28 + mean * 18).toFixed(1)),
+    port_stay_inflation_pct: Number((mean * 14).toFixed(1)),
+    vessels_served: 2142,
+    teu_served: 17_400_000,
+    missed_connection_proxy: Math.round(mean * 420),
+    wait_cost_usd: Math.round(mean * 9_600_000),
+  }
+}
+
+function mockArm(shape: ArmShape): ArmResult {
+  const daily = mockDaily(shape)
+  const historical = shape.arm === 'HISTORICAL'
+  return {
+    arm: shape.arm,
+    label: shape.label,
+    provenance: historical ? 'RECONSTRUCTED' : 'SIMULATED',
+    is_simulation: !historical,
+    daily,
+    metrics: mockMetrics(daily),
+    decisions: [],
+    blind_audit: historical
+      ? null
+      : { total_reads: 153, max_lookahead_seconds: 0, violations: 0, verdict: 'PASS' },
+    calibration: null,
+    caveat: historical
+      ? 'Reconstructed from IMF PortWatch daily port calls, anchored to published 2024 figures.'
+      : null,
+  }
+}
+
+export const MOCK_BENCHMARK_RESULT: BenchmarkResult = (() => {
+  const arms = BENCHMARK_SHAPES.map(mockArm)
+  const baseline = arms[1].metrics
+  const cascade = arms[2].metrics
+  return {
+    benchmark_id: 'offline-benchmark',
+    config: {
+      seed: 42,
+      arms: BENCHMARK_SHAPES.map((shape) => shape.arm),
+      world: {
+        seed: 42,
+        berths: { active_berths: 42, reserve_tranches: [] },
+        service: {
+          base_hours: 2,
+          cranes_per_berth: 4,
+          moves_per_crane_hour: 28,
+          teu_per_move: 1.6,
+          efficiency: 1,
+          congestion_alpha: 0.15,
+          congestion_queue_ref: 20,
+          congestion_cap: 3,
+          surge_alpha_factor: 0.75,
+          surge_efficiency_gain: 0.06,
+          fast_connection_speedup: 0.92,
+        },
+        arrival_jitter_hours: 0,
+        service_rate_multiplier: 1,
+        berth_delta: 0,
+        activation_lead_override_days: null,
+      },
+      brain: 'SCRIPTED',
+      rolling_window_days: 3,
+      recovery_threshold_days: 2,
+      recovery_sustain_days: 5,
+    },
+    calibration_window: { label: 'Pre-crisis calibration', start: '2023-01-01', end: '2024-02-29' },
+    blind_window: { label: 'Red Sea 2024 blind replay', start: '2024-04-01', end: '2024-08-31' },
+    historical_arm_provenance: 'RECONSTRUCTED',
+    arms,
+    comparisons: [
+      {
+        arm: 'CASCADE_AGENTIC',
+        versus: 'REACTIVE_BASELINE',
+        peak_wait_delta_days: Number((cascade.peak_wait_days - baseline.peak_wait_days).toFixed(2)),
+        peak_wait_reduction_pct: Number(
+          (
+            ((baseline.peak_wait_days - cascade.peak_wait_days) / baseline.peak_wait_days) *
+            100
+          ).toFixed(1),
+        ),
+        recovery_days_saved: 24,
+        mean_wait_delta_days: Number((cascade.mean_wait_days - baseline.mean_wait_days).toFixed(2)),
+        wait_cost_delta_usd: cascade.wait_cost_usd - baseline.wait_cost_usd,
+        wins_on_peak: true,
+        wins_on_recovery: true,
+      },
+    ],
+    anchor_comparisons: [],
+    fixture_hashes: {},
+    runtime_ms: 0,
+    notice:
+      'OFFLINE ILLUSTRATION. The API is unreachable, so these curves are hand-shaped placeholders, not simulator output.',
+  }
+})()

@@ -771,6 +771,7 @@ time,
 .recovery-workspace,
 .execution-page,
 .replay-page,
+.benchmark-page,
 .system-status-page,
 .operations-timeline {
   border: 1px solid var(--line);
@@ -2160,6 +2161,7 @@ time,
 .recovery-workspace,
 .execution-page,
 .replay-page,
+.benchmark-page,
 .system-status-page {
   padding: 16px;
 }
@@ -2168,6 +2170,7 @@ time,
 .recovery-workspace > .page-section-header,
 .execution-page > .page-section-header,
 .replay-page > .page-section-header,
+.benchmark-page > .page-section-header,
 .system-status-page > .page-section-header {
   padding-bottom: 13px;
   border-bottom: 1px solid var(--line);
@@ -3593,4 +3596,312 @@ time,
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Act 2: Red Sea 2024 crisis benchmark */
+.benchmark-page {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.benchmark-run-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.benchmark-run-button:hover:not(:disabled) {
+  background: rgba(78, 163, 168, 0.12);
+}
+
+.benchmark-run-button:disabled {
+  border-color: var(--line-strong);
+  color: var(--muted);
+  cursor: default;
+}
+
+.benchmark-notice,
+.benchmark-error {
+  margin: 0;
+  padding: 8px 11px;
+  border-left: 2px solid var(--line-strong);
+  background: var(--panel-muted);
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.benchmark-notice.is-offline {
+  border-left-color: var(--amber);
+  color: var(--amber);
+}
+
+.benchmark-error {
+  border-left-color: var(--red);
+  color: var(--red);
+}
+
+.benchmark-chart {
+  margin: 0;
+  padding: 12px 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-chart figcaption {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.benchmark-headline {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--panel-muted);
+  color: var(--muted-strong);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.benchmark-headline strong {
+  color: var(--accent-strong);
+}
+
+.benchmark-arm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.benchmark-arm-card {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-arm-card header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.benchmark-arm-card h3 {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.benchmark-arm-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.benchmark-provenance {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+}
+
+.benchmark-provenance--reconstructed {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.benchmark-provenance--recorded {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.benchmark-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin: 11px 0 0;
+}
+
+.benchmark-kpis dt {
+  color: var(--muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.benchmark-kpis dd {
+  margin: 3px 0 1px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+
+.benchmark-kpis span {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.benchmark-caveat {
+  margin: 11px 0 0;
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.benchmark-audit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid var(--green);
+  border-radius: 3px;
+  background: rgba(103, 168, 122, 0.07);
+  color: var(--green);
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.benchmark-audit.is-fail {
+  border-color: var(--red);
+  background: rgba(200, 109, 104, 0.07);
+  color: var(--red);
+}
+
+.benchmark-audit strong {
+  flex-shrink: 0;
+  letter-spacing: 0.06em;
+}
+
+.benchmark-audit span {
+  color: var(--muted);
+}
+
+.benchmark-anchors,
+.benchmark-decisions {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-table {
+  width: 100%;
+  margin-top: 11px;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.benchmark-table th,
+.benchmark-table td {
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.benchmark-table thead th {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.benchmark-table tbody th {
+  color: var(--muted-strong);
+  font-weight: 500;
+}
+
+.benchmark-table td {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+.benchmark-cell-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+}
+
+.benchmark-decision-list {
+  margin: 11px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.benchmark-decision-list li {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--accent);
+  background: var(--panel-muted);
+}
+
+.benchmark-decision-list li[data-accepted='no'] {
+  border-left-color: var(--red);
+}
+
+.benchmark-decision-date {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+}
+
+.benchmark-decision-list strong {
+  color: var(--ink);
+  font-size: 0.73rem;
+  letter-spacing: 0.03em;
+}
+
+.benchmark-decision-list p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.45;
+}
+
+.benchmark-decision-rejected {
+  color: var(--red);
+}
+
+.benchmark-provenance-footer {
+  display: grid;
+  gap: 7px;
+  padding: 11px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.5;
+}
+
+.benchmark-provenance-footer p {
+  margin: 0;
 }

@@ -21,8 +21,12 @@ import { Sidebar } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
 import { TraceDrawer } from './components/TraceDrawer'
 import { FALLBACK_SCENARIO, SCENARIO_PRESETS, type PageId } from './data/demo'
+import { useBenchmark } from './hooks/useBenchmark'
 import { useRunStream } from './hooks/useRunStream'
 
+const BenchmarkPage = lazy(() =>
+  import('./components/BenchmarkPage').then((module) => ({ default: module.BenchmarkPage })),
+)
 const CascadeGraph = lazy(() =>
   import('./components/CascadeGraph').then((module) => ({ default: module.CascadeGraph })),
 )
@@ -104,6 +108,9 @@ function App() {
   const [cursorHour, setCursorHour] = useState(0)
 
   const stream = useRunStream()
+  // Act 2 keeps its own stream. The two never share state, so a benchmark
+  // cannot disturb the golden run and vice versa.
+  const benchmark = useBenchmark()
   const { events, workflow, run, stage, streaming, error, offline, transportState } = stream
 
   useEffect(() => {
@@ -303,6 +310,8 @@ function App() {
             }
           />
         )
+      case 'benchmark':
+        return <BenchmarkPage benchmark={benchmark} />
       case 'system':
         return (
           <SystemStatusPage
