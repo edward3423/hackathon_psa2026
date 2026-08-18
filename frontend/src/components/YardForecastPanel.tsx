@@ -35,7 +35,6 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
       <section className="yard-panel" aria-labelledby="yard-title">
         <div className="panel-heading">
           <div>
-            <p className="section-label">YARD FORECAST</p>
             <h2 id="yard-title">72-hour block occupancy</h2>
           </div>
         </div>
@@ -50,7 +49,6 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
     <section className="yard-panel" aria-labelledby="yard-title">
       <div className="panel-heading">
         <div>
-          <p className="section-label">YARD FORECAST (SYNTHETIC)</p>
           <h2 id="yard-title">72-hour block occupancy</h2>
         </div>
         <span className="yard-legend-note">
@@ -84,48 +82,48 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
               </figcaption>
               <ResponsiveContainer width="100%" height={190}>
                 <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-                  <CartesianGrid stroke="#e2e8ee" strokeDasharray="2 4" />
+                  <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
                   <XAxis
                     dataKey="hour"
-                    stroke="#66727c"
+                    stroke="#8292a1"
                     fontSize={11}
                     tickFormatter={(value: number) => `${value}h`}
                     interval="preserveStartEnd"
                   />
                   <YAxis
-                    stroke="#66727c"
+                    stroke="#8292a1"
                     fontSize={11}
                     width={44}
                     domain={[0, Math.ceil(block.container_capacity * 1.1)]}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: '#ffffff',
-                      border: '1px solid #d8dee4',
-                      color: '#1a2530',
+                      background: '#111b24',
+                      border: '1px solid #354655',
+                      color: '#e5edf3',
                       fontSize: 12,
                     }}
                     labelFormatter={(value) => `Hour ${value}`}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11, color: '#66727c' }} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: '#a9b7c3' }} />
                   <ReferenceLine
                     y={congestion}
-                    stroke="#92600a"
+                    stroke="#c59a52"
                     strokeDasharray="5 3"
                     label={{
                       value: '85% congested',
-                      fill: '#92600a',
+                      fill: '#c59a52',
                       fontSize: 10,
                       position: 'insideBottomRight',
                     }}
                   />
                   <ReferenceLine
                     y={block.container_capacity}
-                    stroke="#b42318"
+                    stroke="#c86d68"
                     strokeDasharray="5 3"
                     label={{
                       value: '100% capacity',
-                      fill: '#b42318',
+                      fill: '#c86d68',
                       fontSize: 10,
                       position: 'insideTopLeft',
                       dy: -2,
@@ -135,7 +133,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     type="monotone"
                     dataKey="baseline"
                     name="Baseline"
-                    stroke="#66727c"
+                    stroke="#8292a1"
                     strokeWidth={1.6}
                     dot={false}
                     isAnimationActive={false}
@@ -145,7 +143,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                       type="monotone"
                       dataKey="planned"
                       name={selectedPlan ? titleCase(selectedPlan) : 'Planned'}
-                      stroke="#0e7490"
+                      stroke="#4ea3a8"
                       strokeWidth={1.8}
                       dot={false}
                       isAnimationActive={false}

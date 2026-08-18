@@ -59,7 +59,7 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
         role="dialog"
         aria-label="Agent dispute - human decision required"
       >
-        <p className="section-label">AGENT DISPUTE - HUMAN DECISION REQUIRED</p>
+        <p className="dialog-context">Agent disagreement requires an operator decision.</p>
         <h2>{question}</h2>
 
         {dispute ? (
@@ -81,7 +81,7 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
         )}
 
         <div className="constraint-choice">
-          <p className="section-label">CONFIRM THE GOVERNING CONSTRAINT</p>
+          <h3>Choose the governing constraint</h3>
           {presetChoices(dispute).map((preset) => (
             <button
               key={preset}

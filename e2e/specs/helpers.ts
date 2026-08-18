@@ -19,6 +19,14 @@ export async function startRun(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Start run' }).click()
 }
 
+/** Move between the persistent mission-control workspaces. */
+export async function navigateTo(page: Page, label: string): Promise<void> {
+  const navigation = page.getByRole('navigation', { name: 'CASCADE sections' })
+  const destination = navigation.getByRole('button', { name: label, exact: true })
+  await destination.click()
+  await expect(destination).toHaveAttribute('aria-current', 'page')
+}
+
 /** The workflow-stage readout in the top bar (scoped: the stage track repeats stage names). */
 export function stageReadout(page: Page) {
   return page.locator('.run-state strong')
@@ -47,6 +55,12 @@ export async function approvePlan(page: Page, archetype: string): Promise<void> 
   await expect(approvalBar).toBeVisible({ timeout: 30_000 })
   await approvalBar.getByLabel('Plan').selectOption(archetype)
   await approvalBar.getByRole('button', { name: 'Approve' }).click()
+
+  const confirmation = page.getByRole('dialog', { name: 'Confirm simulated execution' })
+  await expect(confirmation).toBeVisible()
+  await expect(confirmation).toContainText(/simulation only/i)
+  await confirmation.getByRole('button', { name: 'Confirm simulated execution' }).click()
+  await expect(confirmation).toBeHidden({ timeout: 15_000 })
 }
 
 /**

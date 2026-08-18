@@ -6,10 +6,10 @@ import type { ConnectionAnalysis, ConnectionStatus } from '../api/types'
 import { CARGO_LABEL, groupTotals, STATUS_LABEL } from '../lib/derive'
 
 const STATUS_COLOR: Record<ConnectionStatus, string> = {
-  SAFE: '#15803d',
-  AT_RISK: '#92600a',
-  MISSED: '#b42318',
-  RESOLVED: '#0e7490',
+  SAFE: '#51b27c',
+  AT_RISK: '#d7a84a',
+  MISSED: '#e56b61',
+  RESOLVED: '#48a8b5',
 }
 
 interface CascadeGraphProps {
@@ -20,8 +20,8 @@ interface CascadeGraphProps {
 
 function vesselNodeStyle(accent: string): CSSProperties {
   return {
-    background: '#ffffff',
-    color: '#1a2530',
+    background: '#111c24',
+    color: '#e8eff3',
     border: `1px solid ${accent}`,
     borderRadius: 2,
     fontSize: 12,
@@ -47,7 +47,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         },
         sourcePosition: 'right',
         targetPosition: 'left',
-        style: vesselNodeStyle('#92600a'),
+        style: vesselNodeStyle('#d7a84a'),
         draggable: false,
       } as Node,
     ]
@@ -77,7 +77,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         },
         sourcePosition: 'right',
         targetPosition: 'left',
-        style: vesselNodeStyle('#d8dee4'),
+        style: vesselNodeStyle('#354652'),
         draggable: false,
       } as Node)
     })
@@ -103,7 +103,8 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         sourcePosition: 'right',
         targetPosition: 'left',
         style: {
-          background: '#f7f9fa',
+          background: '#15212a',
+          color: '#e8eff3',
           border: `1px solid ${color}`,
           borderRadius: 2,
           fontSize: 11,
@@ -137,7 +138,6 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
     <section className="graph-panel" aria-labelledby="graph-title">
       <div className="panel-heading">
         <div>
-          <p className="section-label">CASCADE GRAPH</p>
           <h2 id="graph-title">Connection flows</h2>
         </div>
         {totals && (
@@ -176,7 +176,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
           minZoom={0.4}
           maxZoom={1.4}
         >
-          <Background color="#e3e9ee" gap={22} />
+          <Background color="#25333d" gap={22} />
         </ReactFlow>
       </div>
 

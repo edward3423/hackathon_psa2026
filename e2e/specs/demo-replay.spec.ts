@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import {
   approvePlan,
+  navigateTo,
   openDashboard,
   resetBackend,
   resolveReeferDispute,
@@ -25,7 +26,7 @@ test('replay mode: persistent DEMO REPLAY label and offline completion', async (
   await page.getByRole('button', { name: 'Start demo replay' }).click()
 
   // The DEMO REPLAY label is visible immediately and stays visible.
-  const replayLabel = page.locator('.replay-badge')
+  const replayLabel = page.locator('.top-bar .replay-badge')
   await expect(replayLabel).toBeVisible({ timeout: 15_000 })
   await expect(replayLabel).toHaveText('DEMO REPLAY')
 
@@ -40,6 +41,7 @@ test('replay mode: persistent DEMO REPLAY label and offline completion', async (
 
   // The captured run completes offline and the label is still visible.
   await expect(stageReadout(page)).toHaveText('COMPLETE', { timeout: 30_000 })
+  await navigateTo(page, 'Execution')
   await expect(page.getByText('EXECUTION RECEIPTS (MOCKED)')).toBeVisible()
   await expect(replayLabel).toBeVisible()
 })
