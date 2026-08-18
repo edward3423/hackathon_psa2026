@@ -1,4 +1,5 @@
 import type { RunMode, ScenarioControls } from '../api/types'
+import type { ScenarioPreset } from '../data/demo'
 
 export type BrainMode = Extract<RunMode, 'LIVE_STUB' | 'LIVE_CLAUDE' | 'LIVE_GEMINI'>
 
@@ -11,6 +12,9 @@ interface ControlsBarProps {
   onStart: () => void
   onStartReplay: () => void
   onReset: () => void
+  scenarioPresets: ScenarioPreset[]
+  selectedScenarioId: string
+  onScenarioSelect: (scenarioId: string) => void
 }
 
 export function ControlsBar({
@@ -22,9 +26,28 @@ export function ControlsBar({
   onStart,
   onStartReplay,
   onReset,
+  scenarioPresets,
+  selectedScenarioId,
+  onScenarioSelect,
 }: ControlsBarProps) {
   return (
     <section className="control-strip" aria-label="Scenario controls">
+      <label className="scenario-select">
+        Scenario
+        <select
+          aria-label="Scenario"
+          value={selectedScenarioId}
+          disabled={disabled}
+          onChange={(event) => onScenarioSelect(event.target.value)}
+        >
+          {scenarioPresets.map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {preset.title}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <label>
         Delay
         <input
@@ -66,9 +89,9 @@ export function ControlsBar({
           disabled={disabled}
           onChange={(event) => onBrainModeChange(event.target.value as BrainMode)}
         >
-          <option value="LIVE_STUB">Scripted (offline)</option>
-          <option value="LIVE_CLAUDE">Live Claude (local CLI)</option>
-          <option value="LIVE_GEMINI">Live Gemini (API key)</option>
+          <option value="LIVE_STUB">Scripted Demo</option>
+          <option value="LIVE_CLAUDE">Claude</option>
+          <option value="LIVE_GEMINI">Gemini</option>
         </select>
       </label>
 

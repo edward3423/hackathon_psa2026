@@ -101,21 +101,12 @@ function TraceRow({ event }: { event: TraceEvent }) {
           )}
           {(event.model_exchanges?.length ?? 0) > 0 && (
             <div className="trace-exchanges">
-              <dt>Model calls</dt>
+              <dt>Model activity</dt>
               <dd>
-                {event.model_exchanges?.map((exchange, index) => (
-                  <details key={index} className="model-exchange">
-                    <summary>
-                      {exchange.model}
-                      {exchange.effort ? ` (${exchange.effort})` : ''} via {exchange.provider}
-                      {exchange.duration_ms != null ? ` in ${formatElapsed(exchange.duration_ms)}` : ''}
-                    </summary>
-                    <h4>Prompt</h4>
-                    <pre>{exchange.prompt}</pre>
-                    <h4>Response</h4>
-                    <pre>{exchange.response}</pre>
-                  </details>
-                ))}
+                {event.model_exchanges?.length} model call
+                {event.model_exchanges?.length === 1 ? '' : 's'} recorded. Raw prompts and hidden
+                reasoning are not displayed. Providers:{' '}
+                {[...new Set(event.model_exchanges?.map((exchange) => exchange.provider))].join(', ')}.
               </dd>
             </div>
           )}
@@ -137,9 +128,7 @@ export function TraceDrawer({ events }: TraceDrawerProps) {
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
       >
-        <span className="section-label" id="trace-title">
-          EXECUTION TRACE
-        </span>
+        <strong id="trace-title">Execution trace</strong>
         <span className="drawer-count">{events.length} events</span>
         <span className="drawer-chevron">{open ? 'Collapse' : 'Expand'}</span>
       </button>

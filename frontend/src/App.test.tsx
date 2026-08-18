@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from './App'
@@ -109,9 +109,53 @@ describe('CASCADE dashboard', () => {
 
     expect((await screen.findAllByText('MV ATLAS STAR')).length).toBeGreaterThan(0)
     expect(screen.getByText('18 h')).toBeInTheDocument()
-    expect(screen.getByText('REVISED ETA')).toBeInTheDocument()
+    expect(screen.getByText('Revised ETA')).toBeInTheDocument()
     expect(screen.getByText(scenario.objective)).toBeInTheDocument()
-    expect(screen.getByText(`SYNTHETIC DATA: ${scenario.synthetic_notice}`)).toBeInTheDocument()
+    expect(screen.getByText(`Synthetic data: ${scenario.synthetic_notice}`)).toBeInTheDocument()
+  })
+
+  it('exposes every workspace through an accessible collapsible sidebar', async () => {
+    render(<App />)
+
+    const navigation = await screen.findByRole('navigation', { name: 'CASCADE sections' })
+    const labels = [
+      'Command Center',
+      'Connections',
+      'Yard',
+      'Reefers',
+      'Agents',
+      'Recovery',
+      'Execution',
+      'Replay',
+      'System',
+    ]
+
+    for (const label of labels) {
+      expect(within(navigation).getByRole('button', { name: label })).toBeInTheDocument()
+    }
+
+    expect(within(navigation).getByRole('button', { name: 'Command Center' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Connections' }))
+    expect(
+      await screen.findByRole('heading', { name: 'Threatened transshipment connections' }),
+    ).toBeInTheDocument()
+    expect(within(navigation).getByRole('button', { name: 'Connections' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse navigation sidebar' }))
+    expect(screen.getByRole('button', { name: 'Expand navigation sidebar' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
+    for (const label of labels) {
+      expect(within(navigation).getByRole('button', { name: label })).toBeInTheDocument()
+    }
   })
 
   it('shows graph totals equal to the analysis group sums', async () => {
@@ -121,6 +165,10 @@ describe('CASCADE dashboard', () => {
       results: { connection_analysis: analysis },
     })
     act(() => source.emit('trace', traceEvent({ kind: 'RUN_COMPLETED', stage: 'COMPLETE' })))
+
+    const navigation = screen.getByRole('navigation', { name: 'CASCADE sections' })
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Connections' }))
+    await screen.findByRole('heading', { name: 'Threatened transshipment connections' })
 
     const sum = (status: string) =>
       analysis.groups
@@ -216,6 +264,29 @@ describe('CASCADE dashboard', () => {
     )
     fireEvent.click(approve)
 
+    const confirmation = await screen.findByRole('dialog', {
+      name: 'Confirm simulated execution',
+    })
+    expect(confirmation).toHaveTextContent('Optimized Hybrid')
+    expect(confirmation).toHaveTextContent('Simulation only')
+    expect(calls.some((call) => call.url.endsWith('/approval'))).toBe(false)
+
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Confirm simulated execution' }),
+      ).not.toBeInTheDocument(),
+    )
+    expect(calls.some((call) => call.url.endsWith('/approval'))).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }))
+    const reconfirmation = await screen.findByRole('dialog', {
+      name: 'Confirm simulated execution',
+    })
+    fireEvent.click(
+      within(reconfirmation).getByRole('button', { name: 'Confirm simulated execution' }),
+    )
+
     await waitFor(() => {
       const post = calls.find((call) => call.url.endsWith('/approval'))
       expect(post?.body).toEqual({ plan_archetype: 'OPTIMIZED_HYBRID', decision: 'APPROVED' })
@@ -254,6 +325,9 @@ describe('CASCADE dashboard', () => {
       source.emit('trace', traceEvent({ kind: 'ACTION_DISPATCHED', stage: 'EXECUTING' })),
     )
 
+    const navigation = screen.getByRole('navigation', { name: 'CASCADE sections' })
+    fireEvent.click(within(navigation).getByRole('button', { name: 'Execution' }))
+
     expect(await screen.findByText('EXECUTION RECEIPTS (MOCKED)')).toBeInTheDocument()
     expect(screen.getByText('WO-2042-001')).toBeInTheDocument()
     expect(screen.getByText('ACCEPTED')).toBeInTheDocument()
@@ -265,7 +339,9 @@ describe('CASCADE dashboard', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start demo replay' }))
     await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
 
-    expect(await screen.findByText('DEMO REPLAY')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(document.querySelector('.top-bar .replay-badge')).toHaveTextContent('DEMO REPLAY')
+    })
     const post = calls.find((call) => call.url.includes('/api/runs?'))
     expect(post?.url).toContain('mode=DEMO_REPLAY')
   })
