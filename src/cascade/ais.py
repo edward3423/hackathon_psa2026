@@ -1,7 +1,7 @@
 """Server-side AISStream adapter.
 
-The API key stays on the server. Browser clients receive only normalized
-position reports for the two operational areas used by the demo.
+The API key stays on the server. Browser clients receive only normalized,
+browser-safe vessel positions for the demo's operational areas.
 """
 
 import json
@@ -22,7 +22,8 @@ DEFAULT_BOUNDING_BOXES = [
 
 def configured_bounding_boxes() -> list[list[list[float]]]:
     raw = os.environ.get("AISSTREAM_BOUNDING_BOXES_JSON")
-    if not raw:
+    if raw is None or raw == "":
+        return DEFAULT_BOUNDING_BOXES
         return DEFAULT_BOUNDING_BOXES
     parsed = json.loads(raw)
     if not isinstance(parsed, list) or not parsed:
