@@ -39,7 +39,6 @@ def test_position_report_is_normalized() -> None:
     assert position["mmsi"] == "123456789"
     assert position["name"] == "TEST SHIP"
     assert position["speed_knots"] == 12.4
-
     assert position == {
         "mmsi": "123456789",
         "name": "TEST SHIP",
