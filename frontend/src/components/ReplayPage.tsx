@@ -9,6 +9,8 @@ interface ReplayPageProps {
   initialCursor?: number
   onCursorChange: (cursor: number) => void
   events?: TraceEvent[]
+  live?: boolean
+  scenarioTitle?: string
 }
 
 const SPEEDS = [0.5, 1, 2, 4] as const
@@ -17,7 +19,13 @@ function clampCursor(cursor: number, length: number): number {
   return Math.min(Math.max(Math.round(cursor), 0), Math.max(0, length - 1))
 }
 
-export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: ReplayPageProps) {
+export function ReplayPage({
+  initialCursor = 0,
+  onCursorChange,
+  events = [],
+  live = false,
+  scenarioTitle = 'Simulation',
+}: ReplayPageProps) {
   const milestones = useMemo(
     () =>
       events.length > 0
@@ -48,6 +56,7 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
   )
   const [cursor, setCursor] = useState(() => clampCursor(initialCursor, milestones.length))
   const [playing, setPlaying] = useState(false)
+  const [liveFollow, setLiveFollow] = useState(live)
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1)
 
   useEffect(() => {
@@ -74,6 +83,16 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
     setCursor((currentCursor) => clampCursor(currentCursor, milestones.length))
   }, [milestones.length])
 
+  useEffect(() => {
+    if (live) setLiveFollow(true)
+  }, [live])
+
+  useEffect(() => {
+    if (!liveFollow || events.length === 0) return
+    setPlaying(false)
+    setCursor(milestones.length - 1)
+  }, [events.length, liveFollow, milestones.length])
+
   const current = milestones[cursor]
   const setReplayCursor = (next: number) => setCursor(clampCursor(next, milestones.length))
 
@@ -81,12 +100,12 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
     <section className="replay-page" aria-labelledby="replay-title">
       <header className="page-section-header">
         <div>
-          <h2 id="replay-title">Disruption response timeline</h2>
-          <p>Recorded synthetic events from the backend replay workflow.</p>
+          <h2 id="replay-title">{scenarioTitle} replay</h2>
+          <p>Watch events arrive live, or pause and inspect any point in the simulation.</p>
         </div>
-        <div className="replay-position" aria-live="polite">
+        <div className="replay-position" aria-live="polite" role="status" aria-label="Replay mode">
           <Clock3 aria-hidden="true" size={16} />
-          <span>{current.time}</span>
+          <span>{live && liveFollow ? 'Following live' : live ? 'Live follow paused' : 'Recorded replay'}</span>
           <strong>{current.label}</strong>
         </div>
       </header>
@@ -98,7 +117,10 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
           <button
             type="button"
             className="icon-action"
-            onClick={() => setReplayCursor(cursor - 1)}
+            onClick={() => {
+              setLiveFollow(false)
+              setReplayCursor(cursor - 1)
+            }}
             disabled={cursor === 0}
             aria-label="Previous Event"
           >
@@ -107,7 +129,13 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
           <button
             type="button"
             className="primary-action replay-play-action"
-            onClick={() => setPlaying((currentPlaying) => !currentPlaying)}
+            onClick={() => {
+              setLiveFollow(false)
+              if (!playing && cursor === milestones.length - 1 && milestones.length > 1) {
+                setReplayCursor(0)
+              }
+              setPlaying((currentPlaying) => !currentPlaying)
+            }}
           >
             {playing ? (
               <Pause aria-hidden="true" size={17} />
@@ -119,7 +147,10 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
           <button
             type="button"
             className="icon-action"
-            onClick={() => setReplayCursor(cursor + 1)}
+            onClick={() => {
+              setLiveFollow(false)
+              setReplayCursor(cursor + 1)
+            }}
             disabled={cursor === milestones.length - 1}
             aria-label="Next Event"
           >
@@ -130,12 +161,27 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
             className="secondary-action"
             onClick={() => {
               setPlaying(false)
+              setLiveFollow(false)
               setReplayCursor(0)
             }}
           >
             <RotateCcw aria-hidden="true" size={16} />
             Restart
           </button>
+          {live && (
+            <button
+              type="button"
+              className="secondary-action"
+              aria-label={liveFollow ? 'Pause live follow' : 'Resume live follow'}
+              onClick={() => {
+                setPlaying(false)
+                setLiveFollow((current) => !current)
+                if (!liveFollow) setReplayCursor(milestones.length - 1)
+              }}
+            >
+              {liveFollow ? 'Pause live' : 'Follow live'}
+            </button>
+          )}
         </div>
 
         <label className="replay-speed-control">
@@ -171,6 +217,7 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
           value={cursor}
           onChange={(event) => {
             setPlaying(false)
+            setLiveFollow(false)
             setReplayCursor(Number(event.target.value))
           }}
         />
@@ -186,6 +233,7 @@ export function ReplayPage({ initialCursor = 0, onCursorChange, events = [] }: R
               type="button"
               onClick={() => {
                 setPlaying(false)
+                setLiveFollow(false)
                 setReplayCursor(index)
               }}
               aria-current={index === cursor ? 'step' : undefined}

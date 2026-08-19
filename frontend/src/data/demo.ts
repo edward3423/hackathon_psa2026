@@ -20,7 +20,6 @@ export type PageId =
   | 'agents'
   | 'execution'
   | 'replay'
-  | 'system'
 
 export interface ScenarioPreset {
   id: string
@@ -166,7 +165,7 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 1284,
     connections: 438,
     risk: 'CRITICAL',
-    x: 12,
+    x: 18,
     y: 43,
   },
   {
@@ -179,7 +178,7 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 208,
     connections: 118,
     risk: 'HIGH',
-    x: 76,
+    x: 36,
     y: 21,
   },
   {
@@ -192,7 +191,7 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 146,
     connections: 86,
     risk: 'HIGH',
-    x: 76,
+    x: 36,
     y: 47,
   },
   {
@@ -205,7 +204,7 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 164,
     connections: 74,
     risk: 'MEDIUM',
-    x: 76,
+    x: 36,
     y: 72,
   },
 ]

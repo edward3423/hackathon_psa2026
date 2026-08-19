@@ -743,14 +743,6 @@ time,
   line-height: 1.5;
 }
 
-.command-center-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  gap: 14px;
-  align-items: start;
-}
-
-.command-center-rail,
 .agent-workspace,
 .recovery-page-stack,
 .connections-workspace {
@@ -771,7 +763,6 @@ time,
 .recovery-workspace,
 .execution-page,
 .replay-page,
-.system-status-page,
 .operations-timeline {
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -867,28 +858,24 @@ time,
   line-height: 1.45;
 }
 
-.operations-overview__disruption-facts,
-.operations-overview__vessel-facts {
+.operations-overview__disruption-facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--line);
 }
 
-.operations-overview__disruption-facts div,
-.operations-overview__vessel-facts div {
+.operations-overview__disruption-facts div {
   padding: 8px 10px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
-.operations-overview__disruption-facts dt,
-.operations-overview__vessel-facts dt {
+.operations-overview__disruption-facts dt {
   color: var(--muted);
   font-size: 0.62rem;
 }
 
-.operations-overview__disruption-facts dd,
-.operations-overview__vessel-facts dd {
+.operations-overview__disruption-facts dd {
   margin-top: 3px;
   color: var(--muted-strong);
   font-family: var(--mono);
@@ -1059,54 +1046,57 @@ time,
 .operations-overview__vessel {
   position: absolute;
   z-index: 3;
-  width: 150px;
-  min-height: 54px;
-  display: grid;
-  grid-template-columns: 20px 1fr auto;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: 2px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid currentColor;
+  border-radius: 50%;
   color: var(--muted-strong);
-  background: #0e1a23;
+  background: #0a151e;
+  transform: translate(-50%, -50%);
+}
+
+.operations-overview__vessel:hover,
+.operations-overview__vessel:focus-visible {
+  background: currentColor;
+  outline: 2px solid #d9e6ec;
+  outline-offset: 3px;
+}
+
+.operations-overview__vessel-core {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.operations-overview__vessel-tooltip {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 12px);
+  z-index: 8;
+  width: 230px;
+  display: none;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  color: var(--muted);
+  background: #0c161f;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
+  font-size: 0.62rem;
+  line-height: 1.35;
   text-align: left;
   transform: translateY(-50%);
 }
 
-.operations-overview__vessel:hover,
-.operations-overview__vessel[aria-pressed="true"] {
-  border-color: var(--accent);
+.operations-overview__vessel-tooltip strong {
   color: var(--ink);
+  font-size: 0.7rem;
 }
 
-.operations-overview__vessel span {
-  min-width: 0;
+.operations-overview__vessel:hover .operations-overview__vessel-tooltip,
+.operations-overview__vessel:focus-visible .operations-overview__vessel-tooltip {
   display: grid;
-  gap: 2px;
-}
-
-.operations-overview__vessel strong,
-.operations-overview__vessel small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.operations-overview__vessel strong {
-  font-size: 0.67rem;
-}
-
-.operations-overview__vessel small {
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.58rem;
-}
-
-.operations-overview__vessel em {
-  font-size: 0.55rem;
-  font-style: normal;
-  font-weight: 750;
 }
 
 .operations-overview__risk--low em,
@@ -1133,19 +1123,19 @@ time,
   left: 49%;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 5px;
+  gap: 9px;
 }
 
 .operations-overview__yard-block {
-  min-height: 50px;
+  min-height: 82px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 58px minmax(0, 1fr);
   align-items: center;
-  gap: 5px 7px;
-  padding: 7px 8px;
+  gap: 9px;
+  padding: 8px;
   border: 1px solid var(--line);
   color: var(--muted-strong);
-  background: #111b22;
+  background: #101a20;
   font: inherit;
   text-align: left;
 }
@@ -1154,8 +1144,66 @@ time,
   border-color: var(--accent);
 }
 
-.operations-overview__yard-block span {
-  grid-column: 1 / -1;
+.operations-overview__building {
+  position: relative;
+  width: 54px;
+  height: 48px;
+  display: block;
+}
+
+.operations-overview__building-roof {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 46px;
+  height: 18px;
+  border: 1px solid #52616a;
+  background: #25343c;
+  transform: skewY(-10deg);
+}
+
+.operations-overview__building-front {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 7px;
+  height: 31px;
+  display: flex;
+  align-items: end;
+  justify-content: space-around;
+  padding: 0 5px 4px;
+  border: 1px solid #52616a;
+  background: #1a282f;
+}
+
+.operations-overview__building-front > span {
+  width: 9px;
+  height: 18px;
+  border: 1px solid #52616a;
+  background: #0b151b;
+}
+
+.operations-overview__building-front--reefer {
+  align-items: center;
+  justify-content: center;
+  color: #8fb6ce;
+}
+
+.operations-overview__building-label {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.operations-overview__building-label strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operations-overview__building-label > span {
   color: var(--muted);
   font-size: 0.6rem;
 }
@@ -1303,10 +1351,6 @@ time,
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
   font-size: 0.7rem;
-}
-
-.operations-overview__vessel-facts {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .drawer-context {
@@ -2159,16 +2203,14 @@ time,
 .yard-panel,
 .recovery-workspace,
 .execution-page,
-.replay-page,
-.system-status-page {
+.replay-page {
   padding: 16px;
 }
 
 .yard-operations-page > .page-section-header,
 .recovery-workspace > .page-section-header,
 .execution-page > .page-section-header,
-.replay-page > .page-section-header,
-.system-status-page > .page-section-header {
+.replay-page > .page-section-header {
   padding-bottom: 13px;
   border-bottom: 1px solid var(--line);
 }
@@ -2842,168 +2884,6 @@ time,
   white-space: nowrap;
 }
 
-/* System status */
-.system-status-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.system-health-panel,
-.agent-mode-panel,
-.architecture-panel {
-  padding: 12px;
-  border: 1px solid var(--line);
-}
-
-.status-row-list {
-  margin-top: 8px;
-  border-top: 1px solid var(--line);
-}
-
-.status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.status-row dt {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted-strong);
-  font-size: 0.68rem;
-}
-
-.status-row dd {
-  font-family: var(--mono);
-  font-size: 0.62rem;
-}
-
-.status-healthy {
-  color: var(--green);
-}
-
-.status-isolated {
-  color: var(--amber);
-}
-
-.agent-mode-options {
-  display: grid;
-  gap: 0;
-  margin-top: 10px;
-  border-top: 1px solid var(--line);
-}
-
-.agent-mode-options button {
-  display: grid;
-  gap: 2px;
-  padding: 9px 0;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  background: transparent;
-  text-align: left;
-}
-
-.agent-mode-options button.is-selected {
-  color: var(--accent-strong);
-}
-
-.agent-mode-options strong {
-  font-size: 0.7rem;
-}
-
-.agent-mode-options span {
-  font-size: 0.64rem;
-}
-
-.architecture-panel {
-  margin-top: 12px;
-}
-
-.architecture-flow {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 12px;
-  padding: 0;
-  list-style: none;
-}
-
-.architecture-flow li {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.architecture-node {
-  width: 100%;
-  min-height: 64px;
-  display: grid;
-  place-items: center;
-  gap: 5px;
-  padding: 7px;
-  border: 1px solid var(--line);
-  color: var(--muted-strong);
-  text-align: center;
-}
-
-.architecture-node span {
-  font-size: 0.62rem;
-}
-
-.architecture-arrow {
-  flex: 0 0 auto;
-  color: var(--line-strong);
-  transform: rotate(-90deg);
-}
-
-.architecture-support-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin-top: 10px;
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-}
-
-.architecture-support-grid > div {
-  display: grid;
-  gap: 3px;
-  padding: 9px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.architecture-support-grid strong {
-  font-size: 0.66rem;
-}
-
-.architecture-support-grid span {
-  color: var(--muted);
-  font-size: 0.61rem;
-}
-
-.system-boundaries {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.67rem;
-}
-
-.system-boundaries ul {
-  display: flex;
-  gap: 24px;
-  margin-top: 5px;
-  padding-left: 17px;
-}
-
 /* Global forecast timeline */
 .operations-timeline {
   position: sticky;
@@ -3338,10 +3218,6 @@ time,
     margin-left: 0;
   }
 
-  .command-center-grid {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-
   .operations-overview__metrics {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -3420,7 +3296,6 @@ time,
     grid-template-columns: auto minmax(150px, 0.6fr) minmax(400px, 2fr) 140px;
   }
 
-  .command-center-grid,
   .operations-overview__lower-grid,
   .agent-workspace,
   .agent-topology__workspace {
@@ -3536,9 +3411,7 @@ time,
   .operations-overview__workflow-list,
   .connections-page__cargo-key,
   .yard-grid,
-  .recovery-plan-grid,
-  .system-status-grid,
-  .architecture-support-grid {
+  .recovery-plan-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -3633,24 +3506,6 @@ time,
   .trace-detail {
     grid-template-columns: 1fr;
     padding-left: 16px;
-  }
-
-  .architecture-flow {
-    display: grid;
-  }
-
-  .architecture-flow li {
-    display: grid;
-  }
-
-  .architecture-arrow {
-    margin: 4px auto;
-    transform: none;
-  }
-
-  .system-boundaries ul {
-    display: grid;
-    gap: 4px;
   }
 
   .operations-timeline {
