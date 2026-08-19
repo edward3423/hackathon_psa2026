@@ -71,6 +71,25 @@
         }
       }
     },
+    "/api/ais/stream": {
+      "get": {
+        "tags": [
+          "vessel-traffic"
+        ],
+        "summary": "Stream Ais",
+        "operationId": "stream_ais_api_ais_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "post": {
         "tags": [
