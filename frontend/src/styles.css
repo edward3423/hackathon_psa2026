@@ -2671,17 +2671,10 @@ time,
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
   background: #0b151c;
 }
 
 .deck-vessel-map__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #0b151c;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2692,8 +2685,6 @@ time,
 }
 
 .deck-vessel-map__header h3 {
-  color: var(--ink);
-  font-size: 0.78rem;
   color: var(--ink);
   font-size: 0.78rem;
 }
@@ -2710,9 +2701,6 @@ time,
   display: flex;
   align-items: center;
   gap: 14px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
   color: var(--muted-strong);
   font-family: var(--mono);
   font-size: 0.61rem;
@@ -2724,9 +2712,6 @@ time,
   align-items: center;
   gap: 6px;
   letter-spacing: 0.04em;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .deck-vessel-map__key {
@@ -2781,21 +2766,14 @@ time,
 .deck-vessel-map__tooltip strong {
   color: var(--ink);
   font-size: 0.7rem;
-  color: var(--ink);
-  font-size: 0.7rem;
 }
 
 .deck-vessel-map__tooltip span:last-child {
   color: var(--muted);
   font-family: var(--mono);
-  color: var(--muted);
-  font-family: var(--mono);
 }
 
 .deck-vessel-map__notice {
-  padding: 7px 12px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
   padding: 7px 12px;
   border-top: 1px solid var(--line);
   color: var(--muted);
