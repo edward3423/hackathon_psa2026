@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { DeckProps, PickingInfo } from '@deck.gl/core'
-import { GeoJsonLayer, PathLayer, ScatterplotLayer } from '@deck.gl/layers'
+import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { MapboxOverlay } from '@deck.gl/mapbox'
 import { DeckGL } from '@deck.gl/react'
 import type { FeatureCollection } from 'geojson'
@@ -20,6 +20,7 @@ interface PlannedVessel {
   path: Coordinate[]
   speedKnots: number
   plan: string
+  color: [number, number, number]
 }
 
 interface VesselMarker {
@@ -29,6 +30,7 @@ interface VesselMarker {
   speedKnots: number | null
   detail: string
   live: boolean
+  color?: [number, number, number]
 }
 
 interface TooltipState extends VesselMarker {
@@ -42,6 +44,7 @@ interface DeckVesselMapProps {
 }
 
 const MAX_LIVE_VESSELS = 400
+const MAPBOX_LOAD_TIMEOUT_MS = 4_000
 const INITIAL_VIEW_STATE = { longitude: 65, latitude: 4, zoom: 1.15, pitch: 0, bearing: 0 }
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined
 
@@ -52,6 +55,7 @@ const PLANNED_VESSELS: PlannedVessel[] = [
     path: [[33.2, 28.6], [42.5, 12.6], [18.1, -34.6], [55.2, -20.2], [80.2, 5.2], [103.8, 1.25]],
     speedKnots: 16.2,
     plan: 'Cape reroute to Singapore',
+    color: [244, 185, 66],
   },
   {
     id: 'pacific-link',
@@ -59,6 +63,7 @@ const PLANNED_VESSELS: PlannedVessel[] = [
     path: [[139.7, 35.4], [128.1, 25.3], [121.3, 14.4], [112.1, 4.8], [103.8, 1.25]],
     speedKnots: 14.8,
     plan: 'Protected onward connection',
+    color: [89, 204, 214],
   },
   {
     id: 'borneo-feeder',
@@ -66,6 +71,7 @@ const PLANNED_VESSELS: PlannedVessel[] = [
     path: [[119.4, -5.1], [114.1, -2.5], [108.2, 0.2], [103.8, 1.25]],
     speedKnots: 11.6,
     plan: 'Feeder arrival re-sequenced',
+    color: [239, 124, 105],
   },
 ]
 
@@ -87,7 +93,7 @@ function interpolatePath(path: Coordinate[], progress: number): Coordinate {
 }
 
 function DeckOverlay(props: DeckProps) {
-  const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay({ ...props, interleaved: true }))
+  const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay({ ...props, interleaved: false }))
   overlay.setProps(props)
   return null
 }
@@ -96,7 +102,16 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
   const [aisState, setAisState] = useState<'connecting' | 'live' | 'offline'>('connecting')
   const [livePositions, setLivePositions] = useState<Map<string, AisPosition>>(new Map())
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const [mapboxState, setMapboxState] = useState<'loading' | 'ready' | 'fallback'>(
+    MAPBOX_TOKEN ? 'loading' : 'fallback',
+  )
   const progress = eventCount > 1 ? cursor / (eventCount - 1) : 0
+
+  useEffect(() => {
+    if (mapboxState !== 'loading') return
+    const timeout = window.setTimeout(() => setMapboxState('fallback'), MAPBOX_LOAD_TIMEOUT_MS)
+    return () => window.clearTimeout(timeout)
+  }, [mapboxState])
 
   useEffect(() => {
     let source: EventSource | undefined
@@ -143,6 +158,7 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
         speedKnots: vessel.speedKnots,
         detail: vessel.plan,
         live: false,
+        color: vessel.color,
       })),
     [progress],
   )
@@ -167,23 +183,52 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       id: 'optimized-routes',
       data: PLANNED_VESSELS,
       getPath: (vessel) => vessel.path,
-      getColor: [206, 154, 65, 180],
-      getWidth: 2,
+      getColor: (vessel) => [...vessel.color, 245],
+      getWidth: 5,
       widthUnits: 'pixels',
       jointRounded: true,
+      capRounded: true,
+    }),
+    new ScatterplotLayer<VesselMarker>({
+      id: 'planned-vessel-halos',
+      data: plannedMarkers,
+      getPosition: (vessel) => vessel.position,
+      getRadius: 17,
+      radiusUnits: 'pixels',
+      getFillColor: [244, 185, 66, 38],
+      getLineColor: [255, 224, 151, 180],
+      lineWidthMinPixels: 1,
+      stroked: true,
     }),
     new ScatterplotLayer<VesselMarker>({
       id: 'planned-vessels',
       data: plannedMarkers,
       getPosition: (vessel) => vessel.position,
-      getRadius: 7,
+      getRadius: 10,
       radiusUnits: 'pixels',
-      getFillColor: [224, 170, 70, 255],
-      getLineColor: [15, 24, 29, 255],
-      lineWidthMinPixels: 2,
+      getFillColor: (vessel) => [...(vessel.color ?? [244, 185, 66]), 255],
+      getLineColor: [247, 250, 248, 255],
+      lineWidthMinPixels: 3,
       stroked: true,
       pickable: true,
       onHover,
+    }),
+    new TextLayer<VesselMarker>({
+      id: 'planned-vessel-labels',
+      data: plannedMarkers,
+      getPosition: (vessel) => vessel.position,
+      getText: (vessel) => vessel.name.replace(/^MV /, ''),
+      getColor: [247, 250, 248, 255],
+      getSize: 12,
+      getPixelOffset: [0, -22],
+      getTextAnchor: 'middle',
+      getAlignmentBaseline: 'bottom',
+      fontWeight: 700,
+      fontSettings: { sdf: true, fontSize: 64, buffer: 4 },
+      outlineColor: [4, 11, 16, 255],
+      outlineWidth: 3,
+      billboard: true,
+      pickable: false,
     }),
     new ScatterplotLayer<VesselMarker>({
       id: 'live-ais-vessels',
@@ -223,19 +268,30 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
           <p>DECK.GL SIMULATION</p>
         </div>
         <div className="deck-vessel-map__legend" aria-label="Map layers">
-          <span><i className="deck-vessel-map__key deck-vessel-map__key--planned" />PLANNED ROUTES</span>
+          <span aria-label="3 built-in simulated ships and their routes">
+            <i className="deck-vessel-map__key deck-vessel-map__key--planned" />3 SIMULATED SHIPS + ROUTES
+          </span>
           <span><i className="deck-vessel-map__key deck-vessel-map__key--live" />AISSTREAM {aisState.toUpperCase()}</span>
-          <span>{MAPBOX_TOKEN ? 'MAPBOX ACTIVE' : 'MAPBOX TOKEN NEEDED'}</span>
+          <span>
+            {mapboxState === 'ready'
+              ? 'MAPBOX ACTIVE'
+              : mapboxState === 'loading'
+                ? 'MAPBOX LOADING'
+                : 'LOCAL MAP FALLBACK'}
+          </span>
         </div>
       </header>
 
       <div className="deck-vessel-map__canvas">
-        {MAPBOX_TOKEN ? (
+        {MAPBOX_TOKEN && mapboxState !== 'fallback' ? (
           <MapboxMap
             initialViewState={INITIAL_VIEW_STATE}
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle="mapbox://styles/mapbox/dark-v11"
+            projection={{ name: 'mercator' }}
             attributionControl
+            onLoad={() => setMapboxState('ready')}
+            onError={() => setMapboxState('fallback')}
           >
             <DeckOverlay layers={vesselLayers} />
           </MapboxMap>
@@ -249,7 +305,12 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
         )}
 
         {tooltip && (
-          <div className="deck-vessel-map__tooltip" role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+          <div
+            className="deck-vessel-map__tooltip"
+            data-live={tooltip.live}
+            role="tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+          >
             <strong>{tooltip.name}</strong>
             <span>{tooltip.live ? 'Live AIS position' : 'Simulated optimized position'}</span>
             <span>{tooltip.detail} · {tooltip.speedKnots?.toFixed(1) ?? 'Unknown'} kn</span>
@@ -258,8 +319,8 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       </div>
 
       <footer className="deck-vessel-map__notice">
-        Scenario routes are simulated. Live dots are AIS (Automatic Identification System)
-        reports and may be delayed by receiver coverage.
+        Bright labeled circles and lines are the three simulated ships and their optimized routes.
+        Live AIS (Automatic Identification System) dots appear only when the provider is connected.
       </footer>
     </section>
   )
