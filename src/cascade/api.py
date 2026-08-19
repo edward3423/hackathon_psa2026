@@ -79,29 +79,8 @@ def ais_status() -> dict[str, object]:
         "coverage": "Red Sea and Singapore approaches",
         "bounding_boxes": configured_bounding_boxes(),
     }
-        "coverage": "Red Sea and Singapore approaches",
-        "bounding_boxes": configured_bounding_boxes(),
-    }
 
 
-async def _stream_ais(api_key: str) -> AsyncIterator[str]:
-    try:
-        async for position in live_positions(api_key):
-            yield _sse("position", position)
-    except Exception as error:
-        yield _sse("provider_error", {"detail": f"AIS provider disconnected: {error}"})
-
-
-@app.get("/api/ais/stream", tags=["vessel-traffic"])
-def stream_ais() -> StreamingResponse:
-    api_key = os.environ.get("AISSTREAM_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=503, detail="AISSTREAM_API_KEY is not configured")
-    return StreamingResponse(
-        _stream_ais(api_key),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
 _MODE_QUERY = Query(default=None, description="Overrides the body mode field.")
 
 
