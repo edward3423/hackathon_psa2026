@@ -330,10 +330,35 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
         </button>
       </header>
 
+      {result && (
+        <div className="benchmark-result-summary" aria-label="Benchmark result summary">
+          <AuditBadge result={result} />
+          {headline && (
+            <p className="benchmark-headline" data-tour="benchmark-headline">
+              CASCADE cut the peak wait by{' '}
+              <strong>{headline.peak_wait_reduction_pct.toFixed(1)}%</strong> against the reactive
+              baseline ({signed(headline.peak_wait_delta_days, 'd')} peak,{' '}
+              {headline.recovery_days_saved == null
+                ? 'no recovery comparison'
+                : `${headline.recovery_days_saved.toFixed(0)} days earlier recovery`}
+              ). This is one pinned run; the robustness claim is the sweep win-rate.
+            </p>
+          )}
+        </div>
+      )}
+
       {result?.notice && (
         <aside className="benchmark-scope-notice" aria-labelledby="benchmark-scope-title">
           <h3 id="benchmark-scope-title">What this benchmark claims</h3>
-          <p>{result.notice}</p>
+          <p>
+            A controlled comparison of three policies using the same blind arrival stream. It is
+            not a reproduction of historical port operations or a prediction about individual
+            vessels.
+          </p>
+          <details>
+            <summary>Methodology and limitations</summary>
+            <p>{result.notice}</p>
+          </details>
         </aside>
       )}
       {playbackNotice && (
@@ -418,18 +443,6 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
         </ResponsiveContainer>
       </figure>
 
-      {headline && (
-        <p className="benchmark-headline" data-tour="benchmark-headline">
-          CASCADE cut the peak wait by{' '}
-          <strong>{headline.peak_wait_reduction_pct.toFixed(1)}%</strong> against the reactive
-          baseline ({signed(headline.peak_wait_delta_days, 'd')} peak,{' '}
-          {headline.recovery_days_saved == null
-            ? 'no recovery comparison'
-            : `${headline.recovery_days_saved.toFixed(0)} days earlier recovery`}
-          ). This is one pinned run; the robustness claim is the sweep win-rate.
-        </p>
-      )}
-
       {result && (
         <>
           <div className="benchmark-arm-grid" data-tour="benchmark-arms">
@@ -437,7 +450,6 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
               <ArmTiles arm={arm} key={arm.arm} />
             ))}
           </div>
-          <AuditBadge result={result} />
           <AnchorTable anchors={result.anchor_comparisons} />
         </>
       )}

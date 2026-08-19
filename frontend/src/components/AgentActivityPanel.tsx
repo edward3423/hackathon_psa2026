@@ -10,7 +10,7 @@ import { useState } from 'react'
 
 import type { AgentActivity, TraceEvent } from '../api/types'
 import { deriveAgentViews, type AgentView } from '../lib/derive'
-import { formatElapsed } from '../lib/format'
+import { formatElapsed, humanizeOperationalText } from '../lib/format'
 
 interface AgentActivityPanelProps {
   events: TraceEvent[]
@@ -28,7 +28,7 @@ const AGENT_ICON: Record<AgentView['agent'], LucideIcon> = {
 
 function AgentCard({ view }: { view: AgentView }) {
   const [expanded, setExpanded] = useState(false)
-  const showDetail = expanded || view.status === 'COMPLETED'
+  const showDetail = expanded
   const Icon = AGENT_ICON[view.agent]
   const activeTool = view.toolsCalled.at(-1)
   const statusLabel = view.status === 'RUNNING' && activeTool ? 'CALLING TOOL' : view.status
@@ -44,7 +44,7 @@ function AgentCard({ view }: { view: AgentView }) {
         </div>
         <div>
           <h3>{view.agent}</h3>
-          <p>{view.objective}</p>
+          <p>{humanizeOperationalText(view.objective)}</p>
         </div>
         <div className="agent-badges">
           <span className="agent-status"><i aria-hidden="true" />{statusLabel}</span>
@@ -60,10 +60,14 @@ function AgentCard({ view }: { view: AgentView }) {
         <p className="parallel-tag">Parallel analysis: {view.parallelGroup}</p>
       )}
 
-      {view.status === 'RUNNING' && activeTool && <code className="active-tool">{activeTool}</code>}
+      {view.status === 'RUNNING' && activeTool && (
+        <span className="active-tool">{humanizeOperationalText(activeTool)}</span>
+      )}
 
       <p className="agent-result">
-        {view.result ?? view.lastSummary ?? 'Waiting for coordinator handoff.'}
+        {humanizeOperationalText(
+          view.result ?? view.lastSummary ?? 'Waiting for coordinator handoff.',
+        )}
       </p>
 
       {view.eventCount > 0 && (
@@ -82,13 +86,13 @@ function AgentCard({ view }: { view: AgentView }) {
           {view.inputSummaries.length > 0 && (
             <div>
               <dt>Inputs</dt>
-              <dd>{view.inputSummaries.join(' ')}</dd>
+              <dd>{humanizeOperationalText(view.inputSummaries.join(' '))}</dd>
             </div>
           )}
           {view.toolsCalled.length > 0 && (
             <div>
               <dt>Tools called</dt>
-              <dd>{view.toolsCalled.join(', ')}</dd>
+              <dd>{humanizeOperationalText(view.toolsCalled.join(', '))}</dd>
             </div>
           )}
           {view.evidence.length > 0 && (
@@ -99,7 +103,7 @@ function AgentCard({ view }: { view: AgentView }) {
                     for instance when a plan is re-evaluated after revision. */}
                 <ul>
                   {view.evidence.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <li key={index}>{humanizeOperationalText(item)}</li>
                   ))}
                 </ul>
               </dd>
@@ -111,7 +115,7 @@ function AgentCard({ view }: { view: AgentView }) {
               <dd>
                 <ul>
                   {view.assumptions.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <li key={index}>{humanizeOperationalText(item)}</li>
                   ))}
                 </ul>
               </dd>
@@ -120,7 +124,7 @@ function AgentCard({ view }: { view: AgentView }) {
           {view.result && (
             <div>
               <dt>Result</dt>
-              <dd>{view.result}</dd>
+              <dd>{humanizeOperationalText(view.result)}</dd>
             </div>
           )}
           <div>

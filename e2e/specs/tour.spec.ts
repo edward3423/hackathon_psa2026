@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-import { resetBackend, stageReadout } from './helpers'
+import {
+  approvePlan,
+  resetBackend,
+  resolveReeferDispute,
+  stageReadout,
+  startRun,
+} from './helpers'
 
 /**
  * The guided tour, played end to end against the live backend.
@@ -33,6 +39,7 @@ test.describe('guided tour', () => {
   })
 
   test('plays every chapter and drives the product to the end', async ({ page }) => {
+    test.setTimeout(120_000)
     const consoleErrors: string[] = []
     page.on('console', (message) => {
       if (message.type() === 'error') consoleErrors.push(message.text())
@@ -109,5 +116,48 @@ test.describe('guided tour', () => {
     // Exiting leaves the app usable, not stuck behind a scrim.
     await expect(page.locator('.tour-spotlight')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Start tour' })).toBeVisible()
+  })
+
+  test('resets a completed run before showing the cold open', async ({ page }) => {
+    await page.goto('/?tour=fast')
+    await startRun(page)
+    await resolveReeferDispute(page)
+    await approvePlan(page, 'OPTIMIZED_HYBRID')
+    await expect(stageReadout(page)).toHaveText('COMPLETE', { timeout: 30_000 })
+
+    await page.getByRole('button', { name: 'Start tour' }).click()
+    const transport = page.getByRole('group', { name: 'Tour controls' })
+    await expect(transport).toBeVisible()
+    await transport.getByRole('button', { name: 'Pause tour' }).click()
+
+    await expect(stageReadout(page)).toHaveText('READY')
+    await expect(page.locator('.run-id')).toHaveText('NOT STARTED')
+    await expect(page.getByText('Step 1 of 44')).toBeVisible()
+  })
+
+  test('keeps the sailing timeout notice inside the step 11 spotlight', async ({ page }) => {
+    test.setTimeout(120_000)
+    await page.setViewportSize({ width: 1920, height: 1080 })
+    await page.goto('/')
+    await page.getByRole('button', { name: 'Start tour' }).click()
+
+    const transport = page.getByRole('group', { name: 'Tour controls' })
+    await expect(transport.getByText('Step 11 of 44')).toBeVisible({ timeout: 100_000 })
+    const notice = page.locator('[data-tour="sailing-fallback"]')
+    await expect(notice).toBeVisible({ timeout: 30_000 })
+    await transport.getByRole('button', { name: 'Pause tour' }).click()
+    await page.waitForTimeout(1_000)
+
+    const spotlight = page.locator('.tour-spotlight')
+    await expect(spotlight).toBeVisible()
+    const [noticeBox, spotlightBox] = await Promise.all([notice.boundingBox(), spotlight.boundingBox()])
+    expect(noticeBox).not.toBeNull()
+    expect(spotlightBox).not.toBeNull()
+    expect(noticeBox!.y).toBeGreaterThanOrEqual(0)
+    expect(noticeBox!.y + noticeBox!.height).toBeLessThanOrEqual(1080)
+    expect(noticeBox!.x).toBeGreaterThanOrEqual(spotlightBox!.x)
+    expect(noticeBox!.x + noticeBox!.width).toBeLessThanOrEqual(
+      spotlightBox!.x + spotlightBox!.width,
+    )
   })
 })

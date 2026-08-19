@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import type { Dispute, TraceEvent } from '../api/types'
+import { humanizeOperationalText } from '../lib/format'
 
 interface DisputeOverlayProps {
   dispute: Dispute | null
@@ -11,6 +12,11 @@ interface DisputeOverlayProps {
 
 const REEFER_PRESET = 'Respect physical reefer plug capacity'
 
+function isReeferCapacityChoice(value: string): boolean {
+  const normalized = value.toLowerCase()
+  return normalized.includes('reefer') && normalized.includes('plug') && normalized.includes('capacity')
+}
+
 function presetChoices(dispute: Dispute | null): string[] {
   if (!dispute) return []
   const choices = dispute.positions.map((position) => position.position)
@@ -20,8 +26,8 @@ function presetChoices(dispute: Dispute | null): string[] {
   ]
     .join(' ')
     .toLowerCase()
-  if ((text.includes('reefer') || text.includes('plug')) && !choices.includes(REEFER_PRESET)) {
-    choices.push(REEFER_PRESET)
+  if (text.includes('reefer') || text.includes('plug')) {
+    return [...choices.filter((choice) => !isReeferCapacityChoice(choice)), REEFER_PRESET]
   }
   return choices
 }
@@ -61,17 +67,17 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
         data-tour="dispute-dialog"
       >
         <p className="dialog-context">Agent disagreement requires an operator decision.</p>
-        <h2>{question}</h2>
+        <h2>{humanizeOperationalText(question)}</h2>
 
         {dispute ? (
           <div className="dispute-positions" data-tour="dispute-positions">
             {dispute.positions.map((position) => (
               <article key={position.agent} className="dispute-position">
                 <h3>{position.agent}</h3>
-                <p>{position.position}</p>
+                <p>{humanizeOperationalText(position.position)}</p>
                 <ul>
                   {position.evidence.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <li key={index}>{humanizeOperationalText(item)}</li>
                   ))}
                 </ul>
               </article>
@@ -88,14 +94,14 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
               key={preset}
               type="button"
               className={`constraint-option${!useFreeText && choice === preset ? ' selected' : ''}`}
-              data-tour={preset === REEFER_PRESET ? 'dispute-constraint-reefer' : undefined}
+              data-tour={isReeferCapacityChoice(preset) ? 'dispute-constraint-reefer' : undefined}
               aria-pressed={!useFreeText && choice === preset}
               onClick={() => {
                 setChoice(preset)
                 setUseFreeText(false)
               }}
             >
-              {preset}
+              {humanizeOperationalText(preset)}
             </button>
           ))}
           <button

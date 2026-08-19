@@ -597,11 +597,11 @@ export function OperationsOverview({
             </div>
             <div>
               <dt>Estimated arrival</dt>
-              <dd>{selectedVessel.eta}</dd>
+              <dd>{formatDateTime(selectedVessel.eta)}</dd>
             </div>
             <div>
               <dt>Departure</dt>
-              <dd>{selectedVessel.departure}</dd>
+              <dd>{formatDateTime(selectedVessel.departure)}</dd>
             </div>
             <div>
               <dt>Berth</dt>

@@ -58,6 +58,30 @@ test('every agent reports COMPLETED once the run completes', async ({ page }) =>
   const texts = await statuses.allTextContents()
   expect(texts.length).toBeGreaterThan(0)
   for (const status of texts) expect(status.trim()).toBe('COMPLETED')
+
+  await navigateTo(page, 'Agents')
+  await expect(page.getByRole('button', { name: 'Show details' })).toHaveCount(5)
+  await expect(page.locator('.agent-detail-grid')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Show details' }).first().click()
+  await expect(page.locator('.agent-detail-grid')).toHaveCount(1)
+})
+
+test('the connection map keeps every cargo group readable', async ({ page }) => {
+  await openDashboard(page)
+  await startRun(page)
+  await resolveReeferDispute(page)
+  await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
+  await navigateTo(page, 'Connections')
+
+  const lanes = page.locator('.connection-lane')
+  await expect(lanes).toHaveCount(5)
+  await expect(page.locator('.react-flow')).toHaveCount(0)
+  const labels = page.locator('.connection-group')
+  await expect(labels.first()).toBeVisible()
+  const smallestLabel = await labels.evaluateAll((nodes) =>
+    Math.min(...nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize))),
+  )
+  expect(smallestLabel).toBeGreaterThanOrEqual(12)
 })
 
 test('the pre-run preview survives the run starting', async ({ page }) => {
@@ -133,7 +157,7 @@ test('the connections table paginates instead of running thousands of pixels lon
   await expect(pager.getByRole('button', { name: 'Previous' })).toBeDisabled()
 })
 
-test('the approval bar reserves its own space instead of covering the workspace', async ({
+test('the approval bar and timeline never stack over workspace content', async ({
   page,
 }) => {
   await openDashboard(page)
@@ -146,24 +170,76 @@ test('the approval bar reserves its own space instead of covering the workspace'
   const barBox = await bar.boundingBox()
   expect(barBox).not.toBeNull()
 
-  // The forecast timeline sticks to the bottom of the viewport, which is
-  // exactly where the fixed approval bar sits. It has to come to rest above it.
+  // The timeline belongs to the document flow. Pinning it above the approval
+  // bar consumed almost three hundred pixels and hid the lower half of plans.
   const timeline = page.locator('.operations-timeline')
-  await expect(timeline).toBeVisible()
-  const timelineBox = await timeline.boundingBox()
-  expect(timelineBox).not.toBeNull()
-  expect(timelineBox!.y + timelineBox!.height).toBeLessThanOrEqual(barBox!.y + 1)
+  expect(await timeline.evaluate((node) => getComputedStyle(node).position)).toBe('relative')
 
   // Scrolled to the very bottom, the last of the workspace is still clear of
   // the bar: the reserved space is real padding under the content, not a gap
   // the content is free to scroll into.
   await page.mouse.wheel(0, 20_000)
   await page.waitForTimeout(200)
+  const timelineBox = await timeline.boundingBox()
+  expect(timelineBox).not.toBeNull()
+  expect(timelineBox!.y + timelineBox!.height).toBeLessThanOrEqual(barBox!.y + 1)
   const lastContentEdge = await page.locator('.app-content').evaluate((node) => {
     const padding = Number.parseFloat(getComputedStyle(node).paddingBottom)
     return node.getBoundingClientRect().bottom - padding
   })
   expect(lastContentEdge).toBeLessThanOrEqual(barBox!.y + 1)
+})
+
+test('execution copy never exposes internal cargo enum names', async ({ page }) => {
+  await openDashboard(page)
+  await startRun(page)
+  await resolveReeferDispute(page)
+  await approvePlan(page, 'OPTIMIZED_HYBRID')
+  await expect(stageReadout(page)).toHaveText('COMPLETE', { timeout: 30_000 })
+  await navigateTo(page, 'Execution')
+
+  await expect(page.locator('.mock-action-list')).toBeVisible()
+  await expect(page.locator('.execution-page')).not.toContainText(/PHARMA_REEFER/)
+  await expect(page.locator('.execution-page')).not.toContainText(/TIME_CRITICAL_MANUFACTURING/)
+  await expect(page.locator('.execution-page')).toContainText(/refrigerated medicine/i)
+})
+
+test('all operational timestamps use GMT+8', async ({ page }) => {
+  await openDashboard(page)
+
+  await expect(page.locator('.top-bar')).toContainText('GMT+8')
+  await expect(page.locator('.operations-overview')).toContainText('GMT+8')
+  await expect(page.locator('.app-shell')).not.toContainText(/\bUTC\b/)
+
+  await startRun(page)
+  const dispute = page.getByRole('dialog', { name: /dispute/i })
+  await expect(dispute).toContainText('GMT+8', { timeout: 30_000 })
+  await expect(dispute).not.toContainText(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)
+  await expect(
+    dispute.getByRole('button', { name: /physical reefer plug capacity/i }),
+  ).toHaveCount(1)
+
+  await resolveReeferDispute(page)
+  await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
+
+  for (const pageName of ['Connections', 'Yard', 'Replay']) {
+    await navigateTo(page, pageName)
+    await expect(page.locator('.app-content')).toContainText('GMT+8')
+    await expect(page.locator('.app-content')).not.toContainText(/\bUTC\b/)
+  }
+})
+
+test('agent pages never expose internal plan or tool identifiers', async ({ page }) => {
+  await openDashboard(page)
+  await startRun(page)
+  await resolveReeferDispute(page)
+  await expect(stageReadout(page)).toHaveText('AWAITING APPROVAL', { timeout: 30_000 })
+  await navigateTo(page, 'Agents')
+
+  const workspace = page.locator('.agent-workspace')
+  await expect(workspace).toBeVisible()
+  await expect(workspace).not.toContainText(/OPTIMIZED_HYBRID|AGGRESSIVE_RUSH|evaluate_plan/)
+  await expect(workspace).toContainText(/Optimized Hybrid|Aggressive Rush/i)
 })
 
 for (const pageName of ['Command Center', 'Connections', 'Replay']) {

@@ -243,7 +243,12 @@ export function TourOverlay({ tour }: TourOverlayProps) {
           <span style={{ width: `${((globalIndex + 1) / globalCount) * 100}%` }} />
         </div>
         <div className="tour-transport__actions">
-          <button type="button" onClick={tour.back} aria-label="Re-read the previous step">
+          <button
+            type="button"
+            onClick={tour.back}
+            aria-label="Re-read the previous step"
+            disabled={globalIndex === 0}
+          >
             <ChevronLeft size={15} aria-hidden="true" />
           </button>
           <button

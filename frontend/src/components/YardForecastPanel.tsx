@@ -53,7 +53,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
         </div>
         <span className="yard-legend-note">
           Baseline vs {selectedPlan ? titleCase(selectedPlan) : 'selected plan'} - containers per
-          block, hours from alert (UTC)
+          block, hours from alert
         </span>
       </div>
 

@@ -243,6 +243,18 @@ function App() {
     }
   }
 
+  const startTour = async () => {
+    if (!tour.available) {
+      tour.start()
+      return
+    }
+    // The opening card must describe the state behind it. Starting over a
+    // completed run showed old IDs, completed agents, and COMPLETE while the
+    // narration introduced a disruption that had supposedly just arrived.
+    await resetRun()
+    tour.start()
+  }
+
   const selectScenario = (scenarioId: string) => {
     const preset = SCENARIO_PRESETS.find((candidate) => candidate.id === scenarioId)
     if (!preset) return
@@ -403,7 +415,7 @@ function App() {
           showRunContext={!actTwo}
           subtitle={actTwo ? 'Red Sea 2024 blind replay benchmark' : undefined}
           tourEnabled={tour.available}
-          onStartTour={tour.start}
+          onStartTour={() => void startTour()}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
         />
@@ -438,10 +450,8 @@ function App() {
         <main className="app-content" id="main-content">
           <Suspense fallback={<p className="page-loading">Loading workspace...</p>}>
             {renderPage()}
-            {/* The timeline scrubs the 72 hours of one Act 1 vessel run. It is
-                sticky to the bottom of the viewport, so on the Act 2 benchmark -
-                a 153-day fleet replay it cannot address - it is not merely
-                meaningless but sits on top of the chart. */}
+            {/* The timeline scrubs the 72 hours of one Act 1 vessel run. The Act 2
+                benchmark spans 153 days, so this control does not belong there. */}
             {!actTwo && (
               <OperationsTimeline
                 cursorHour={cursorHour}

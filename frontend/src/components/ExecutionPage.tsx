@@ -1,7 +1,7 @@
 import { CheckCircle2, ClipboardCheck, FileCheck2, LockKeyhole, RadioTower } from 'lucide-react'
 
 import type { ActionReceipt, MockedAction } from '../api/types'
-import { titleCase } from '../lib/format'
+import { humanizeOperationalText, titleCase } from '../lib/format'
 
 interface ExecutionPageProps {
   actions?: MockedAction[] | null
@@ -73,11 +73,15 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                           <Icon aria-hidden="true" size={18} />
                         </span>
                         <div>
-                          <p className="action-type">{titleCase(action.action_type)}</p>
+                          <p className="action-type">
+                            {humanizeOperationalText(action.action_type)}
+                          </p>
                           <h4>{action.action_id}</h4>
                         </div>
                       </header>
-                      <p className="action-description">{action.description}</p>
+                      <p className="action-description">
+                        {humanizeOperationalText(action.description)}
+                      </p>
                       <details className="execution-details">
                         <summary>Inspect action details</summary>
                         <dl>
@@ -87,7 +91,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                           </div>
                           <div>
                             <dt>Payload summary</dt>
-                            <dd>{action.payload_summary}</dd>
+                            <dd>{humanizeOperationalText(action.payload_summary)}</dd>
                           </div>
                           <div>
                             <dt>Validation</dt>
@@ -129,7 +133,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                       </span>
                     </summary>
                     <div className="receipt-detail">
-                      <p>{receipt.detail}</p>
+                      <p>{humanizeOperationalText(receipt.detail)}</p>
                       <dl>
                         <div>
                           <dt>Source</dt>

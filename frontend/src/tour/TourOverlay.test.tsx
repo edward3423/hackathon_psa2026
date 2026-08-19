@@ -103,6 +103,20 @@ describe('TourOverlay', () => {
     expect(tour.exit).toHaveBeenCalledOnce()
   })
 
+  it('disables previous on the first step', () => {
+    const base = controller()
+    render(
+      <TourOverlay
+        tour={{
+          ...base,
+          position: { ...base.position!, globalIndex: 0 },
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Re-read the previous step' })).toBeDisabled()
+  })
+
   it('offers resume once paused, and reports a stall', () => {
     const tour = controller({
       status: 'STALLED' as TourStatus,

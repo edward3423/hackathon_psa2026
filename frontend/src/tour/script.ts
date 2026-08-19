@@ -130,7 +130,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
       {
         id: 'dispute-confirm',
         click: 'dispute-confirm',
-        anchor: 'sailing-fallback',
+        anchor: 'impact-summary',
         title: 'A tool times out, and the agent says so',
         body: 'Planning resumed and the alternative-sailing lookup failed. Rather than inventing a result, the agent falls back to cached data and marks the finding medium confidence.',
         until: () => anchorPresent('sailing-fallback'),

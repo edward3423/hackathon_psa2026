@@ -23,7 +23,7 @@ import {
 } from 'recharts'
 
 import type { PlanArchetype, PlanComparison, PlanEvaluation } from '../api/types'
-import { formatMoney, titleCase } from '../lib/format'
+import { formatMoney, humanizeOperationalText, titleCase } from '../lib/format'
 
 interface RecoveryWorkspaceProps {
   comparison: PlanComparison | null
@@ -35,6 +35,17 @@ const SHORT_PLAN_NAME: Record<PlanArchetype, string> = {
   AGGRESSIVE_RUSH: 'Aggressive',
   STANDARD_REBOOK: 'Rebooking',
   OPTIMIZED_HYBRID: 'Hybrid',
+}
+
+function formatRecommendationRationale(value: string): string {
+  return humanizeOperationalText(value)
+    .replace(/costs (\d+(?:\.\d+)?)/g, (_, amount: string) =>
+      `costs ${formatMoney(Number(amount))}`,
+    )
+    .replace(/(\d+(?:\.\d+)?) percent/g, '$1%')
+    .replace(/(\d+) plan\(s\) were/g, (_, count: string) =>
+      `${count} ${count === '1' ? 'plan was' : 'plans were'}`,
+    )
 }
 
 function planRisk(evaluation: PlanEvaluation): 'HIGH' | 'MEDIUM' | 'LOW' {
@@ -142,7 +153,7 @@ function PlanCard({
           <strong>Constraint violations</strong>
           <ul>
             {evaluation.rejection_reasons?.map((reason, index) => (
-              <li key={index}>{reason}</li>
+              <li key={index}>{humanizeOperationalText(reason)}</li>
             ))}
           </ul>
         </div>
@@ -199,10 +210,10 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
                   <span>{action.target_sailing ?? action.onward_vessel}</span>
                 </div>
                 <p>
-                  {action.container_count} {titleCase(action.cargo_type)} containers from{' '}
+                  {action.container_count} {humanizeOperationalText(action.cargo_type)} containers from{' '}
                   {action.onward_vessel}.
                 </p>
-                <p className="action-rationale">{action.rationale}</p>
+                <p className="action-rationale">{humanizeOperationalText(action.rationale)}</p>
               </li>
             ))}
           </ol>
@@ -216,7 +227,7 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         {(plan.assumptions?.length ?? 0) > 0 ? (
           <ul className="assumption-list">
             {plan.assumptions?.map((assumption, index) => (
-              <li key={index}>{assumption}</li>
+              <li key={index}>{humanizeOperationalText(assumption)}</li>
             ))}
           </ul>
         ) : (
@@ -225,7 +236,7 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         {(evaluation.rejection_reasons?.length ?? 0) > 0 && (
           <ul className="warning-list">
             {evaluation.rejection_reasons?.map((reason, index) => (
-              <li key={index}>{reason}</li>
+              <li key={index}>{humanizeOperationalText(reason)}</li>
             ))}
           </ul>
         )}
@@ -327,7 +338,9 @@ export function RecoveryWorkspace({
         ))}
       </div>
 
-      <p className="recommendation-rationale">{comparison.rationale}</p>
+      <p className="recommendation-rationale">
+        {formatRecommendationRationale(comparison.rationale)}
+      </p>
 
       <section className="plan-comparison-panel" aria-labelledby="comparison-title" data-tour="plan-tradeoffs">
         <header className="panel-heading">

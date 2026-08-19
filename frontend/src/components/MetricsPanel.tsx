@@ -1,6 +1,6 @@
 import type { AlternativeSailingResult, ConnectionAnalysis, YardForecast } from '../api/types'
 import { groupTotals, yardPeakPercent } from '../lib/derive'
-import { formatDateTime, pluralize } from '../lib/format'
+import { formatDateTime, humanizeOperationalText, pluralize } from '../lib/format'
 
 interface MetricsPanelProps {
   analysis: ConnectionAnalysis | null
@@ -75,7 +75,7 @@ export function MetricsPanel({ analysis, baselineYard, sailings }: MetricsPanelP
           <p>
             Cached sailing data was used. It may be stale, so this result has medium confidence.
           </p>
-          {sailings.stale_notice && <p>{sailings.stale_notice}</p>}
+          {sailings.stale_notice && <p>{humanizeOperationalText(sailings.stale_notice)}</p>}
         </aside>
       )}
     </section>

@@ -141,14 +141,12 @@ time,
 }
 
 /*
- * How much of the bottom of the viewport the two pinned strips are covering.
- * Each measures itself and publishes its own height through usePublishedHeight,
- * and both fall back to 0 whenever that strip is not mounted, so every rule
- * that reads them is inert the rest of the time.
+ * How much of the bottom of the viewport the fixed approval strip covers.
+ * It measures itself and publishes its height, then the workspace reserves
+ * the same space so its final content remains reachable.
  */
 :root {
   --approval-bar-height: 0px;
-  --operations-timeline-height: 0px;
 }
 
 .with-approval .app-content {
@@ -803,16 +801,16 @@ time,
  * and letting it scroll inside itself makes the page as long as its main column
  * and keeps the agents in view while the workspace is read.
  *
- * It stops short of both pinned strips, so its last card is reachable rather
- * than parked behind the forecast timeline. Below 1050px the grid collapses to
- * one column and the rail is ordinary page content again.
+ * It stops short of the approval strip, so its last card remains reachable.
+ * Below 1050px the grid collapses to one column and the rail is ordinary page
+ * content again.
  */
 @media (min-width: 1051px) {
   .command-center-rail {
     position: sticky;
     top: 16px;
     max-height: calc(
-      100vh - var(--approval-bar-height) - var(--operations-timeline-height) - 44px
+      100vh - var(--approval-bar-height) - 44px
     );
     overflow-y: auto;
   }
@@ -1994,47 +1992,207 @@ time,
   font-weight: 700;
 }
 
-.graph-canvas {
-  height: 420px;
+.connection-map {
+  display: grid;
+  grid-template-columns: 190px 54px minmax(0, 1fr);
+  align-items: stretch;
   margin-top: 12px;
-  overflow: hidden;
   border: 1px solid var(--line-strong);
   background: #09131b;
 }
 
-.graph-canvas .react-flow {
-  background: #09131b;
-}
-
-.graph-canvas .react-flow__attribution {
-  background: transparent;
-}
-
-.graph-canvas .react-flow__attribution a {
-  color: #667986;
-  font-size: var(--text-xs);
-}
-
-.graph-vessel,
-.graph-group {
+.connection-map__origin {
+  align-self: center;
   display: grid;
-  gap: 3px;
-  text-align: left;
+  gap: 5px;
+  margin: 14px;
+  padding: 13px;
+  border: 1px solid var(--amber);
+  background: #111c24;
 }
 
-.graph-node-kind,
-.graph-node-meta,
-.graph-status {
+.connection-map__origin span,
+.connection-lane header span {
+  color: var(--muted);
   font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.graph-node-kind {
+.connection-map__origin strong {
+  font-size: var(--text-md);
+}
+
+.connection-map__origin small {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.connection-map__origin b {
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.connection-map__handoff {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 0;
   color: var(--muted);
 }
 
-.graph-node-meta {
-  color: var(--amber);
+.connection-map__handoff span {
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.connection-map__handoff small {
+  font-size: var(--text-xs);
+  writing-mode: vertical-rl;
+  text-transform: uppercase;
+}
+
+.connection-map__lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+  padding: 12px;
+  border-left: 1px solid var(--line-strong);
+}
+
+.connection-lane {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.connection-lane > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.connection-lane h3 {
+  margin-top: 3px;
+  font-size: var(--text-sm);
+}
+
+.connection-lane > header > strong {
+  color: var(--accent-strong);
   font-family: var(--mono);
+  font-size: var(--text-md);
+}
+
+.connection-lane ul {
+  display: grid;
+  gap: 5px;
+  padding: 7px;
+  list-style: none;
+}
+
+.connection-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 7px;
+  border-left: 3px solid var(--line-strong);
+  background: #0c171f;
+}
+
+.connection-group > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.connection-group > div strong {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.connection-group > div span {
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+  line-height: 1.25;
+}
+
+.connection-group em {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.connection-group--safe {
+  border-left-color: var(--green);
+}
+
+.connection-group--safe em {
+  color: var(--green);
+}
+
+.connection-group--at-risk {
+  border-left-color: var(--amber);
+}
+
+.connection-group--at-risk em {
+  color: var(--amber);
+}
+
+.connection-group--missed {
+  border-left-color: var(--red);
+}
+
+.connection-group--missed em {
+  color: var(--red);
+}
+
+.connection-group--resolved {
+  border-left-color: var(--accent-strong);
+}
+
+.connection-group--resolved em {
+  color: var(--accent-strong);
+}
+
+@media (max-width: 900px) {
+  .connection-map {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-map__handoff {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto;
+    align-items: center;
+    padding: 0 14px;
+  }
+
+  .connection-map__handoff span {
+    width: 100%;
+    height: 1px;
+  }
+
+  .connection-map__handoff small {
+    writing-mode: initial;
+  }
+
+  .connection-map__lanes {
+    border-top: 1px solid var(--line-strong);
+    border-left: 0;
+  }
 }
 
 .connections-page {
@@ -3101,9 +3259,7 @@ time,
 
 /* Global forecast timeline */
 .operations-timeline {
-  position: sticky;
-  bottom: var(--approval-bar-height);
-  z-index: 30;
+  position: relative;
   margin-top: 14px;
   padding: 10px 12px;
   background: #0b151e;
@@ -3816,6 +3972,12 @@ time,
   cursor: default;
 }
 
+.benchmark-result-summary {
+  display: grid;
+  grid-template-columns: minmax(320px, auto) minmax(0, 1fr);
+  gap: 10px;
+}
+
 /* The benchmark's central honesty statement. Sits directly under the header so
    nobody reads the chart before reading what it does and does not claim. */
 .benchmark-scope-notice {
@@ -3840,6 +4002,30 @@ time,
   color: var(--muted-strong);
   font-size: var(--text-md);
   line-height: 1.6;
+}
+
+.benchmark-scope-notice details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.benchmark-scope-notice summary {
+  width: fit-content;
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.benchmark-scope-notice details p {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 900px) {
+  .benchmark-result-summary {
+    grid-template-columns: 1fr;
+  }
 }
 
 .benchmark-notice,

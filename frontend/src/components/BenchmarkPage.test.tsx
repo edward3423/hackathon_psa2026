@@ -135,8 +135,10 @@ describe('Crisis Benchmark page', () => {
     await playOfflineBenchmark()
 
     const notice = screen.getByText(MOCK_BENCHMARK_RESULT.notice)
-    expect(notice).toBeVisible()
     expect(notice.closest('.benchmark-scope-notice')).not.toBeNull()
+    expect(notice).not.toBeVisible()
+    fireEvent.click(screen.getByText('Methodology and limitations'))
+    expect(notice).toBeVisible()
 
     // It is the claim statement, so it must say what is not being claimed.
     expect(notice).toHaveTextContent(/not a reproduction of history/i)

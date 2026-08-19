@@ -8,7 +8,7 @@ import { configure } from '@testing-library/react'
 // nothing when the element does appear; a genuine failure still fails.
 configure({ asyncUtilTimeout: 5000 })
 
-// Polyfills required by @xyflow/react and recharts in jsdom.
+// Layout polyfills required by Recharts in jsdom.
 
 /** jsdom lays nothing out, so measured elements are given a plausible box. */
 const MEASURED_BOX = { width: 800, height: 320 }

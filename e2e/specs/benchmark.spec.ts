@@ -74,11 +74,15 @@ test('crisis benchmark: three arms render, blind audit passes, KPI tiles populat
   await expect(audit).toContainText('BLIND AUDIT PASS')
   await expect(audit).toContainText('0 violations')
   await expect(audit).toHaveClass(/is-pass/)
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+  await expect(audit).toBeInViewport()
 
   // The scope notice and the anchor readings have to reach the user.
   const scope = page.locator('.benchmark-scope-notice')
   await expect(scope).toBeVisible()
   await expect(scope).toContainText(/not a reproduction of history/i)
+  await expect(scope.getByText('Methodology and limitations')).toBeVisible()
+  await expect(scope.locator('details')).not.toHaveAttribute('open')
 
   const anchors = page.locator('.benchmark-anchors')
   await expect(anchors).toBeVisible()
