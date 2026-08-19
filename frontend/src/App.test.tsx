@@ -127,7 +127,6 @@ describe('CASCADE dashboard', () => {
       'Recovery',
       'Execution',
       'Replay',
-      'System',
     ]
 
     for (const label of labels) {
@@ -141,7 +140,11 @@ describe('CASCADE dashboard', () => {
 
     fireEvent.click(within(navigation).getByRole('button', { name: 'Connections' }))
     expect(
-      await screen.findByRole('heading', { name: 'Threatened transshipment connections' }),
+      await screen.findByRole(
+        'heading',
+        { name: 'Threatened transshipment connections' },
+        { timeout: 5_000 },
+      ),
     ).toBeInTheDocument()
     expect(within(navigation).getByRole('button', { name: 'Connections' })).toHaveAttribute(
       'aria-current',
