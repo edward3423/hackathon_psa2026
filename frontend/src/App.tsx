@@ -45,11 +45,6 @@ const RecoveryWorkspace = lazy(() =>
 const ReplayPage = lazy(() =>
   import('./components/ReplayPage').then((module) => ({ default: module.ReplayPage })),
 )
-const SystemStatusPage = lazy(() =>
-  import('./components/SystemStatusPage').then((module) => ({
-    default: module.SystemStatusPage,
-  })),
-)
 const YardOperationsPage = lazy(() =>
   import('./components/YardOperationsPage').then((module) => ({
     default: module.YardOperationsPage,
@@ -61,23 +56,10 @@ const YardForecastPanel = lazy(() =>
   })),
 )
 
-const SYSTEM_MODE_BY_BRAIN = {
-  LIVE_STUB: 'SCRIPTED',
-  LIVE_GEMINI: 'GEMINI',
-  LIVE_CLAUDE: 'CLAUDE',
-} as const
-
-const BRAIN_MODE_BY_SYSTEM = {
-  SCRIPTED: 'LIVE_STUB',
-  GEMINI: 'LIVE_GEMINI',
-  CLAUDE: 'LIVE_CLAUDE',
-} as const
-
 function pageForStage(stage: WorkflowStage): PageId {
   if (stage === 'DISPUTE') return 'agents'
   if (stage === 'PLANNING' || stage === 'AWAITING_APPROVAL') return 'recovery'
   if (stage === 'EXECUTING' || stage === 'COMPLETE') return 'execution'
-  if (stage === 'FAILED') return 'system'
   return 'overview'
 }
 
@@ -193,7 +175,7 @@ function App() {
     setDismissedDisputeEventIds(new Set())
     setApprovalSubmitted(false)
     setCursorHour(0)
-    setActivePage(mode === 'DEMO_REPLAY' ? 'replay' : 'overview')
+    if (mode === 'DEMO_REPLAY') setActivePage('replay')
     void stream.start(controls, mode)
   }
 
@@ -279,6 +261,11 @@ function App() {
       case 'recovery':
         return (
           <div className="recovery-page-stack">
+            <MetricsPanel
+              analysis={results?.connection_analysis ?? null}
+              baselineYard={results?.baseline_yard ?? null}
+              sailings={results?.alternative_sailings ?? null}
+            />
             <RecoveryWorkspace
               comparison={comparison}
               selectedPlan={selectedPlan}
@@ -298,47 +285,25 @@ function App() {
           <ReplayPage
             initialCursor={0}
             events={events}
+            live={streaming}
+            scenarioTitle={selectedPreset.title}
             onCursorChange={(index) =>
               setCursorHour(events.length > 1 ? Math.round((index / (events.length - 1)) * 72) : 0)
             }
           />
         )
-      case 'system':
-        return (
-          <SystemStatusPage
-            backendConnected={backendConnected}
-            sseConnected={transportState === 'CONNECTED' || transportState === 'ENDED'}
-            agentMode={SYSTEM_MODE_BY_BRAIN[brainMode]}
-            onAgentModeChange={(mode) => setBrainMode(BRAIN_MODE_BY_SYSTEM[mode])}
-          />
-        )
       case 'overview':
       default:
         return (
-          <div className="command-center-grid">
-            <OperationsOverview
-              scenario={displayScenario}
-              preset={selectedPreset}
-              stage={stage}
-              analysis={results?.connection_analysis ?? null}
-              baselineYard={results?.baseline_yard ?? null}
-              cursorHour={cursorHour}
-              onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
-            />
-            <aside className="command-center-rail" aria-label="Run context">
-              <AgentActivityPanel
-                events={events}
-                activities={workflow?.activities}
-                streaming={streaming}
-              />
-              <MetricsPanel
-                analysis={results?.connection_analysis ?? null}
-                baselineYard={results?.baseline_yard ?? null}
-                sailings={results?.alternative_sailings ?? null}
-              />
-              <TraceDrawer events={events} />
-            </aside>
-          </div>
+          <OperationsOverview
+            scenario={displayScenario}
+            preset={selectedPreset}
+            stage={stage}
+            analysis={results?.connection_analysis ?? null}
+            baselineYard={results?.baseline_yard ?? null}
+            cursorHour={cursorHour}
+            onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
+          />
         )
     }
   }
@@ -397,12 +362,14 @@ function App() {
         <main className="app-content" id="main-content">
           <Suspense fallback={<p className="page-loading">Loading workspace...</p>}>
             {renderPage()}
-            <OperationsTimeline
-              cursorHour={cursorHour}
-              onCursorChange={setCursorHour}
-              stage={stage}
-              events={events}
-            />
+            {activePage === 'overview' && (
+              <OperationsTimeline
+                cursorHour={cursorHour}
+                onCursorChange={setCursorHour}
+                stage={stage}
+                events={events}
+              />
+            )}
           </Suspense>
         </main>
       </div>

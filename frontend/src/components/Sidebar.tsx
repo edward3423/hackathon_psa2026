@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  Activity,
   Bot,
   Cable,
   ClipboardCheck,
@@ -31,7 +30,6 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: 'recovery', label: 'Recovery', icon: Route },
   { id: 'execution', label: 'Execution', icon: ClipboardCheck },
   { id: 'replay', label: 'Replay', icon: History },
-  { id: 'system', label: 'System', icon: Activity },
 ]
 
 export interface SidebarProps {
