@@ -208,6 +208,31 @@ export function OperationsOverview({
     setSelectedInfrastructure(selection)
   }
 
+  const renderVessel = (vessel: PortVessel) => (
+    <button
+      key={vessel.id}
+      type="button"
+      className={`operations-overview__vessel operations-overview__vessel--${vessel.role.toLowerCase()} operations-overview__risk--${vessel.risk.toLowerCase()}`}
+      onClick={(event) => selectVessel(vessel, event.currentTarget)}
+      aria-pressed={selectedVesselId === vessel.id}
+      aria-controls="overview-vessel-details"
+    >
+      <Ship size={18} aria-hidden="true" />
+      <span className="operations-overview__vessel-text">
+        <strong>{vessel.name}</strong>
+        <span className="operations-overview__vessel-meta">
+          <small>{vessel.berth}</small>
+          <em>{vessel.risk}</em>
+        </span>
+      </span>
+    </button>
+  )
+
+  const inboundVessels = PORT_VESSELS.filter((vessel) => vessel.role === 'INBOUND')
+  const alongsideVessels = layers.connections
+    ? PORT_VESSELS.filter((vessel) => vessel.role !== 'INBOUND')
+    : []
+
   return (
     <div className="operations-overview">
       <section
@@ -370,10 +395,27 @@ export function OperationsOverview({
             </div>
           </div>
 
+          {/* Three zones in one grid, seaward to inland: the approach channel,
+              the berth line, the yard. Vessels used to be absolutely positioned
+              on hardcoded percentages, which put the outbound calls on top of
+              the yard blocks at every viewport width. Columns cannot overlap,
+              so the collision is now impossible rather than merely tuned away. */}
           <div className="operations-overview__port-canvas">
-            <div className="operations-overview__water" aria-hidden="true">
-              <span>Approach channel</span>
+            <div className="operations-overview__seaward">
+              <div className="operations-overview__channel">
+                <span className="operations-overview__zone-label">Approach channel</span>
+                <div className="operations-overview__vessel-stack">
+                  {inboundVessels.map(renderVessel)}
+                </div>
+              </div>
+              <div className="operations-overview__quayside">
+                <span className="operations-overview__zone-label">Alongside Terminal 1</span>
+                <div className="operations-overview__vessel-stack">
+                  {alongsideVessels.map(renderVessel)}
+                </div>
+              </div>
             </div>
+
             <button
               type="button"
               className="operations-overview__berth"
@@ -388,84 +430,69 @@ export function OperationsOverview({
                 })
               }
             >
-              <Anchor size={16} />
+              <Anchor size={16} aria-hidden="true" />
               <span>Terminal 1 berth line</span>
             </button>
 
-            {PORT_VESSELS.filter(
-              (vessel) => vessel.role === 'INBOUND' || layers.connections,
-            ).map((vessel) => (
-              <button
-                key={vessel.id}
-                type="button"
-                className={`operations-overview__vessel operations-overview__vessel--${vessel.role.toLowerCase()} operations-overview__risk--${vessel.risk.toLowerCase()}`}
-                style={{ left: `${vessel.x}%`, top: `${vessel.y}%` }}
-                onClick={(event) => selectVessel(vessel, event.currentTarget)}
-                aria-pressed={selectedVesselId === vessel.id}
-                aria-controls="overview-vessel-details"
-              >
-                <Ship size={18} aria-hidden="true" />
-                <span>
-                  <strong>{vessel.name}</strong>
-                  <small>{vessel.berth}</small>
-                </span>
-                <em>{vessel.risk}</em>
-              </button>
-            ))}
-
-            {layers.yard && (
-            <div className="operations-overview__yard-blocks" aria-label="Synthetic yard blocks">
-              {yardBlocks.map((block) => (
-                <button
-                  type="button"
-                  key={block.id}
-                  className={`operations-overview__yard-block${
-                    block.occupancy >= 100
-                      ? ' operations-overview__yard-block--critical'
-                      : block.occupancy >= 85
-                        ? ' operations-overview__yard-block--warning'
-                        : ''
-                  }`}
-                  onClick={() =>
-                    inspectInfrastructure({
-                      kind: 'Yard block',
-                      title: `Block ${block.id}`,
-                      status: `${block.occupancy}% occupied near H+${cursorHour}`,
-                      detail:
-                        block.occupancy >= 85
-                          ? 'This block is above the congestion threshold and needs recovery-plan relief.'
-                          : 'This block remains within the modeled operating threshold.',
-                    })
-                  }
+            <div className="operations-overview__terminal">
+              <span className="operations-overview__zone-label">Terminal yard</span>
+              {layers.yard && (
+                <div
+                  className="operations-overview__yard-blocks"
+                  aria-label="Synthetic yard blocks"
                 >
-                  <Warehouse size={15} aria-hidden="true" />
-                  <strong>{block.id}</strong>
-                  <span>{block.occupancy}% forecast</span>
-                </button>
-              ))}
-              {layers.reefers && (
-              <button
-                type="button"
-                className="operations-overview__yard-block operations-overview__yard-block--reefer"
-                onClick={() =>
-                  inspectInfrastructure({
-                    kind: 'Reefer rack',
-                    title: 'Refrigerated container racks',
-                    status: `${reeferDemand} of ${reeferCapacity} plugs forecast`,
-                    detail:
-                      reeferDemand > reeferCapacity
-                        ? 'Forecast demand exceeds physical electrical plug capacity.'
-                        : 'Forecast demand stays within reported electrical plug capacity.',
-                  })
-                }
-              >
-                <Zap size={15} aria-hidden="true" />
-                <strong>Reefer racks</strong>
-                <span>{reeferDemand} plugs forecast</span>
-              </button>
+                  {yardBlocks.map((block) => (
+                    <button
+                      type="button"
+                      key={block.id}
+                      className={`operations-overview__yard-block${
+                        block.occupancy >= 100
+                          ? ' operations-overview__yard-block--critical'
+                          : block.occupancy >= 85
+                            ? ' operations-overview__yard-block--warning'
+                            : ''
+                      }`}
+                      onClick={() =>
+                        inspectInfrastructure({
+                          kind: 'Yard block',
+                          title: `Block ${block.id}`,
+                          status: `${block.occupancy}% occupied near H+${cursorHour}`,
+                          detail:
+                            block.occupancy >= 85
+                              ? 'This block is above the congestion threshold and needs recovery-plan relief.'
+                              : 'This block remains within the modeled operating threshold.',
+                        })
+                      }
+                    >
+                      <Warehouse size={15} aria-hidden="true" />
+                      <strong>{block.id}</strong>
+                      <span>{block.occupancy}% forecast</span>
+                    </button>
+                  ))}
+                  {layers.reefers && (
+                    <button
+                      type="button"
+                      className="operations-overview__yard-block operations-overview__yard-block--reefer"
+                      onClick={() =>
+                        inspectInfrastructure({
+                          kind: 'Reefer rack',
+                          title: 'Refrigerated container racks',
+                          status: `${reeferDemand} of ${reeferCapacity} plugs forecast`,
+                          detail:
+                            reeferDemand > reeferCapacity
+                              ? 'Forecast demand exceeds physical electrical plug capacity.'
+                              : 'Forecast demand stays within reported electrical plug capacity.',
+                        })
+                      }
+                    >
+                      <Zap size={15} aria-hidden="true" />
+                      <strong>Reefer racks</strong>
+                      <span>{reeferDemand} plugs forecast</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-            )}
           </div>
 
           <div className="operations-overview__risk-legend" aria-label="Vessel risk legend">

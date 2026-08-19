@@ -1020,40 +1020,75 @@ time,
   background: #183039;
 }
 
+/* Water, berth line, yard: three grid columns, seaward to inland. Grid columns
+   cannot overlap each other, so no vessel card can ever come to rest on a yard
+   block whatever the viewport width. The two water zones stack as rows rather
+   than columns, because vertical room is plentiful here and horizontal room is
+   what a vessel card actually needs. */
 .operations-overview__port-canvas {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 0.95fr);
   min-height: 380px;
   margin-top: 12px;
-  overflow: hidden;
   border: 1px solid var(--line-strong);
   background: #0a151e;
 }
 
-.operations-overview__water {
-  position: absolute;
-  inset: 0 58% 0 0;
-  display: flex;
-  align-items: end;
-  padding: 12px;
+.operations-overview__seaward {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   border-right: 1px solid #30536a;
-  color: #7fa0b5;
   background: #0d2331;
-  font-size: 0.64rem;
+}
+
+.operations-overview__channel,
+.operations-overview__quayside,
+.operations-overview__terminal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.operations-overview__quayside {
+  border-top: 1px dashed #23485c;
+}
+
+.operations-overview__terminal {
+  background: #0a151e;
+}
+
+.operations-overview__vessel-stack {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.operations-overview__zone-label {
+  align-self: start;
+  color: #7fa0b5;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operations-overview__terminal .operations-overview__zone-label {
+  color: var(--muted);
 }
 
 .operations-overview__berth {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 42%;
-  width: 34px;
-  display: flex;
-  align-items: center;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-items: center;
+  gap: 8px;
+  padding: 10px 0;
   border-right: 1px solid var(--line-strong);
   border-left: 1px solid var(--line-strong);
   color: var(--muted);
   background: #161d21;
-  padding: 0;
   cursor: pointer;
 }
 
@@ -1063,22 +1098,22 @@ time,
   background: #1a252b;
 }
 
+/* Out of flow so the 34px column never has to fit the label's unrotated
+   width, and centred on the whole strip so it clears the anchor icon. */
 .operations-overview__berth span {
   position: absolute;
-  left: 7px;
+  top: 50%;
+  left: 50%;
   white-space: nowrap;
-  transform: rotate(-90deg) translateX(-50%);
-  transform-origin: left center;
+  transform: translate(-50%, -50%) rotate(-90deg);
   font-size: 0.6rem;
+  letter-spacing: 0.06em;
 }
 
 .operations-overview__vessel {
-  position: absolute;
-  z-index: 3;
-  width: 150px;
   min-height: 54px;
   display: grid;
-  grid-template-columns: 20px 1fr auto;
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
   gap: 7px;
   padding: 7px 8px;
@@ -1087,7 +1122,6 @@ time,
   color: var(--muted-strong);
   background: #0e1a23;
   text-align: left;
-  transform: translateY(-50%);
 }
 
 .operations-overview__vessel:hover,
@@ -1096,10 +1130,19 @@ time,
   color: var(--ink);
 }
 
-.operations-overview__vessel span {
+.operations-overview__vessel-text {
   min-width: 0;
   display: grid;
   gap: 2px;
+}
+
+/* Berth and risk share the second line, so the name gets the full card width. */
+.operations-overview__vessel-meta {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .operations-overview__vessel strong,
@@ -1120,6 +1163,7 @@ time,
 }
 
 .operations-overview__vessel em {
+  flex: none;
   font-size: 0.55rem;
   font-style: normal;
   font-weight: 750;
@@ -1143,12 +1187,9 @@ time,
 }
 
 .operations-overview__yard-blocks {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  left: 49%;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
   gap: 5px;
 }
 
@@ -1185,6 +1226,7 @@ time,
 }
 
 .operations-overview__yard-block--reefer {
+  grid-column: 1 / -1;
   border-color: var(--blue);
   color: #8fb6ce;
 }
@@ -3484,20 +3526,7 @@ time,
     min-height: 520px;
   }
 
-  .operations-overview__water {
-    right: 50%;
-  }
-
-  .operations-overview__berth {
-    left: 50%;
-  }
-
-  .operations-overview__vessel {
-    width: 126px;
-  }
-
   .operations-overview__yard-blocks {
-    left: 55%;
     grid-template-columns: 1fr;
   }
 

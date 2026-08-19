@@ -159,8 +159,6 @@ export interface PortVessel {
   containers: number
   connections: number
   risk: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
-  x: number
-  y: number
 }
 
 export const PORT_VESSELS: PortVessel[] = [
@@ -174,8 +172,6 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 1284,
     connections: 438,
     risk: 'CRITICAL',
-    x: 12,
-    y: 43,
   },
   {
     id: 'SGSIN-PSA-2043',
@@ -187,8 +183,6 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 208,
     connections: 118,
     risk: 'HIGH',
-    x: 76,
-    y: 21,
   },
   {
     id: 'SGSIN-PSA-2044',
@@ -200,8 +194,6 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 146,
     connections: 86,
     risk: 'HIGH',
-    x: 76,
-    y: 47,
   },
   {
     id: 'SGSIN-PSA-2045',
@@ -213,8 +205,6 @@ export const PORT_VESSELS: PortVessel[] = [
     containers: 164,
     connections: 74,
     risk: 'MEDIUM',
-    x: 76,
-    y: 72,
   },
 ]
 
