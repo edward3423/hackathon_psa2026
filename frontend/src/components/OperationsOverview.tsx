@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Anchor,
   ArrowRight,
   Boxes,
   Factory,
-  Ship,
   Snowflake,
-  Warehouse,
   X,
   Zap,
 } from 'lucide-react'
@@ -59,7 +57,6 @@ export interface OperationsOverviewProps {
   baselineYard?: YardForecast | null
   cursorHour?: number
   onStageSelect?: (stage: WorkflowStage) => void
-  onVesselSelect?: (vessel: PortVessel | null) => void
 }
 
 interface InfrastructureSelection {
@@ -89,17 +86,11 @@ export function OperationsOverview({
   baselineYard = null,
   cursorHour = 0,
   onStageSelect,
-  onVesselSelect,
 }: OperationsOverviewProps) {
-  const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null)
   const [selectedInfrastructure, setSelectedInfrastructure] =
     useState<InfrastructureSelection | null>(null)
   const [layers, setLayers] = useState({ connections: true, yard: true, reefers: true })
-  const lastTriggerRef = useRef<HTMLButtonElement | null>(null)
-  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
 
-  const selectedVessel =
-    PORT_VESSELS.find((vessel) => vessel.id === selectedVesselId) ?? null
   const inboundVessel = PORT_VESSELS.find((vessel) => vessel.role === 'INBOUND')
   const currentRank = STAGE_RANK[stage]
   const affectedContainers = analysis
@@ -175,36 +166,7 @@ export function OperationsOverview({
   const reeferDemand = reeferShortage?.required_plugs ?? preset.reeferDemand
   const reeferCapacity = reeferShortage?.available_plugs ?? REEFER_PLUG_CAPACITY
 
-  useEffect(() => {
-    if (!selectedVessel) return
-
-    closeButtonRef.current?.focus()
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      setSelectedVesselId(null)
-      onVesselSelect?.(null)
-      lastTriggerRef.current?.focus()
-    }
-    window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
-  }, [onVesselSelect, selectedVessel])
-
-  const selectVessel = (vessel: PortVessel, trigger: HTMLButtonElement) => {
-    lastTriggerRef.current = trigger
-    setSelectedInfrastructure(null)
-    setSelectedVesselId(vessel.id)
-    onVesselSelect?.(vessel)
-  }
-
-  const closeVesselDetails = () => {
-    setSelectedVesselId(null)
-    onVesselSelect?.(null)
-    lastTriggerRef.current?.focus()
-  }
-
   const inspectInfrastructure = (selection: InfrastructureSelection) => {
-    setSelectedVesselId(null)
-    onVesselSelect?.(null)
     setSelectedInfrastructure(selection)
   }
 
@@ -388,16 +350,21 @@ export function OperationsOverview({
                 type="button"
                 className={`operations-overview__vessel operations-overview__vessel--${vessel.role.toLowerCase()} operations-overview__risk--${vessel.risk.toLowerCase()}`}
                 style={{ left: `${vessel.x}%`, top: `${vessel.y}%` }}
-                onClick={(event) => selectVessel(vessel, event.currentTarget)}
-                aria-pressed={selectedVesselId === vessel.id}
-                aria-controls="overview-vessel-details"
+                aria-label={`${vessel.name}, ${vessel.risk.toLowerCase()} risk, ${vessel.role.toLowerCase()} vessel`}
+                aria-describedby={`vessel-tooltip-${vessel.id}`}
               >
-                <Ship size={18} aria-hidden="true" />
-                <span>
+                <span className="operations-overview__vessel-core" aria-hidden="true" />
+                <span
+                  className="operations-overview__vessel-tooltip"
+                  id={`vessel-tooltip-${vessel.id}`}
+                  role="tooltip"
+                >
                   <strong>{vessel.name}</strong>
-                  <small>{vessel.berth}</small>
+                  <span>{vessel.role === 'INBOUND' ? 'Inbound vessel' : 'Outbound vessel'}</span>
+                  <span>{vessel.berth} · {riskStatus(vessel)}</span>
+                  <span>{vessel.eta} · {vessel.containers.toLocaleString()} containers</span>
+                  <span>{vessel.connections.toLocaleString()} onward connections · {vessel.risk} risk</span>
                 </span>
-                <em>{vessel.risk}</em>
               </button>
             ))}
 
@@ -407,7 +374,7 @@ export function OperationsOverview({
                 <button
                   type="button"
                   key={block.id}
-                  className={`operations-overview__yard-block${
+                  className={`operations-overview__yard-block operations-overview__storage-building${
                     block.occupancy >= 100
                       ? ' operations-overview__yard-block--critical'
                       : block.occupancy >= 85
@@ -425,16 +392,24 @@ export function OperationsOverview({
                           : 'This block remains within the modeled operating threshold.',
                     })
                   }
+                  aria-label={`Inspect storage building ${block.id}, ${block.occupancy}% occupied`}
                 >
-                  <Warehouse size={15} aria-hidden="true" />
-                  <strong>{block.id}</strong>
-                  <span>{block.occupancy}% forecast</span>
+                  <span className="operations-overview__building" aria-hidden="true">
+                    <span className="operations-overview__building-roof" />
+                    <span className="operations-overview__building-front">
+                      <span /><span /><span />
+                    </span>
+                  </span>
+                  <span className="operations-overview__building-label">
+                    <strong>Storage {block.id}</strong>
+                    <span>{block.occupancy}% occupied</span>
+                  </span>
                 </button>
               ))}
               {layers.reefers && (
               <button
                 type="button"
-                className="operations-overview__yard-block operations-overview__yard-block--reefer"
+                className="operations-overview__yard-block operations-overview__storage-building operations-overview__yard-block--reefer"
                 onClick={() =>
                   inspectInfrastructure({
                     kind: 'Reefer rack',
@@ -447,9 +422,16 @@ export function OperationsOverview({
                   })
                 }
               >
-                <Zap size={15} aria-hidden="true" />
-                <strong>Reefer racks</strong>
-                <span>{reeferDemand} plugs forecast</span>
+                <span className="operations-overview__building" aria-hidden="true">
+                  <span className="operations-overview__building-roof" />
+                  <span className="operations-overview__building-front operations-overview__building-front--reefer">
+                    <Zap size={13} />
+                  </span>
+                </span>
+                <span className="operations-overview__building-label">
+                  <strong>Cold storage</strong>
+                  <span>{reeferDemand} plugs needed</span>
+                </span>
               </button>
               )}
             </div>
@@ -511,71 +493,6 @@ export function OperationsOverview({
           </div>
         </section>
       </div>
-
-      {selectedVessel && (
-        <aside
-          className="operations-overview__vessel-drawer"
-          id="overview-vessel-details"
-          aria-labelledby="overview-vessel-title"
-        >
-          <div className="operations-overview__vessel-drawer-header">
-            <div>
-              <h2 id="overview-vessel-title">{selectedVessel.name}</h2>
-            </div>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className="operations-overview__vessel-drawer-close"
-              onClick={closeVesselDetails}
-              aria-label="Close vessel details"
-            >
-              <X size={18} aria-hidden="true" />
-            </button>
-          </div>
-          <div className={`operations-overview__vessel-risk operations-overview__risk--${selectedVessel.risk.toLowerCase()}`}>
-            <span>{selectedVessel.risk} RISK</span>
-            <strong>{riskStatus(selectedVessel)}</strong>
-          </div>
-          <dl className="operations-overview__vessel-facts">
-            <div>
-              <dt>Vessel ID</dt>
-              <dd>{selectedVessel.id}</dd>
-            </div>
-            <div>
-              <dt>Role</dt>
-              <dd>{selectedVessel.role}</dd>
-            </div>
-            <div>
-              <dt>Estimated arrival</dt>
-              <dd>{selectedVessel.eta}</dd>
-            </div>
-            <div>
-              <dt>Departure</dt>
-              <dd>{selectedVessel.departure}</dd>
-            </div>
-            <div>
-              <dt>Berth</dt>
-              <dd>{selectedVessel.berth}</dd>
-            </div>
-            <div>
-              <dt>Containers</dt>
-              <dd>{selectedVessel.containers.toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt>Connections</dt>
-              <dd>{selectedVessel.connections.toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt>Delay status</dt>
-              <dd>{riskStatus(selectedVessel)}</dd>
-            </div>
-            <div>
-              <dt>Current risk</dt>
-              <dd>{selectedVessel.risk}</dd>
-            </div>
-          </dl>
-        </aside>
-      )}
 
       {selectedInfrastructure && (
         <aside
