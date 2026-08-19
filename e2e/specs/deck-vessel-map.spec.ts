@@ -27,3 +27,29 @@ test('Deck.gl vessel map replays routes and reports AISStream state', async ({ p
   await page.getByRole('button', { name: 'Next Event' }).click()
   await expect(map).not.toHaveAttribute('data-route-progress', '0.000')
 })
+
+test('Mapbox mode renders every simulated ship as a native marker', async ({ page }) => {
+  await page.route('https://api.mapbox.com/styles/v1/mapbox/dark-v11*', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ version: 8, sources: {}, layers: [] }),
+    })
+  })
+  await page.route('https://events.mapbox.com/**', (route) => route.abort())
+
+  await openDashboard(page)
+  await navigateTo(page, 'Replay')
+
+  const map = page.getByRole('region', { name: 'World vessel simulation' })
+  await expect(map.getByText('MAPBOX ACTIVE')).toBeVisible()
+
+  for (const ship of ['MV ATLAS STAR', 'MV PACIFIC LINK', 'MV BORNEO FEEDER']) {
+    await expect(map.getByRole('button', { name: `${ship}, simulated optimized position` })).toBeVisible()
+  }
+
+  const atlas = map.getByRole('button', {
+    name: 'MV ATLAS STAR, simulated optimized position',
+  })
+  await atlas.hover()
+  await expect(map.getByRole('tooltip').filter({ hasText: 'Cape reroute to Singapore' })).toBeVisible()
+})
