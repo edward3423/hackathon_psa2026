@@ -80,68 +80,17 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         click: 'control-start',
         anchor: 'run-state',
         title: 'Start the run',
-        body: 'Events stream from the backend over SSE. The stage readout and the trace count are the two places to watch it move.',
+        body: 'Events stream from the backend over SSE. Watch the stage readout and the trace count, and watch how quickly the run stops itself.',
         until: () => stageReadout() !== 'READY' && stageReadout() !== '',
         dwellMs: 2000,
       },
     ],
   },
   {
-    id: 'command-center',
-    title: 'Command Center',
-    steps: [
-      {
-        id: 'workflow-rail',
-        anchor: 'workflow-rail',
-        title: 'Who is working right now',
-        body: 'Impact and Yard run in parallel, not in sequence. Both specialists are already on the problem before either has finished.',
-        dwellMs: 8000,
-      },
-      {
-        id: 'situation',
-        anchor: 'situation-card',
-        title: 'The shape of the problem',
-        body: 'Containers affected, connections at risk, expected misses. These are the counts the recovery plans will be scored against later.',
-        dwellMs: 6000,
-      },
-      {
-        id: 'schematic',
-        anchor: 'port-schematic',
-        title: 'The port, not a dashboard',
-        body: 'Berths, the approach channel, yard blocks and reefer racks. Vessels and blocks are clickable, and the colours are the same risk scale used everywhere else in the app.',
-        dwellMs: 9000,
-      },
-      {
-        id: 'cargo',
-        anchor: 'cargo-order',
-        title: 'What gets protected first',
-        body: 'Cargo is ranked before any plan exists. Pharmaceutical reefers outrank standard dry cargo, and that ordering is what the agents are about to disagree over.',
-        dwellMs: 7000,
-      },
-      {
-        id: 'agents',
-        anchor: 'agent-panel',
-        title: 'Five specialists, live',
-        body: 'Each card shows the agent, its status and the tool it is calling right now. Expand one and it names the tool and the arguments.',
-        dwellMs: 8000,
-      },
-      {
-        id: 'impact',
-        anchor: 'impact-summary',
-        title: 'Calculated, not narrated',
-        body: 'The agents decide what to look at. Deterministic Python computes every figure on this panel, so the same scenario produces the same numbers every time.',
-        dwellMs: 7000,
-      },
-      {
-        id: 'trace',
-        anchor: 'trace-drawer',
-        title: 'Every step is on the record',
-        body: 'One entry per agent action and per tool call, in order, with the arguments. The trace is the audit surface for everything the tour is about to show.',
-        dwellMs: 5000,
-      },
-    ],
-  },
-  {
+    // The dispute comes second, not later: the backend streams 23 events at
+    // 50 ms, so the run halts on the conflict about a second after Start. A
+    // chapter placed between the two would narrate the Command Center from
+    // behind a modal the operator has not answered yet.
     id: 'dispute',
     title: 'The agents disagree',
     steps: [
@@ -149,7 +98,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         id: 'dispute-open',
         anchor: 'dispute-dialog',
         title: 'The workflow stops itself',
-        body: 'Impact and Yard reached incompatible conclusions, so the run halts. This is designed behaviour: the agents surface the conflict instead of quietly picking a side.',
+        body: 'Within a second of starting, Impact and Yard reached incompatible conclusions and the run halted. This is designed behaviour: the agents surface the conflict instead of quietly picking a side.',
         until: () => anchorPresent('dispute-dialog'),
         dwellMs: 8000,
       },
@@ -187,6 +136,70 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         until: () => anchorPresent('sailing-fallback'),
         dwellMs: 8000,
       },
+    ],
+  },
+  {
+    // Still on the Command Center: confirming the constraint dismissed the
+    // dialog and the run has carried itself to the approval gate, so every
+    // panel below is populated and nothing is covering them.
+    id: 'command-center',
+    title: 'Command Center',
+    steps: [
+      {
+        id: 'workflow-rail',
+        anchor: 'workflow-rail',
+        title: 'What ran, and in what order',
+        body: 'Impact and Yard ran in parallel, not in sequence. Both specialists were on the problem before either had finished, and the rail has already carried the run to the approval gate.',
+        dwellMs: 8000,
+      },
+      {
+        id: 'situation',
+        anchor: 'situation-card',
+        title: 'The shape of the problem',
+        body: 'Containers affected, connections at risk, expected misses. These are the counts the three recovery plans are scored against.',
+        dwellMs: 6000,
+      },
+      {
+        id: 'schematic',
+        anchor: 'port-schematic',
+        title: 'The port, not a dashboard',
+        body: 'Berths, the approach channel, yard blocks and reefer racks. Vessels and blocks are clickable, and the colours are the same risk scale used everywhere else in the app.',
+        dwellMs: 9000,
+      },
+      {
+        id: 'cargo',
+        anchor: 'cargo-order',
+        title: 'What gets protected first',
+        body: 'Cargo is ranked before any plan exists. Pharmaceutical reefers outrank standard dry cargo, and that ordering is what the two agents just disagreed over.',
+        dwellMs: 7000,
+      },
+      {
+        id: 'agents',
+        anchor: 'agent-panel',
+        title: 'Five specialists, each with a receipt',
+        body: 'Each card shows the agent, its status and the tool it called. Expand one and it names the arguments it passed and the evidence it got back.',
+        dwellMs: 8000,
+      },
+      {
+        id: 'impact',
+        anchor: 'impact-summary',
+        title: 'Calculated, not narrated',
+        body: 'The agents decide what to look at. Deterministic Python computes every figure on this panel, so the same scenario produces the same numbers every time.',
+        dwellMs: 7000,
+      },
+      {
+        id: 'trace',
+        anchor: 'trace-drawer',
+        title: 'Every step is on the record',
+        body: 'One entry per agent action and per tool call, in order, with the arguments. The trace is the audit surface for every figure the tour has shown and every one still to come.',
+        dwellMs: 5000,
+      },
+    ],
+  },
+  {
+    id: 'agent-room',
+    title: 'The agent room',
+    steps: [
       {
         id: 'topology',
         click: 'nav-agents',

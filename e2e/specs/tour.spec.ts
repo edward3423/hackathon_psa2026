@@ -18,8 +18,9 @@ import { resetBackend, stageReadout } from './helpers'
 
 const CHAPTERS = [
   'Cold open',
-  'Command Center',
   'The agents disagree',
+  'Command Center',
+  'The agent room',
   'Three plans, one decision',
   'Nothing moves without approval',
   'Act 2: the blind benchmark',

@@ -22,6 +22,10 @@ const CURSOR_PRESS_MS = 200
 /** Two frames of grace after a scroll, so the spotlight lands on a settled rect. */
 const SETTLE_MS = 120
 const DEFAULT_TIMEOUT_MS = 30_000
+/** How much of the anchor has to stay on screen before the tour re-scrolls. */
+const KEEP_IN_VIEW_PX = 72
+/** Long enough for a smooth scroll to land, so a nudge is never interrupted. */
+const RESCROLL_COOLDOWN_MS = 900
 
 const ABORTED = Symbol('tour-aborted')
 
@@ -159,6 +163,19 @@ function scrollIntoView(element: HTMLElement): void {
     inline: 'nearest',
     behavior: 'smooth',
   })
+}
+
+/**
+ * Whether enough of the anchor is on screen to be worth pointing at.
+ *
+ * A step is only satisfied by the part of the element the viewer can actually
+ * see, so this measures the overlap with the viewport rather than asking
+ * whether the element is wholly inside it - the panels the tour spotlights are
+ * routinely taller than the window.
+ */
+export function isAnchorInView(rect: DOMRect, viewportHeight: number): boolean {
+  const visible = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0)
+  return visible >= Math.min(rect.height, KEEP_IN_VIEW_PX)
 }
 
 export interface UseTourOptions {
@@ -354,9 +371,20 @@ export function useTour({ enabled, search }: UseTourOptions): TourController {
       return
     }
     let handle = 0
-    const track = () => {
+    // Streaming content keeps growing the page underneath the anchor - the agent
+    // rail gains an entry per event - so an element scrolled into view when the
+    // step opened can slide out of it well before the dwell is over, leaving the
+    // bubble describing something nobody can see. Nudge it back when it goes,
+    // on a cooldown so a smooth scroll is never cut off mid-flight.
+    let nextNudgeAt = 0
+    const track = (now: number) => {
       const element = findAnchor(anchor)
-      setRect(element ? element.getBoundingClientRect() : null)
+      const current = element ? element.getBoundingClientRect() : null
+      setRect(current)
+      if (element && current && now >= nextNudgeAt && !isAnchorInView(current, window.innerHeight)) {
+        scrollIntoView(element)
+        nextNudgeAt = now + RESCROLL_COOLDOWN_MS
+      }
       handle = requestAnimationFrame(track)
     }
     handle = requestAnimationFrame(track)
