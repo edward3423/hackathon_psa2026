@@ -13,17 +13,14 @@ from websockets.asyncio.client import connect
 
 AISSTREAM_URL = "wss://stream.aisstream.io/v0/stream"
 DEFAULT_BOUNDING_BOXES = [
-DEFAULT_BOUNDING_BOXES = [
     [[10.0, 30.0], [30.0, 45.0]],  # Red Sea and Suez approaches
     [[-2.0, 100.0], [8.0, 108.0]],  # Singapore Strait approaches
-]
 ]
 
 
 def configured_bounding_boxes() -> list[list[list[float]]]:
     raw = os.environ.get("AISSTREAM_BOUNDING_BOXES_JSON")
     if raw is None or raw == "":
-        return DEFAULT_BOUNDING_BOXES
         return DEFAULT_BOUNDING_BOXES
     parsed = json.loads(raw)
     if not isinstance(parsed, list) or not parsed:
@@ -37,12 +34,6 @@ def normalize_position(message: dict[str, Any]) -> dict[str, Any] | None:
     metadata = message.get("MetaData") or {}
     report = (message.get("Message") or {}).get("PositionReport") or {}
     latitude = metadata.get("latitude", metadata.get("Latitude"))
-    metadata = message.get("MetaData") or {}
-    report = (message.get("Message") or {}).get("PositionReport") or {}
-    latitude = metadata.get("latitude", metadata.get("Latitude"))
-    longitude = metadata.get("longitude", metadata.get("Longitude"))
-    if not isinstance(latitude, int | float) or not isinstance(longitude, int | float):
-        return None
     longitude = metadata.get("longitude", metadata.get("Longitude"))
     if not isinstance(latitude, int | float) or not isinstance(longitude, int | float):
         return None

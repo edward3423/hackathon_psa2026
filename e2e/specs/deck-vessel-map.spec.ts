@@ -18,6 +18,7 @@ test('Deck.gl vessel map replays routes and reports AISStream state', async ({ p
 
   await page.getByRole('button', { name: 'Start demo replay' }).click()
   await resolveReeferDispute(page)
+  await page.getByRole('button', { name: 'Restart' }).click()
   await expect(page.getByRole('button', { name: 'Next Event' })).toBeEnabled()
   await expect(map).toHaveAttribute('data-route-progress', '0.000')
   await page.getByRole('button', { name: 'Next Event' }).click()

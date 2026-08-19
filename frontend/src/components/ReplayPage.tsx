@@ -4,8 +4,6 @@ import { Clock3, Pause, Play, RotateCcw, SkipBack, SkipForward } from 'lucide-re
 import type { TraceEvent } from '../api/types'
 import { formatTime, spaced } from '../lib/format'
 import { DeckVesselMap } from './DeckVesselMap'
-import type { TraceEvent } from '../api/types'
-import { formatTime, spaced } from '../lib/format'
 
 interface ReplayPageProps {
   initialCursor?: number
