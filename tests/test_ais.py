@@ -17,6 +17,8 @@ async def test_ais_is_explicitly_offline_without_server_key(
         stream = await client.get("/api/ais/stream")
     assert status.json()["available"] is False
     assert stream.status_code == 503
+    assert status.json()["available"] is False
+    assert stream.status_code == 503
 
 
 def test_position_report_is_normalized() -> None:
@@ -37,3 +39,14 @@ def test_position_report_is_normalized() -> None:
     assert position["mmsi"] == "123456789"
     assert position["name"] == "TEST SHIP"
     assert position["speed_knots"] == 12.4
+    assert position == {
+        "mmsi": "123456789",
+        "name": "TEST SHIP",
+        "latitude": 1.25,
+        "longitude": 103.8,
+        "course": 92.5,
+        "speed_knots": 12.4,
+        "heading": 90,
+        "timestamp": "2026-08-19T10:00:00Z",
+        "source": "LIVE_AIS",
+    }

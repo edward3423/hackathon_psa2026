@@ -2667,6 +2667,10 @@ time,
 
 /* Replay */
 .deck-vessel-map {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
@@ -2677,6 +2681,10 @@ time,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: #0b151c;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
@@ -2684,6 +2692,8 @@ time,
 }
 
 .deck-vessel-map__header h3 {
+  color: var(--ink);
+  font-size: 0.78rem;
   color: var(--ink);
   font-size: 0.78rem;
 }
@@ -2700,6 +2710,9 @@ time,
   display: flex;
   align-items: center;
   gap: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   color: var(--muted-strong);
   font-family: var(--mono);
   font-size: 0.61rem;
@@ -2710,12 +2723,17 @@ time,
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .deck-vessel-map__key {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  background: var(--muted);
 }
 
 .deck-vessel-map__key--planned {
@@ -2756,7 +2774,13 @@ time,
   transform: translate(10px, calc(-100% - 10px));
 }
 
+.deck-vessel-map__tooltip[data-live='true'] {
+  border-color: var(--accent-strong);
+}
+
 .deck-vessel-map__tooltip strong {
+  color: var(--ink);
+  font-size: 0.7rem;
   color: var(--ink);
   font-size: 0.7rem;
 }
@@ -2764,9 +2788,14 @@ time,
 .deck-vessel-map__tooltip span:last-child {
   color: var(--muted);
   font-family: var(--mono);
+  color: var(--muted);
+  font-family: var(--mono);
 }
 
 .deck-vessel-map__notice {
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
   padding: 7px 12px;
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -3475,6 +3504,8 @@ time,
   .deck-vessel-map__legend {
     align-items: flex-start;
     flex-direction: column;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .deck-vessel-map__legend {
@@ -3483,6 +3514,7 @@ time,
 
   .deck-vessel-map__canvas {
     height: 300px;
+    min-height: 250px;
   }
 
   .connections-filters label,

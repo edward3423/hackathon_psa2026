@@ -1,4 +1,8 @@
-"""Secure AISStream WebSocket adapter for browser-safe vessel positions."""
+"""Server-side AISStream adapter.
+
+The API key stays on the server. Browser clients receive only normalized,
+browser-safe vessel positions for the demo's operational areas.
+"""
 
 import json
 import os
@@ -9,14 +13,14 @@ from websockets.asyncio.client import connect
 
 AISSTREAM_URL = "wss://stream.aisstream.io/v0/stream"
 DEFAULT_BOUNDING_BOXES = [
-    [[10.0, 30.0], [30.0, 45.0]],
-    [[-2.0, 100.0], [8.0, 108.0]],
+    [[10.0, 30.0], [30.0, 45.0]],  # Red Sea and Suez approaches
+    [[-2.0, 100.0], [8.0, 108.0]],  # Singapore Strait approaches
 ]
 
 
 def configured_bounding_boxes() -> list[list[list[float]]]:
     raw = os.environ.get("AISSTREAM_BOUNDING_BOXES_JSON")
-    if raw is None:
+    if raw is None or raw == "":
         return DEFAULT_BOUNDING_BOXES
     parsed = json.loads(raw)
     if not isinstance(parsed, list) or not parsed:

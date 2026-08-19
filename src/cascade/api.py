@@ -72,10 +72,10 @@ def get_scenario() -> ScenarioState:
 
 @app.get("/api/ais/status", tags=["vessel-traffic"])
 def ais_status() -> dict[str, object]:
-    available = bool(os.environ.get("AISSTREAM_API_KEY"))
+    configured = bool(os.environ.get("AISSTREAM_API_KEY"))
     return {
-        "available": available,
-        "provider": "AISStream" if available else None,
+        "available": configured,
+        "provider": "AISStream" if configured else None,
         "coverage": "Red Sea and Singapore approaches",
         "bounding_boxes": configured_bounding_boxes(),
     }
