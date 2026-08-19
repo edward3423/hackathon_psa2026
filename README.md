@@ -90,8 +90,19 @@ npm run generate:types
 npm run dev
 ```
 
-Then open `http://localhost:5620`. The live AI mode needs a `GEMINI_API_KEY`
-in a local `.env` file; without it the app still runs in offline modes.
+Then open `http://localhost:5620`. Optional live services are configured in a
+local `.env` file:
+
+```dotenv
+GEMINI_API_KEY=
+AISSTREAM_API_KEY=
+VITE_MAPBOX_ACCESS_TOKEN=
+```
+
+`AISSTREAM_API_KEY` supplies real AIS (Automatic Identification System) ship
+positions through the backend. `VITE_MAPBOX_ACCESS_TOKEN` supplies the Mapbox
+basemap and should be a public token restricted to the deployed site URL. The
+route simulation and local world map still work when these keys are absent.
 
 ## Good to know
 

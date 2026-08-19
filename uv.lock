@@ -153,7 +153,9 @@ dependencies = [
     { name = "fastapi" },
     { name = "google-adk" },
     { name = "pydantic" },
+    { name = "python-dotenv" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -169,7 +171,9 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.116.1,<1.0.0" },
     { name = "google-adk", specifier = ">=2.0.0,<3.0.0" },
     { name = "pydantic", specifier = ">=2.11.7,<3.0.0" },
+    { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0,<1.0.0" },
+    { name = "websockets", specifier = ">=15.0.1" },
 ]
 
 [package.metadata.requires-dev]
