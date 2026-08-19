@@ -2741,6 +2741,79 @@ time,
   height: 100%;
 }
 
+.mapbox-simulated-vessel {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.mapbox-simulated-vessel__marker {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  place-items: center;
+}
+
+.mapbox-simulated-vessel__dot {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #f7faf8;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgb(244 185 66 / 0.3), 0 2px 7px rgb(0 0 0 / 0.8);
+}
+
+.mapbox-simulated-vessel__name {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  color: #f7faf8;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 1px 2px #040b10, 0 0 4px #040b10;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.mapbox-simulated-vessel__tooltip {
+  position: absolute;
+  z-index: 6;
+  top: 19px;
+  left: 19px;
+  width: max-content;
+  max-width: 240px;
+  display: none;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid var(--amber);
+  border-radius: 2px;
+  background: #101a20;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 0.45);
+  color: var(--muted-strong);
+  font-size: 0.65rem;
+  pointer-events: none;
+}
+
+.mapbox-simulated-vessel:hover .mapbox-simulated-vessel__tooltip,
+.mapbox-simulated-vessel:focus-within .mapbox-simulated-vessel__tooltip {
+  display: grid;
+}
+
+.mapbox-simulated-vessel__tooltip strong {
+  color: var(--ink);
+}
+
+.mapbox-simulated-vessel__tooltip span:last-child {
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
 .deck-vessel-map__tooltip {
   position: absolute;
   z-index: 5;

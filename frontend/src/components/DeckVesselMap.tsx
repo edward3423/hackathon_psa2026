@@ -1,27 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DeckProps, PickingInfo } from '@deck.gl/core'
+import type { PickingInfo } from '@deck.gl/core'
 import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
-import { MapboxOverlay } from '@deck.gl/mapbox'
 import { DeckGL } from '@deck.gl/react'
 import type { FeatureCollection } from 'geojson'
 import { feature } from 'topojson-client'
 import type { GeometryCollection, Topology } from 'topojson-specification'
-import { Map as MapboxMap, useControl } from 'react-map-gl/mapbox'
+import { Layer, Map as MapboxMap, Marker, Source } from 'react-map-gl/mapbox'
 import countries from 'world-atlas/countries-110m.json'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import { eventsUrl, getAisStatus, type AisPosition } from '../api/client'
-
-type Coordinate = [number, number]
-
-interface PlannedVessel {
-  id: string
-  name: string
-  path: Coordinate[]
-  speedKnots: number
-  plan: string
-  color: [number, number, number]
-}
+import { PLANNED_VESSELS, type Coordinate, type PlannedVessel } from '../data/vesselRoutes'
 
 interface VesselMarker {
   id: string
@@ -48,33 +37,6 @@ const MAPBOX_LOAD_TIMEOUT_MS = 4_000
 const INITIAL_VIEW_STATE = { longitude: 65, latitude: 4, zoom: 1.15, pitch: 0, bearing: 0 }
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined
 
-const PLANNED_VESSELS: PlannedVessel[] = [
-  {
-    id: 'atlas-star',
-    name: 'MV ATLAS STAR',
-    path: [[33.2, 28.6], [42.5, 12.6], [18.1, -34.6], [55.2, -20.2], [80.2, 5.2], [103.8, 1.25]],
-    speedKnots: 16.2,
-    plan: 'Cape reroute to Singapore',
-    color: [244, 185, 66],
-  },
-  {
-    id: 'pacific-link',
-    name: 'MV PACIFIC LINK',
-    path: [[139.7, 35.4], [128.1, 25.3], [121.3, 14.4], [112.1, 4.8], [103.8, 1.25]],
-    speedKnots: 14.8,
-    plan: 'Protected onward connection',
-    color: [89, 204, 214],
-  },
-  {
-    id: 'borneo-feeder',
-    name: 'MV BORNEO FEEDER',
-    path: [[119.4, -5.1], [114.1, -2.5], [108.2, 0.2], [103.8, 1.25]],
-    speedKnots: 11.6,
-    plan: 'Feeder arrival re-sequenced',
-    color: [239, 124, 105],
-  },
-]
-
 const FALLBACK_LAND = (() => {
   const topology = countries as unknown as Topology<{ countries: GeometryCollection }>
   return feature(topology, topology.objects.countries) as FeatureCollection
@@ -90,12 +52,6 @@ function interpolatePath(path: Coordinate[], progress: number): Coordinate {
     start[0] + (end[0] - start[0]) * fraction,
     start[1] + (end[1] - start[1]) * fraction,
   ]
-}
-
-function DeckOverlay(props: DeckProps) {
-  const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay({ ...props, interleaved: false }))
-  overlay.setProps(props)
-  return null
 }
 
 export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
@@ -174,10 +130,39 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       })),
     [livePositions],
   )
+  const liveGeoJson = useMemo<FeatureCollection>(
+    () => ({
+      type: 'FeatureCollection',
+      features: liveMarkers.map((vessel) => ({
+        type: 'Feature',
+        properties: {
+          id: vessel.id,
+          name: vessel.name,
+          speedKnots: vessel.speedKnots,
+          detail: vessel.detail,
+        },
+        geometry: { type: 'Point', coordinates: vessel.position },
+      })),
+    }),
+    [liveMarkers],
+  )
 
   const onHover = ({ object, x, y }: PickingInfo<VesselMarker>) => {
     setTooltip(object ? { ...object, x, y } : null)
   }
+  const liveVesselLayer = new ScatterplotLayer<VesselMarker>({
+    id: 'live-ais-vessels',
+    data: liveMarkers,
+    getPosition: (vessel) => vessel.position,
+    getRadius: 5,
+    radiusUnits: 'pixels',
+    getFillColor: [91, 190, 199, 230],
+    getLineColor: [232, 250, 251, 255],
+    lineWidthMinPixels: 1,
+    stroked: true,
+    pickable: true,
+    onHover,
+  })
   const vesselLayers = [
     new PathLayer<PlannedVessel>({
       id: 'optimized-routes',
@@ -230,16 +215,7 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       billboard: true,
       pickable: false,
     }),
-    new ScatterplotLayer<VesselMarker>({
-      id: 'live-ais-vessels',
-      data: liveMarkers,
-      getPosition: (vessel) => vessel.position,
-      getRadius: 4,
-      radiusUnits: 'pixels',
-      getFillColor: [91, 190, 199, 230],
-      pickable: true,
-      onHover,
-    }),
+    liveVesselLayer,
   ]
   const fallbackLayers = [
     new GeoJsonLayer({
@@ -288,12 +264,96 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
             initialViewState={INITIAL_VIEW_STATE}
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle="mapbox://styles/mapbox/dark-v11"
-            projection={{ name: 'mercator' }}
+            projection={{ name: 'globe' }}
             attributionControl
+            interactiveLayerIds={['live-ais-vessels-mapbox']}
             onLoad={() => setMapboxState('ready')}
             onError={() => setMapboxState('fallback')}
+            onMouseMove={(event) => {
+              const vessel = event.features?.[0]
+              if (!vessel?.properties) {
+                setTooltip(null)
+                return
+              }
+              const speed = vessel.properties.speedKnots
+              setTooltip({
+                id: String(vessel.properties.id),
+                name: String(vessel.properties.name),
+                position: [event.lngLat.lng, event.lngLat.lat],
+                speedKnots: typeof speed === 'number' ? speed : null,
+                detail: String(vessel.properties.detail),
+                live: true,
+                x: event.point.x,
+                y: event.point.y,
+              })
+            }}
+            onMouseLeave={() => setTooltip(null)}
           >
-            <DeckOverlay layers={vesselLayers} />
+            {PLANNED_VESSELS.map((vessel) => (
+              <Source
+                id={`simulated-route-${vessel.id}`}
+                key={`route-${vessel.id}`}
+                type="geojson"
+                data={{
+                  type: 'Feature',
+                  properties: {},
+                  geometry: { type: 'LineString', coordinates: vessel.path },
+                }}
+              >
+                <Layer
+                  id={`simulated-route-${vessel.id}`}
+                  type="line"
+                  layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+                  paint={{
+                    'line-color': `rgb(${vessel.color.join(', ')})`,
+                    'line-opacity': 0.95,
+                    'line-width': 4,
+                  }}
+                />
+              </Source>
+            ))}
+            {plannedMarkers.map((vessel) => (
+              <Marker
+                key={`marker-${vessel.id}`}
+                longitude={vessel.position[0]}
+                latitude={vessel.position[1]}
+                anchor="center"
+              >
+                <div className="mapbox-simulated-vessel">
+                  <button
+                    type="button"
+                    aria-label={`${vessel.name}, simulated optimized position`}
+                    className="mapbox-simulated-vessel__marker"
+                  >
+                    <span
+                      className="mapbox-simulated-vessel__dot"
+                      style={{ backgroundColor: `rgb(${vessel.color?.join(', ')})` }}
+                    />
+                    <span className="mapbox-simulated-vessel__name">
+                      {vessel.name.replace(/^MV /, '')}
+                    </span>
+                  </button>
+                  <span className="mapbox-simulated-vessel__tooltip" role="tooltip">
+                    <strong>{vessel.name}</strong>
+                    <span>{vessel.detail}</span>
+                    <span>{vessel.speedKnots?.toFixed(1)} kn</span>
+                  </span>
+                </div>
+              </Marker>
+            ))}
+            <Source id="live-ais-vessels" type="geojson" data={liveGeoJson}>
+              <Layer
+                id="live-ais-vessels-mapbox"
+                type="circle"
+                paint={{
+                  'circle-color': '#5bbec7',
+                  'circle-opacity': 0.9,
+                  'circle-radius': 5,
+                  'circle-stroke-color': '#e8fafb',
+                  'circle-stroke-width': 1,
+                }}
+              />
+            </Source>
           </MapboxMap>
         ) : (
           <DeckGL
