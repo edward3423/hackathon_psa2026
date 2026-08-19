@@ -2666,6 +2666,180 @@ time,
 }
 
 /* Replay */
+.vessel-map {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: #0b151c;
+}
+
+.vessel-map__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-raised);
+}
+
+.vessel-map__header h3 {
+  color: var(--ink);
+  font-size: 0.78rem;
+}
+
+.vessel-map__header p {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.64rem;
+}
+
+.vessel-map__legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted-strong);
+  font-family: var(--mono);
+  font-size: 0.61rem;
+  letter-spacing: 0.04em;
+}
+
+.vessel-map__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vessel-map__key {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.vessel-map__key--planned {
+  background: var(--amber);
+}
+
+.vessel-map__key--live {
+  background: var(--accent-strong);
+}
+
+.vessel-map__canvas {
+  position: relative;
+  min-height: 340px;
+}
+
+.vessel-map__canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 340px;
+}
+
+.vessel-map__ocean {
+  fill: #0b1c26;
+  stroke: #28404b;
+  stroke-width: 1;
+}
+
+.vessel-map__graticule {
+  fill: none;
+  stroke: #1b303a;
+  stroke-width: 0.6;
+}
+
+.vessel-map__land {
+  fill: #23343a;
+  stroke: #4a5b5f;
+  stroke-width: 0.45;
+}
+
+.vessel-map__route {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+  opacity: 0.62;
+}
+
+.vessel-map__marker {
+  cursor: help;
+  outline: none;
+}
+
+.vessel-map__marker circle:first-child {
+  fill: var(--amber);
+  stroke: #151b1e;
+  stroke-width: 2;
+}
+
+.vessel-map__marker-ring {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1;
+  opacity: 0.42;
+}
+
+.vessel-map__marker:hover .vessel-map__marker-ring,
+.vessel-map__marker:focus .vessel-map__marker-ring {
+  stroke-width: 2;
+  opacity: 1;
+}
+
+.vessel-map__live-vessel {
+  fill: var(--accent-strong);
+  stroke: #071116;
+  stroke-width: 1;
+  cursor: help;
+}
+
+.vessel-map__live-vessel:hover,
+.vessel-map__live-vessel:focus {
+  r: 5px;
+  outline: none;
+}
+
+.vessel-map__tooltip {
+  position: absolute;
+  z-index: 4;
+  width: max-content;
+  max-width: 270px;
+  display: grid;
+  gap: 3px;
+  padding: 8px 10px;
+  border: 1px solid var(--amber);
+  border-radius: 2px;
+  background: #101a20;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 0.34);
+  color: var(--muted-strong);
+  font-size: 0.65rem;
+  pointer-events: none;
+  transform: translate(10px, calc(-100% - 10px));
+}
+
+.vessel-map__tooltip[data-live='true'] {
+  border-color: var(--accent-strong);
+}
+
+.vessel-map__tooltip strong {
+  color: var(--ink);
+  font-size: 0.7rem;
+}
+
+.vessel-map__tooltip span:last-child {
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.vessel-map__notice {
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
 .replay-position {
   display: grid;
   grid-template-columns: auto auto;
@@ -3361,6 +3535,21 @@ time,
   .approval-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .vessel-map__header,
+  .vessel-map__legend {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .vessel-map__legend {
+    gap: 7px;
+  }
+
+  .vessel-map__canvas,
+  .vessel-map__canvas svg {
+    min-height: 250px;
   }
 
   .connections-filters label,

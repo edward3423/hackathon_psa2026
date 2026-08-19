@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from cascade import __version__
+from cascade.ais import configured_bounding_boxes, live_positions
 from cascade.contracts import (
     ApprovalRequest,
     DisputeResolutionRequest,
@@ -64,6 +65,37 @@ def health() -> HealthResponse:
 @app.get("/api/scenario", response_model=ScenarioState, tags=["scenario"])
 def get_scenario() -> ScenarioState:
     return scenario_with_controls()
+
+
+@app.get("/api/ais/status", tags=["vessel-traffic"])
+def ais_status() -> dict[str, object]:
+    configured = bool(os.environ.get("AISSTREAM_API_KEY"))
+    return {
+        "available": configured,
+        "provider": "AISStream" if configured else None,
+        "coverage": "Red Sea and Singapore approaches",
+        "bounding_boxes": configured_bounding_boxes(),
+    }
+
+
+async def _stream_ais(api_key: str) -> AsyncIterator[str]:
+    try:
+        async for position in live_positions(api_key):
+            yield _sse("position", position)
+    except Exception as error:
+        yield _sse("provider_error", {"detail": f"AIS provider disconnected: {error}"})
+
+
+@app.get("/api/ais/stream", tags=["vessel-traffic"])
+def stream_ais() -> StreamingResponse:
+    api_key = os.environ.get("AISSTREAM_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="AISSTREAM_API_KEY is not configured")
+    return StreamingResponse(
+        _stream_ais(api_key),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 _MODE_QUERY = Query(default=None, description="Overrides the body mode field.")

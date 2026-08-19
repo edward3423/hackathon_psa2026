@@ -48,6 +48,48 @@
         }
       }
     },
+    "/api/ais/status": {
+      "get": {
+        "tags": [
+          "vessel-traffic"
+        ],
+        "summary": "Ais Status",
+        "operationId": "ais_status_api_ais_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Ais Status Api Ais Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ais/stream": {
+      "get": {
+        "tags": [
+          "vessel-traffic"
+        ],
+        "summary": "Stream Ais",
+        "operationId": "stream_ais_api_ais_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "post": {
         "tags": [
