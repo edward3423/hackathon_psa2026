@@ -2,9 +2,11 @@ import json
 import os
 from collections.abc import AsyncIterator
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from cascade import __version__
 from cascade.ais import configured_bounding_boxes, live_positions
@@ -16,13 +18,14 @@ from cascade.contracts import (
     RunMode,
     ScenarioControls,
     ScenarioState,
-    TraceEvent,
     WorkflowStage,
     WorkflowState,
 )
 from cascade.workflow import ConflictError, RunStore, WorkflowRun, scenario_with_controls
 
 KEEPALIVE_SECONDS = 15.0
+
+load_dotenv()
 
 app = FastAPI(
     title="CASCADE API",
@@ -69,33 +72,13 @@ def get_scenario() -> ScenarioState:
 
 @app.get("/api/ais/status", tags=["vessel-traffic"])
 def ais_status() -> dict[str, object]:
-    configured = bool(os.environ.get("AISSTREAM_API_KEY"))
+    available = bool(os.environ.get("AISSTREAM_API_KEY"))
     return {
-        "available": configured,
-        "provider": "AISStream" if configured else None,
+        "available": available,
+        "provider": "AISStream" if available else None,
         "coverage": "Red Sea and Singapore approaches",
         "bounding_boxes": configured_bounding_boxes(),
     }
-
-
-async def _stream_ais(api_key: str) -> AsyncIterator[str]:
-    try:
-        async for position in live_positions(api_key):
-            yield _sse("position", position)
-    except Exception as error:
-        yield _sse("provider_error", {"detail": f"AIS provider disconnected: {error}"})
-
-
-@app.get("/api/ais/stream", tags=["vessel-traffic"])
-def stream_ais() -> StreamingResponse:
-    api_key = os.environ.get("AISSTREAM_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=503, detail="AISSTREAM_API_KEY is not configured")
-    return StreamingResponse(
-        _stream_ais(api_key),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
 
 
 _MODE_QUERY = Query(default=None, description="Overrides the body mode field.")
@@ -143,9 +126,29 @@ async def create_run(
     )
 
 
-def _sse(event_name: str, payload: TraceEvent | dict[str, str]) -> str:
-    data = payload.model_dump(mode="json") if isinstance(payload, TraceEvent) else payload
+def _sse(event_name: str, payload: BaseModel | dict[str, object]) -> str:
+    data = payload.model_dump(mode="json") if isinstance(payload, BaseModel) else payload
     return f"event: {event_name}\ndata: {json.dumps(data)}\n\n"
+
+
+async def _stream_ais(api_key: str) -> AsyncIterator[str]:
+    try:
+        async for position in live_positions(api_key):
+            yield _sse("position", position)
+    except Exception as error:
+        yield _sse("provider_error", {"detail": f"AIS provider disconnected: {error}"})
+
+
+@app.get("/api/ais/stream", tags=["vessel-traffic"])
+def stream_ais() -> StreamingResponse:
+    api_key = os.environ.get("AISSTREAM_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="AISSTREAM_API_KEY is not configured")
+    return StreamingResponse(
+        _stream_ais(api_key),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 async def _stream_run(run: WorkflowRun) -> AsyncIterator[str]:

@@ -3,7 +3,7 @@ import { Clock3, Pause, Play, RotateCcw, SkipBack, SkipForward } from 'lucide-re
 
 import type { TraceEvent } from '../api/types'
 import { formatTime, spaced } from '../lib/format'
-import { WorldVesselMap } from './WorldVesselMap'
+import { DeckVesselMap } from './DeckVesselMap'
 
 interface ReplayPageProps {
   initialCursor?: number
@@ -110,11 +110,7 @@ export function ReplayPage({
         </div>
       </header>
 
-      <WorldVesselMap
-        cursor={cursor}
-        eventCount={milestones.length}
-        scenarioTitle={scenarioTitle}
-      />
+      <DeckVesselMap cursor={cursor} eventCount={milestones.length} />
 
       <section className="replay-controls" aria-label="Replay controls">
         <div className="replay-transport">
