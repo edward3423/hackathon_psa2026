@@ -40,7 +40,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
         </div>
       ) : (
         <>
-          <div className="execution-safety-notice" role="note">
+          <div className="execution-safety-notice" role="note" data-tour="execution-safety">
             <LockKeyhole aria-hidden="true" size={20} />
             <div>
               <strong>NO REAL-WORLD ACTIONS WERE EXECUTED</strong>
@@ -49,7 +49,11 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
           </div>
 
           {actionItems.length > 0 && (
-            <section className="mock-action-section" aria-labelledby="mock-actions-title">
+            <section
+              className="mock-action-section"
+              aria-labelledby="mock-actions-title"
+              data-tour="execution-actions"
+            >
               <header className="panel-heading">
                 <div>
                   <h3 id="mock-actions-title">Mocked action register</h3>
@@ -99,7 +103,11 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
           )}
 
           {receiptItems.length > 0 && (
-            <section className="receipt-section" aria-labelledby="execution-receipts-title">
+            <section
+              className="receipt-section"
+              aria-labelledby="execution-receipts-title"
+              data-tour="execution-receipts"
+            >
               <header className="panel-heading">
                 <div>
                   <h3 id="execution-receipts-title">EXECUTION RECEIPTS (MOCKED)</h3>

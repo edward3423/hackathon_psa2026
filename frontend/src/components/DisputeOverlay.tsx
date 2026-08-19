@@ -58,19 +58,20 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
         className="dispute-overlay"
         role="dialog"
         aria-label="Agent dispute - human decision required"
+        data-tour="dispute-dialog"
       >
         <p className="dialog-context">Agent disagreement requires an operator decision.</p>
         <h2>{question}</h2>
 
         {dispute ? (
-          <div className="dispute-positions">
+          <div className="dispute-positions" data-tour="dispute-positions">
             {dispute.positions.map((position) => (
               <article key={position.agent} className="dispute-position">
                 <h3>{position.agent}</h3>
                 <p>{position.position}</p>
                 <ul>
-                  {position.evidence.map((item) => (
-                    <li key={item}>{item}</li>
+                  {position.evidence.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </article>
@@ -87,6 +88,7 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
               key={preset}
               type="button"
               className={`constraint-option${!useFreeText && choice === preset ? ' selected' : ''}`}
+              data-tour={preset === REEFER_PRESET ? 'dispute-constraint-reefer' : undefined}
               aria-pressed={!useFreeText && choice === preset}
               onClick={() => {
                 setChoice(preset)
@@ -118,7 +120,13 @@ export function DisputeOverlay({ dispute, openEvent, onResolve }: DisputeOverlay
 
         {error && <p className="error-banner" role="alert">{error}</p>}
 
-        <button className="primary-action" type="button" onClick={submit} disabled={!canSubmit}>
+        <button
+          className="primary-action"
+          type="button"
+          data-tour="dispute-confirm"
+          onClick={submit}
+          disabled={!canSubmit}
+        >
           {submitting ? 'Submitting...' : 'Confirm constraint'}
         </button>
       </section>

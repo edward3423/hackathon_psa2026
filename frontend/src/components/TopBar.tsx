@@ -1,4 +1,4 @@
-import { Bot, Menu, Radio, ShieldCheck, Wifi, WifiOff } from 'lucide-react'
+import { Bot, Menu, PlayCircle, Radio, ShieldCheck, Wifi, WifiOff } from 'lucide-react'
 
 import type { RunCreated, ScenarioState, WorkflowStage } from '../api/types'
 import { formatDateTime, spaced } from '../lib/format'
@@ -39,6 +39,13 @@ interface TopBarProps {
   showRunContext?: boolean
   /** What this page is, when it is not the single-vessel scenario. */
   subtitle?: string
+  /**
+   * The guided tour starts real runs, so it needs the backend. The control stays
+   * clickable when it cannot run and explains why, which tells a first-time
+   * viewer more than a dead button would.
+   */
+  tourEnabled?: boolean
+  onStartTour?: () => void
   onOpenNavigation: () => void
   onStageSelect?: (stage: WorkflowStage) => void
 }
@@ -54,6 +61,8 @@ export function TopBar({
   eventCount,
   showRunContext = true,
   subtitle,
+  tourEnabled = true,
+  onStartTour,
   onOpenNavigation,
   onStageSelect,
 }: TopBarProps) {
@@ -91,7 +100,7 @@ export function TopBar({
         </div>
       )}
 
-      <div className="masthead-row">
+      <div className="masthead-row" data-tour="masthead">
         <button
           className="mobile-nav-trigger"
           type="button"
@@ -101,9 +110,28 @@ export function TopBar({
           <Menu size={19} aria-hidden="true" />
         </button>
 
-        <div className="page-identity">
-          <h1>CASCADE</h1>
-          <p className="scenario-readout">{subtitle ?? scenario.name}</p>
+        <div className="masthead-identity">
+          <div className="page-identity">
+            <h1>CASCADE</h1>
+            <p className="scenario-readout">{subtitle ?? scenario.name}</p>
+          </div>
+
+          {onStartTour && (
+            <button
+              type="button"
+              className={`tour-launch-button${tourEnabled ? '' : ' is-unavailable'}`}
+              data-tour="tour-launch"
+              onClick={onStartTour}
+              title={
+                tourEnabled
+                  ? 'Play the five-minute guided walkthrough'
+                  : 'The guided tour needs the backend'
+              }
+            >
+              <PlayCircle size={16} aria-hidden="true" />
+              Start tour
+            </button>
+          )}
         </div>
 
         {showRunContext && (
@@ -147,7 +175,7 @@ export function TopBar({
               </div>
             </div>
 
-            <div className="run-state" aria-live="polite">
+            <div className="run-state" aria-live="polite" data-tour="run-state">
               <span>Workflow</span>
               <strong>{spaced(stage)}</strong>
               <small>{eventCount} trace {eventCount === 1 ? 'record' : 'records'}</small>
@@ -158,7 +186,7 @@ export function TopBar({
 
       {showRunContext && (
         <>
-          <div className="disruption-strip" role="status">
+          <div className="disruption-strip" role="status" data-tour="disruption-strip">
             <div className="disruption-primary">
               <Radio size={17} aria-hidden="true" />
               <span>Active disruption</span>
@@ -189,7 +217,7 @@ export function TopBar({
             {scenario.objective}
           </p>
 
-          <ol className="stage-track" aria-label="Workflow stages">
+          <ol className="stage-track" aria-label="Workflow stages" data-tour="stage-track">
             {STAGES.map((stageName, index) => (
               <li key={stageName}>
                 <button

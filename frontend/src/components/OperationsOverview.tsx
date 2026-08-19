@@ -210,7 +210,11 @@ export function OperationsOverview({
 
   return (
     <div className="operations-overview">
-      <section className="operations-overview__situation" aria-labelledby="situation-title">
+      <section
+        className="operations-overview__situation"
+        aria-labelledby="situation-title"
+        data-tour="situation-card"
+      >
         <div className="operations-overview__section-heading">
           <div>
             <h2 id="situation-title">{preset.title}</h2>
@@ -288,7 +292,11 @@ export function OperationsOverview({
         </dl>
       </section>
 
-      <section className="operations-overview__workflow" aria-labelledby="workflow-title">
+      <section
+        className="operations-overview__workflow"
+        aria-labelledby="workflow-title"
+        data-tour="workflow-rail"
+      >
         <div className="operations-overview__section-heading">
           <div>
             <h2 id="workflow-title">Disruption response</h2>
@@ -334,7 +342,11 @@ export function OperationsOverview({
       </section>
 
       <div className="operations-overview__lower-grid">
-        <section className="operations-overview__port" aria-labelledby="port-title">
+        <section
+          className="operations-overview__port"
+          aria-labelledby="port-title"
+          data-tour="port-schematic"
+        >
           <div className="operations-overview__section-heading">
             <div>
               <h2 id="port-title">Port and yard schematic</h2>
@@ -465,7 +477,11 @@ export function OperationsOverview({
           </div>
         </section>
 
-        <section className="operations-overview__cargo" aria-labelledby="cargo-title">
+        <section
+          className="operations-overview__cargo"
+          aria-labelledby="cargo-title"
+          data-tour="cargo-order"
+        >
           <div className="operations-overview__section-heading">
             <div>
               <h2 id="cargo-title">Protection order</h2>

@@ -121,7 +121,11 @@ export function TraceDrawer({ events }: TraceDrawerProps) {
   const ordered = [...events].sort((a, b) => a.sequence - b.sequence)
 
   return (
-    <section className={`trace-drawer${open ? ' open' : ''}`} aria-labelledby="trace-title">
+    <section
+      className={`trace-drawer${open ? ' open' : ''}`}
+      aria-labelledby="trace-title"
+      data-tour="trace-drawer"
+    >
       <button
         type="button"
         className="drawer-toggle"

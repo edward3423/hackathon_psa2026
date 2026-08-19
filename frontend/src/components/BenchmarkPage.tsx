@@ -208,7 +208,11 @@ function ArmTiles({ arm }: { arm: ArmResult }) {
 function AnchorTable({ anchors }: { anchors: AnchorComparison[] }) {
   if (anchors.length === 0) return null
   return (
-    <section className="benchmark-anchors" aria-labelledby="benchmark-anchors-title">
+    <section
+      className="benchmark-anchors"
+      aria-labelledby="benchmark-anchors-title"
+      data-tour="benchmark-anchors"
+    >
       <header className="panel-heading">
         <div>
           <h3 id="benchmark-anchors-title">Simulated against recorded anchors</h3>
@@ -269,7 +273,11 @@ function AuditBadge({ result }: { result: BenchmarkResult }) {
   const pass = violations === 0
   const Icon = pass ? ShieldCheck : ShieldAlert
   return (
-    <div className={`benchmark-audit ${pass ? 'is-pass' : 'is-fail'}`} role="status">
+    <div
+      className={`benchmark-audit ${pass ? 'is-pass' : 'is-fail'}`}
+      role="status"
+      data-tour="benchmark-audit"
+    >
       <Icon aria-hidden="true" size={18} />
       <strong>BLIND AUDIT {pass ? 'PASS' : 'FAIL'}</strong>
       <span>
@@ -313,6 +321,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
         <button
           type="button"
           className="benchmark-run-button"
+          data-tour="benchmark-run"
           onClick={() => void start()}
           disabled={running}
         >
@@ -332,7 +341,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
       )}
       {error && <p className="benchmark-error">{error}</p>}
 
-      <figure className="benchmark-chart">
+      <figure className="benchmark-chart" data-tour="benchmark-chart">
         <figcaption>
           Three-day rolling mean wait from arrival to berth, in days. Recorded peak and the
           two-day recovery target are drawn for reference.
@@ -410,7 +419,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
       </figure>
 
       {headline && (
-        <p className="benchmark-headline">
+        <p className="benchmark-headline" data-tour="benchmark-headline">
           CASCADE cut the peak wait by{' '}
           <strong>{headline.peak_wait_reduction_pct.toFixed(1)}%</strong> against the reactive
           baseline ({signed(headline.peak_wait_delta_days, 'd')} peak,{' '}
@@ -423,7 +432,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
 
       {result && (
         <>
-          <div className="benchmark-arm-grid">
+          <div className="benchmark-arm-grid" data-tour="benchmark-arms">
             {result.arms.map((arm) => (
               <ArmTiles arm={arm} key={arm.arm} />
             ))}
@@ -434,7 +443,11 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
       )}
 
       {decisions.length > 0 && (
-        <section className="benchmark-decisions" aria-labelledby="benchmark-decisions-title">
+        <section
+          className="benchmark-decisions"
+          aria-labelledby="benchmark-decisions-title"
+          data-tour="benchmark-decisions"
+        >
           <header className="panel-heading">
             <div>
               <h3 id="benchmark-decisions-title">Decisions CASCADE took, and when</h3>
@@ -476,7 +489,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
         </section>
       )}
 
-      <footer className="benchmark-provenance-footer">
+      <footer className="benchmark-provenance-footer" data-tour="benchmark-footer">
         <p>
           Arrival stream: IMF PortWatch daily port calls (portwatch.imf.org, IMF and University of
           Oxford), committed as a fixed snapshot. Vessel-level call sizes are synthesised from the

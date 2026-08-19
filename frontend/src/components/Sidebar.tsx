@@ -97,7 +97,7 @@ export function Sidebar({
       </div>
 
       <nav className="operations-sidebar__navigation" aria-label="CASCADE sections">
-        <ul className="operations-sidebar__navigation-list">
+        <ul className="operations-sidebar__navigation-list" data-tour="nav-list">
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon
             const active = currentPage === item.id
@@ -109,6 +109,7 @@ export function Sidebar({
                     active ? ' operations-sidebar__navigation-button--active' : ''
                   }`}
                   type="button"
+                  data-tour={`nav-${item.id}`}
                   onClick={() => {
                     onNavigate(item.id)
                     onCloseMobile?.()

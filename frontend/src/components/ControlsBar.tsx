@@ -31,7 +31,7 @@ export function ControlsBar({
   onScenarioSelect,
 }: ControlsBarProps) {
   return (
-    <section className="control-strip" aria-label="Scenario controls">
+    <section className="control-strip" aria-label="Scenario controls" data-tour="controls-bar">
       <label className="scenario-select">
         Scenario
         <select
@@ -107,7 +107,13 @@ export function ControlsBar({
         Simulate sailing lookup timeout
       </label>
 
-      <button className="primary-action" type="button" onClick={onStart} disabled={disabled}>
+      <button
+        className="primary-action"
+        type="button"
+        data-tour="control-start"
+        onClick={onStart}
+        disabled={disabled}
+      >
         {disabled ? 'Agents working...' : 'Start run'}
       </button>
       <button
@@ -118,7 +124,7 @@ export function ControlsBar({
       >
         Start demo replay
       </button>
-      <button className="secondary-action" type="button" onClick={onReset}>
+      <button className="secondary-action" type="button" data-tour="control-reset" onClick={onReset}>
         Reset
       </button>
     </section>

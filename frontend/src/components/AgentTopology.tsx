@@ -27,6 +27,9 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
     if (!view) return null
     return (
       <button
+        // Keyed here rather than at the call site, because the parallel branch
+        // renders a list of these and each agent appears in the flow once.
+        key={agent}
         type="button"
         className={`agent-topology__node status-${view.status.toLowerCase()}`}
         aria-pressed={selectedAgent === agent}
@@ -40,7 +43,7 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
   }
 
   return (
-    <section className="agent-topology" aria-labelledby="agent-topology-title">
+    <section className="agent-topology" aria-labelledby="agent-topology-title" data-tour="agent-topology">
       <header className="page-section-header">
         <div>
           <h2 id="agent-topology-title">Agent handoff topology</h2>

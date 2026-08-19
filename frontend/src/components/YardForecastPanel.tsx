@@ -46,7 +46,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
   }
 
   return (
-    <section className="yard-panel" aria-labelledby="yard-title">
+    <section className="yard-panel" aria-labelledby="yard-title" data-tour="yard-forecast">
       <div className="panel-heading">
         <div>
           <h2 id="yard-title">72-hour block occupancy</h2>

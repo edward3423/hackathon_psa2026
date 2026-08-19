@@ -95,9 +95,11 @@ function AgentCard({ view }: { view: AgentView }) {
             <div>
               <dt>Evidence</dt>
               <dd>
+                {/* Keyed by position: an agent can report the same line twice,
+                    for instance when a plan is re-evaluated after revision. */}
                 <ul>
-                  {view.evidence.map((item) => (
-                    <li key={item}>{item}</li>
+                  {view.evidence.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </dd>
@@ -108,8 +110,8 @@ function AgentCard({ view }: { view: AgentView }) {
               <dt>Assumptions</dt>
               <dd>
                 <ul>
-                  {view.assumptions.map((item) => (
-                    <li key={item}>{item}</li>
+                  {view.assumptions.map((item, index) => (
+                    <li key={index}>{item}</li>
                   ))}
                 </ul>
               </dd>
@@ -141,7 +143,7 @@ export function AgentActivityPanel({ events, activities, streaming }: AgentActiv
   const views = deriveAgentViews(events, activities)
 
   return (
-    <section className="activity-panel" aria-labelledby="activity-title">
+    <section className="activity-panel" aria-labelledby="activity-title" data-tour="agent-panel">
       <div className="panel-heading">
         <div>
           <h2 id="activity-title">Agent control room</h2>

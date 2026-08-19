@@ -83,7 +83,7 @@ export function SystemStatusPage({
       </header>
 
       <div className="system-status-grid">
-        <section className="system-health-panel" aria-labelledby="health-title">
+        <section className="system-health-panel" aria-labelledby="health-title" data-tour="system-health">
           <header className="panel-heading">
             <div>
               <h3 id="health-title">Component health</h3>
@@ -102,7 +102,7 @@ export function SystemStatusPage({
           </dl>
         </section>
 
-        <section className="agent-mode-panel" aria-labelledby="agent-mode-title">
+        <section className="agent-mode-panel" aria-labelledby="agent-mode-title" data-tour="system-mode">
           <header className="panel-heading">
             <div>
               <h3 id="agent-mode-title">Agent mode</h3>
@@ -171,7 +171,11 @@ export function SystemStatusPage({
         </div>
       </section>
 
-      <aside className="system-boundaries" aria-label="Demonstration system boundaries">
+      <aside
+        className="system-boundaries"
+        aria-label="Demonstration system boundaries"
+        data-tour="system-boundaries"
+      >
         <strong>Operational boundaries</strong>
         <ul>
           <li>No production database</li>

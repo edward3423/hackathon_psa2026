@@ -99,6 +99,7 @@ function PlanCard({
         evaluation.feasible ? '' : ' is-infeasible'
       }`}
       aria-label={`Recovery plan: ${evaluation.plan.title}`}
+      data-tour={recommended ? 'plan-recommended' : undefined}
     >
       <header className="recovery-plan-header">
         <div>
@@ -140,8 +141,8 @@ function PlanCard({
         <div className="plan-rejections" role="note">
           <strong>Constraint violations</strong>
           <ul>
-            {evaluation.rejection_reasons?.map((reason) => (
-              <li key={reason}>{reason}</li>
+            {evaluation.rejection_reasons?.map((reason, index) => (
+              <li key={index}>{reason}</li>
             ))}
           </ul>
         </div>
@@ -214,8 +215,8 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         <h3 id="plan-assumptions-title">Assumptions and warnings</h3>
         {(plan.assumptions?.length ?? 0) > 0 ? (
           <ul className="assumption-list">
-            {plan.assumptions?.map((assumption) => (
-              <li key={assumption}>{assumption}</li>
+            {plan.assumptions?.map((assumption, index) => (
+              <li key={index}>{assumption}</li>
             ))}
           </ul>
         ) : (
@@ -223,8 +224,8 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         )}
         {(evaluation.rejection_reasons?.length ?? 0) > 0 && (
           <ul className="warning-list">
-            {evaluation.rejection_reasons?.map((reason) => (
-              <li key={reason}>{reason}</li>
+            {evaluation.rejection_reasons?.map((reason, index) => (
+              <li key={index}>{reason}</li>
             ))}
           </ul>
         )}
@@ -294,7 +295,7 @@ export function RecoveryWorkspace({
         </span>
       </header>
 
-      <div className="deterministic-notice" role="note">
+      <div className="deterministic-notice" role="note" data-tour="deterministic-notice">
         <ShieldCheck aria-hidden="true" size={20} />
         <div>
           <strong>Deterministic Plan Evaluation</strong>
@@ -306,7 +307,7 @@ export function RecoveryWorkspace({
         <span className="calculated-badge">Calculated by deterministic engine</span>
       </div>
 
-      <div className="recovery-plan-grid">
+      <div className="recovery-plan-grid" data-tour="plan-cards">
         {comparison.evaluations.map((evaluation) => (
           <PlanCard
             key={evaluation.plan.archetype}
@@ -323,7 +324,7 @@ export function RecoveryWorkspace({
 
       <p className="recommendation-rationale">{comparison.rationale}</p>
 
-      <section className="plan-comparison-panel" aria-labelledby="comparison-title">
+      <section className="plan-comparison-panel" aria-labelledby="comparison-title" data-tour="plan-tradeoffs">
         <header className="panel-heading">
           <div>
             <h3 id="comparison-title">Operational trade-offs</h3>

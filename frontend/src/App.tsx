@@ -23,6 +23,8 @@ import { TraceDrawer } from './components/TraceDrawer'
 import { FALLBACK_SCENARIO, SCENARIO_PRESETS, type PageId } from './data/demo'
 import { useBenchmark } from './hooks/useBenchmark'
 import { useRunStream } from './hooks/useRunStream'
+import { useTour } from './tour/engine'
+import { TourOverlay } from './tour/TourOverlay'
 
 const BenchmarkPage = lazy(() =>
   import('./components/BenchmarkPage').then((module) => ({ default: module.BenchmarkPage })),
@@ -134,6 +136,11 @@ function App() {
   const results = workflow?.results ?? null
   const comparison = results?.plan_comparison ?? null
   const offlineActive = offline || !backendConnected
+
+  // The guided tour drives real runs through the real controls, so every figure
+  // it puts on screen is genuinely computed. That makes the backend a hard
+  // requirement rather than a preference.
+  const tour = useTour({ enabled: !offlineActive })
 
   const selectedPreset = useMemo(() => {
     const preset =
@@ -381,6 +388,8 @@ function App() {
           eventCount={events.length}
           showRunContext={!actTwo}
           subtitle={actTwo ? 'Red Sea 2024 blind replay benchmark' : undefined}
+          tourEnabled={tour.available}
+          onStartTour={tour.start}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
         />
@@ -447,6 +456,8 @@ function App() {
           onDecide={decideApproval}
         />
       )}
+
+      <TourOverlay tour={tour} />
     </div>
   )
 }

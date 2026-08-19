@@ -343,7 +343,10 @@ time,
 .masthead-row {
   min-height: 70px;
   display: grid;
-  grid-template-columns: auto minmax(170px, 0.7fr) minmax(600px, 2.4fr) minmax(160px, 0.7fr);
+  /* Three tracks, because .mobile-nav-trigger is display:none above the
+     sidebar collapse and so is not a grid item: identity, status grid,
+     run state. The breakpoint that reveals the trigger declares four. */
+  grid-template-columns: minmax(260px, auto) minmax(600px, 2.4fr) minmax(160px, 0.7fr);
   align-items: stretch;
   gap: 12px;
   padding: 9px 18px;
@@ -354,12 +357,24 @@ time,
   align-self: center;
 }
 
-.page-identity {
+/* The identity block and the tour launcher share one grid cell, so adding the
+   launcher does not shift every other masthead column at four breakpoints.
+   That cell is the leading track, because .mobile-nav-trigger is display:none
+   on desktop and therefore is not a grid item at all. */
+.masthead-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   align-self: center;
   min-width: 0;
 }
 
+.page-identity {
+  min-width: 0;
+}
+
 .page-identity h1 {
+  white-space: nowrap;
   font-size: 1.45rem;
   line-height: 1;
   letter-spacing: 0.08em;
@@ -3210,7 +3225,7 @@ time,
 
 @media (max-width: 1320px) {
   .masthead-row {
-    grid-template-columns: auto minmax(150px, 0.5fr) minmax(480px, 2fr) 140px;
+    grid-template-columns: minmax(240px, auto) minmax(480px, 2fr) 140px;
   }
 
   .top-status-grid {
@@ -3957,4 +3972,255 @@ time,
 
 .benchmark-provenance-footer p {
   margin: 0;
+}
+
+/* Guided tour
+   ------------------------------------------------------------------
+   The tour draws over the running product without joining its layout.
+   Everything here is fixed-position and, apart from the transport bar,
+   pointer-transparent, so the app underneath keeps behaving normally
+   while the tour clicks its real controls. */
+
+.tour-launch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: rgb(78 163 168 / 0.12);
+  color: var(--accent-strong);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.tour-launch-button:hover {
+  background: rgb(78 163 168 / 0.2);
+}
+
+/* Still clickable when the backend is down: the card it opens explains
+   what is missing, which tells a first-time viewer more than a dead
+   control would. */
+.tour-launch-button.is-unavailable {
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+}
+
+/* Below the sidebar collapse the masthead has no room to spare, and the tour
+   is written for a desktop viewport anyway. */
+@media (max-width: 1050px) {
+  .tour-launch-button {
+    display: none;
+  }
+}
+
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+}
+
+.tour-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(4 9 14 / 0.74);
+}
+
+/* A hole in the dimming, cut with a spread shadow rather than by raising
+   the anchor's z-index - the approval bar and the dispute overlay have
+   stacking contexts of their own that must not be reordered. */
+.tour-spotlight {
+  position: fixed;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgb(4 9 14 / 0.74);
+  transition: left 220ms ease, top 220ms ease, width 220ms ease, height 220ms ease;
+}
+
+.tour-bubble {
+  position: fixed;
+  z-index: 320;
+  display: grid;
+  gap: 7px;
+  max-height: 240px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--panel-raised);
+  box-shadow: 0 18px 42px rgb(2 6 10 / 0.6);
+  pointer-events: auto;
+  /* Glides between anchors instead of teleporting, which on a recording reads
+     as one bubble moving rather than two bubbles appearing. */
+  transition:
+    left 260ms ease,
+    top 260ms ease;
+}
+
+.tour-bubble--center {
+  border-color: var(--line-strong);
+  text-align: center;
+}
+
+.tour-bubble__chapter {
+  color: var(--accent-strong);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tour-bubble h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.tour-bubble p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.tour-bubble__stall {
+  color: var(--amber);
+}
+
+.tour-bubble .secondary-action {
+  justify-self: center;
+  margin-top: 4px;
+}
+
+/* A cursor the camera can follow. The real click fires on the real
+   control; this only shows the viewer where it landed. */
+.tour-cursor {
+  position: fixed;
+  left: -9px;
+  top: -9px;
+  z-index: 340;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent-strong);
+  border-radius: 50%;
+  background: rgb(105 187 192 / 0.28);
+  transition: transform 450ms cubic-bezier(0.33, 0.9, 0.35, 1);
+}
+
+.tour-cursor.is-pressing {
+  border-color: var(--ink);
+  background: rgb(229 237 243 / 0.5);
+  box-shadow: 0 0 0 10px rgb(105 187 192 / 0.16);
+}
+
+.tour-transport {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 330;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgb(2 6 10 / 0.55);
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.tour-transport.is-top {
+  top: 18px;
+  bottom: auto;
+}
+
+/* Out of the way of a hands-off recording, back on the first mouse move. The
+   contents fade, not the bar: fading the bar itself makes its own background
+   translucent, and page text showing through a control strip reads as a
+   rendering fault rather than as a deliberate retreat. */
+.tour-transport.is-idle > * {
+  opacity: 0.42;
+}
+
+.tour-transport > * {
+  transition: opacity 300ms ease;
+}
+
+.tour-transport__identity {
+  display: grid;
+  gap: 2px;
+  min-width: 200px;
+}
+
+.tour-transport__identity strong {
+  color: var(--ink);
+  font-size: 0.74rem;
+}
+
+.tour-transport__identity span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.tour-transport__progress {
+  width: 160px;
+  height: 3px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tour-transport__progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 300ms ease;
+}
+
+.tour-transport__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tour-transport__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--panel-muted);
+  color: var(--muted-strong);
+  cursor: pointer;
+}
+
+.tour-transport__actions button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.tour-transport__actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight,
+  .tour-bubble,
+  .tour-cursor,
+  .tour-transport > *,
+  .tour-transport__progress span {
+    transition: none;
+  }
 }

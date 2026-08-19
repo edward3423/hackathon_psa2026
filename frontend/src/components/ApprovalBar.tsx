@@ -47,7 +47,7 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
 
   return (
     <>
-      <aside className="approval-bar" role="region" aria-label="Human approval">
+      <aside className="approval-bar" role="region" aria-label="Human approval" data-tour="approval-bar">
         <div className="approval-icon" aria-hidden="true">
           <ShieldAlert size={21} />
         </div>
@@ -108,6 +108,7 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
           <button
             className="primary-action"
             type="button"
+            data-tour="approval-approve"
             disabled={submitting || !selectedPlan || !evaluation?.feasible}
             onClick={() => setPendingDecision('APPROVED')}
           >
@@ -175,6 +176,7 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
               <button
                 ref={confirmButtonRef}
                 type="button"
+                data-tour={pendingDecision === 'APPROVED' ? 'approval-confirm' : undefined}
                 className={pendingDecision === 'APPROVED' ? 'primary-action' : 'danger-action'}
                 onClick={() => void decide(pendingDecision)}
                 disabled={submitting}

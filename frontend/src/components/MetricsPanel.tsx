@@ -12,7 +12,7 @@ export function MetricsPanel({ analysis, baselineYard, sailings }: MetricsPanelP
   const totals = analysis ? groupTotals(analysis) : null
 
   return (
-    <section className="metrics-panel" aria-labelledby="metrics-title">
+    <section className="metrics-panel" aria-labelledby="metrics-title" data-tour="impact-summary">
       <div className="panel-heading">
         <div>
           <h2 id="metrics-title">Impact summary</h2>
@@ -48,6 +48,7 @@ export function MetricsPanel({ analysis, baselineYard, sailings }: MetricsPanelP
           className="operational-notice operational-notice--critical"
           role="alert"
           aria-labelledby="reefer-shortage-title"
+          data-tour="reefer-alert"
         >
           <h3 id="reefer-shortage-title">Refrigerated container plug shortage</h3>
           {baselineYard.reefer_shortages.map((shortage) => (
@@ -64,6 +65,7 @@ export function MetricsPanel({ analysis, baselineYard, sailings }: MetricsPanelP
           className="operational-notice operational-notice--warning sailing-fallback-notice"
           role="status"
           aria-labelledby="fallback-title"
+          data-tour="sailing-fallback"
         >
           <h3 id="fallback-title">Sailing lookup timed out</h3>
           <p>
