@@ -30,6 +30,16 @@ export type PageId =
   | 'benchmark'
   | 'system'
 
+/**
+ * A named starting position for the scenario controls, and nothing more.
+ *
+ * A preset used to carry its own container, risk, yard and reefer figures.
+ * They were hand-written, they disagreed with what the engine actually
+ * produced, and the run overwrote them the moment it started. The expected
+ * figures now come from `scenarioPreview()`, computed by the engine for
+ * whatever the controls currently say - including after the delay slider moves,
+ * which a per-preset constant could never follow.
+ */
 export interface ScenarioPreset {
   id: string
   title: string
@@ -37,11 +47,6 @@ export interface ScenarioPreset {
   delayHours: number
   priorityEmphasis: PriorityEmphasis
   lookupFailure: boolean
-  affected: number
-  atRisk: number
-  expectedMisses: number
-  yardPeak: number
-  reeferDemand: number
 }
 
 export const SCENARIO_PRESETS: ScenarioPreset[] = [
@@ -52,11 +57,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 6,
     priorityEmphasis: 'BALANCED',
     lookupFailure: false,
-    affected: 438,
-    atRisk: 42,
-    expectedMisses: 8,
-    yardPeak: 78,
-    reeferDemand: 386,
   },
   {
     id: 'severe-delay',
@@ -65,11 +65,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'BALANCED',
     lookupFailure: true,
-    affected: 400,
-    atRisk: 126,
-    expectedMisses: 60,
-    yardPeak: 94,
-    reeferDemand: 432,
   },
   {
     id: 'reefer-crisis',
@@ -78,11 +73,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 14,
     priorityEmphasis: 'CARGO_PROTECTION',
     lookupFailure: false,
-    affected: 472,
-    atRisk: 151,
-    expectedMisses: 41,
-    yardPeak: 89,
-    reeferDemand: 468,
   },
   {
     id: 'yard-congestion',
@@ -91,11 +81,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 12,
     priorityEmphasis: 'CONGESTION_REDUCTION',
     lookupFailure: false,
-    affected: 510,
-    atRisk: 118,
-    expectedMisses: 29,
-    yardPeak: 99,
-    reeferDemand: 409,
   },
   {
     id: 'agent-conflict',
@@ -104,11 +89,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'CARGO_PROTECTION',
     lookupFailure: false,
-    affected: 438,
-    atRisk: 127,
-    expectedMisses: 34,
-    yardPeak: 92,
-    reeferDemand: 439,
   },
   {
     id: 'lookup-failure',
@@ -117,11 +97,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'BALANCED',
     lookupFailure: true,
-    affected: 400,
-    atRisk: 126,
-    expectedMisses: 60,
-    yardPeak: 94,
-    reeferDemand: 432,
   },
 ]
 
@@ -161,6 +136,11 @@ export interface PortVessel {
   risk: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
 }
 
+/**
+ * The port call as fixtures/golden_world.json models it. `connections` is the
+ * count of transshipment containers moving off MV ATLAS STAR onto that vessel,
+ * so the vessel detail cannot disagree with the Command Center's own totals.
+ */
 export const PORT_VESSELS: PortVessel[] = [
   {
     id: 'SGSIN-PSA-2042',
@@ -170,7 +150,7 @@ export const PORT_VESSELS: PortVessel[] = [
     eta: '15 Sep, 00:00 UTC',
     departure: '15 Sep, 16:00 UTC',
     containers: 1284,
-    connections: 438,
+    connections: 360,
     risk: 'CRITICAL',
   },
   {
@@ -181,7 +161,7 @@ export const PORT_VESSELS: PortVessel[] = [
     eta: '14 Sep, 20:00 UTC',
     departure: '15 Sep, 10:00 UTC',
     containers: 208,
-    connections: 118,
+    connections: 105,
     risk: 'HIGH',
   },
   {
@@ -192,7 +172,7 @@ export const PORT_VESSELS: PortVessel[] = [
     eta: '15 Sep, 04:00 UTC',
     departure: '15 Sep, 18:00 UTC',
     containers: 146,
-    connections: 86,
+    connections: 105,
     risk: 'HIGH',
   },
   {
@@ -203,7 +183,7 @@ export const PORT_VESSELS: PortVessel[] = [
     eta: '15 Sep, 08:00 UTC',
     departure: '15 Sep, 22:00 UTC',
     containers: 164,
-    connections: 74,
+    connections: 90,
     risk: 'MEDIUM',
   },
 ]

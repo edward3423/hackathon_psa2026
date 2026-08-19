@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { ApprovalDecision, PlanArchetype, PlanComparison } from '../api/types'
 import { formatMoney, titleCase } from '../lib/format'
+import { usePublishedHeight } from '../lib/usePublishedHeight'
 
 interface ApprovalBarProps {
   comparison: PlanComparison | null
@@ -17,6 +18,7 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
   const [error, setError] = useState<string | null>(null)
   const [pendingDecision, setPendingDecision] = useState<ApprovalDecision | null>(null)
   const confirmButtonRef = useRef<HTMLButtonElement>(null)
+  const barRef = useRef<HTMLElement>(null)
 
   const evaluation = comparison?.evaluations.find(
     (candidate) => candidate.plan.archetype === selectedPlan,
@@ -35,6 +37,15 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
     }
   }
 
+  /*
+   * The bar is fixed to the bottom of the viewport and sits above everything
+   * else on the page, so while it is up it hides whatever the last 100-odd
+   * pixels of the workspace happen to be - including the sticky forecast
+   * timeline, which pins itself to the same edge. The layout gets out of its
+   * way by reserving exactly the height it occupies.
+   */
+  usePublishedHeight(barRef, '--approval-bar-height')
+
   useEffect(() => {
     if (!pendingDecision) return undefined
     confirmButtonRef.current?.focus()
@@ -47,7 +58,13 @@ export function ApprovalBar({ comparison, selectedPlan, onSelectPlan, onDecide }
 
   return (
     <>
-      <aside className="approval-bar" role="region" aria-label="Human approval" data-tour="approval-bar">
+      <aside
+        ref={barRef}
+        className="approval-bar"
+        role="region"
+        aria-label="Human approval"
+        data-tour="approval-bar"
+      >
         <div className="approval-icon" aria-hidden="true">
           <ShieldAlert size={21} />
         </div>

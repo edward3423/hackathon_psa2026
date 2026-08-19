@@ -352,13 +352,13 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
             <XAxis
               dataKey="date"
               stroke="#8292a1"
-              fontSize={11}
+              fontSize={12}
               tickFormatter={shortDate}
               minTickGap={36}
             />
             <YAxis
               stroke="#8292a1"
-              fontSize={11}
+              fontSize={12}
               width={44}
               domain={[0, 8]}
               tickFormatter={(value: number) => `${value}d`}
@@ -373,7 +373,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
               labelFormatter={(value) => (typeof value === 'string' ? shortDate(value) : value)}
               formatter={(value) => (typeof value === 'number' ? `${value.toFixed(2)} d` : '-')}
             />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#a9b7c3' }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
             <ReferenceLine
               y={RECORDED_PEAK_DAYS}
               stroke="#c86d68"
@@ -381,7 +381,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
               label={{
                 value: 'recorded peak, late May',
                 fill: '#c86d68',
-                fontSize: 10,
+                fontSize: 12,
                 position: 'insideTopLeft',
                 dy: -2,
               }}
@@ -393,7 +393,7 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
               label={{
                 value: 'recovery target',
                 fill: '#c59a52',
-                fontSize: 10,
+                fontSize: 12,
                 position: 'insideBottomRight',
               }}
             />

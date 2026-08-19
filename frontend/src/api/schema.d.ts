@@ -1035,6 +1035,7 @@ export interface components {
             planned_yard?: components["schemas"]["YardForecast"] | null;
             alternative_sailings?: components["schemas"]["AlternativeSailingResult"] | null;
             plan_comparison?: components["schemas"]["PlanComparison"] | null;
+            approved_plan?: components["schemas"]["PlanArchetype"] | null;
             /** Dispatched Actions */
             dispatched_actions?: components["schemas"]["MockedAction"][];
             /** Receipts */

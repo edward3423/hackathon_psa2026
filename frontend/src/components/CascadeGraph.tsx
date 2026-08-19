@@ -107,7 +107,7 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
           color: '#e8eff3',
           border: `1px solid ${color}`,
           borderRadius: 2,
-          fontSize: 11,
+          fontSize: 12,
           width: 196,
           padding: '8px 10px',
         },

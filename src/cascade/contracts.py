@@ -430,6 +430,11 @@ class RunResults(ContractModel):
     planned_yard: YardForecast | None = None
     alternative_sailings: AlternativeSailingResult | None = None
     plan_comparison: PlanComparison | None = None
+    # Which plan the controller actually approved, so a reader of
+    # connection_analysis can be told it is the pre-recovery baseline and what
+    # the approved plan projects instead. Without it the two read as rival
+    # answers to the same question.
+    approved_plan: PlanArchetype | None = None
     dispatched_actions: list[MockedAction] = Field(default_factory=list)
     receipts: list[ActionReceipt] = Field(default_factory=list)
 

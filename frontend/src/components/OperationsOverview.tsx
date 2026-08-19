@@ -13,12 +13,14 @@ import {
 
 import type {
   ConnectionAnalysis,
+  ScenarioControls,
   ScenarioState,
   WorkflowStage,
   YardForecast,
 } from '../api/types'
 import type { PortVessel, ScenarioPreset } from '../data/demo'
 import { PORT_VESSELS } from '../data/demo'
+import { scenarioPreview } from '../data/scenarioPreview.generated'
 import { formatDateTime, spaced } from '../lib/format'
 
 interface WorkflowStep {
@@ -49,11 +51,11 @@ const STAGE_RANK: Record<WorkflowStage, number> = {
   FAILED: -1,
 }
 
-const REEFER_PLUG_CAPACITY = 450
-
 export interface OperationsOverviewProps {
   scenario: ScenarioState
   preset: ScenarioPreset
+  /** The live control state, which the delay slider can move before a run starts. */
+  controls: ScenarioControls
   stage: WorkflowStage
   analysis?: ConnectionAnalysis | null
   baselineYard?: YardForecast | null
@@ -84,6 +86,7 @@ function riskStatus(vessel: PortVessel): string {
 export function OperationsOverview({
   scenario,
   preset,
+  controls,
   stage,
   analysis = null,
   baselineYard = null,
@@ -102,48 +105,52 @@ export function OperationsOverview({
     PORT_VESSELS.find((vessel) => vessel.id === selectedVesselId) ?? null
   const inboundVessel = PORT_VESSELS.find((vessel) => vessel.role === 'INBOUND')
   const currentRank = STAGE_RANK[stage]
+
+  // Before a run there is no analysis, so the panel shows what the engine will
+  // produce for the current controls. Preview and result are the same numbers
+  // from the same computation, so starting the run no longer changes them.
+  const preview = scenarioPreview(controls.delay_hours, controls.priority_emphasis)
   const affectedContainers = analysis
     ? analysis.groups.reduce((total, group) => total + group.container_count, 0)
-    : preset.affected
-  const atRiskContainers = analysis?.at_risk_count ?? preset.atRisk
-  const expectedMisses = analysis?.missed_count ?? preset.expectedMisses
+    : preview.affected
+  const atRiskContainers = analysis?.at_risk_count ?? preview.atRisk
+  const expectedMisses = analysis?.missed_count ?? preview.missed
 
   const cargoBreakdown = useMemo(() => {
-    const priorityOne = Math.round(affectedContainers * 0.1)
-    const priorityTwo = Math.round(affectedContainers * 0.15)
+    const counts = analysis
+      ? analysis.groups.reduce<Record<string, number>>((totals, group) => {
+          totals[group.cargo_type] = (totals[group.cargo_type] ?? 0) + group.container_count
+          return totals
+        }, {})
+      : preview.cargo
     return [
       {
         priority: 1,
         label: 'Refrigerated medicine',
-        count: priorityOne,
+        count: counts.PHARMA_REEFER ?? 0,
         description: 'Highest priority. Electrical plug capacity is protected first.',
         icon: Snowflake,
       },
       {
         priority: 2,
         label: 'Time-critical manufacturing cargo',
-        count: priorityTwo,
+        count: counts.TIME_CRITICAL_MANUFACTURING ?? 0,
         description: 'Components needed to keep a production line moving.',
         icon: Factory,
       },
       {
         priority: 3,
         label: 'Standard dry cargo',
-        count: affectedContainers - priorityOne - priorityTwo,
+        count: counts.GENERAL_DRY ?? 0,
         description: 'Cargo that can usually tolerate a longer onward delay.',
         icon: Boxes,
       },
     ]
-  }, [affectedContainers])
+  }, [analysis, preview.cargo])
 
   const yardBlocks = useMemo(() => {
     if (!baselineYard) {
-      return [
-        { id: 'YB1', occupancy: Math.max(48, preset.yardPeak - 16) },
-        { id: 'YB2', occupancy: Math.max(52, preset.yardPeak - 9) },
-        { id: 'YB3', occupancy: preset.yardPeak },
-        { id: 'YB4', occupancy: Math.max(45, preset.yardPeak - 21) },
-      ]
+      return preview.blocks.map((block) => ({ id: block.id, occupancy: block.peak }))
     }
 
     return baselineYard.blocks.map((block) => {
@@ -159,7 +166,7 @@ export function OperationsOverview({
         occupancy: Math.round((occupancy / block.container_capacity) * 100),
       }
     })
-  }, [baselineYard, cursorHour, preset.yardPeak])
+  }, [baselineYard, cursorHour, preview.blocks])
 
   const yardPeak = baselineYard
     ? Math.round(
@@ -170,10 +177,10 @@ export function OperationsOverview({
           ),
         ),
       )
-    : preset.yardPeak
+    : preview.yardPeak
   const reeferShortage = baselineYard?.reefer_shortages[0]
-  const reeferDemand = reeferShortage?.required_plugs ?? preset.reeferDemand
-  const reeferCapacity = reeferShortage?.available_plugs ?? REEFER_PLUG_CAPACITY
+  const reeferDemand = reeferShortage?.required_plugs ?? preview.reeferDemand
+  const reeferCapacity = reeferShortage?.available_plugs ?? preview.reeferCapacity
 
   useEffect(() => {
     if (!selectedVessel) return

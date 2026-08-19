@@ -86,13 +86,13 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                   <XAxis
                     dataKey="hour"
                     stroke="#8292a1"
-                    fontSize={11}
+                    fontSize={12}
                     tickFormatter={(value: number) => `${value}h`}
                     interval="preserveStartEnd"
                   />
                   <YAxis
                     stroke="#8292a1"
-                    fontSize={11}
+                    fontSize={12}
                     width={44}
                     domain={[0, Math.ceil(block.container_capacity * 1.1)]}
                   />
@@ -105,7 +105,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     }}
                     labelFormatter={(value) => `Hour ${value}`}
                   />
-                  <Legend wrapperStyle={{ fontSize: 11, color: '#a9b7c3' }} />
+                  <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
                   <ReferenceLine
                     y={congestion}
                     stroke="#c59a52"
@@ -113,7 +113,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     label={{
                       value: '85% congested',
                       fill: '#c59a52',
-                      fontSize: 10,
+                      fontSize: 12,
                       position: 'insideBottomRight',
                     }}
                   />
@@ -124,7 +124,7 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     label={{
                       value: '100% capacity',
                       fill: '#c86d68',
-                      fontSize: 10,
+                      fontSize: 12,
                       position: 'insideTopLeft',
                       dy: -2,
                     }}

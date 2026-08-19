@@ -135,6 +135,18 @@ function App() {
   const displayScenario = workflow?.scenario ?? scenario
   const results = workflow?.results ?? null
   const comparison = results?.plan_comparison ?? null
+  // The connection analysis and yard forecast the operational pages render are
+  // the pre-recovery baseline, and the Recovery page reports what the approved
+  // plan projects instead. Manual QA read the two as rival answers to the same
+  // question, so the pages that show the baseline are given the approved plan
+  // and made to say which is which.
+  const approvedEvaluation = useMemo(() => {
+    const archetype = results?.approved_plan
+    if (!archetype || !comparison) return null
+    return (
+      comparison.evaluations.find((evaluation) => evaluation.plan.archetype === archetype) ?? null
+    )
+  }, [comparison, results?.approved_plan])
   const offlineActive = offline || !backendConnected
 
   // The guided tour drives real runs through the real controls, so every figure
@@ -262,6 +274,7 @@ function App() {
             />
             <ConnectionsPage
               analysis={results?.connection_analysis ?? null}
+              approved={approvedEvaluation}
               inboundVessel={displayScenario.alert.vessel_name}
               offline={offlineActive}
             />
@@ -335,6 +348,7 @@ function App() {
             <OperationsOverview
               scenario={displayScenario}
               preset={selectedPreset}
+              controls={workflow?.scenario.controls ?? controls}
               stage={stage}
               analysis={results?.connection_analysis ?? null}
               baselineYard={results?.baseline_yard ?? null}

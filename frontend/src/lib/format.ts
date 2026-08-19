@@ -44,3 +44,8 @@ export function titleCase(value: string): string {
 export function spaced(value: string): string {
   return value.replaceAll('_', ' ')
 }
+
+/** A count and its noun, agreeing: "1 plug", "3 plugs". */
+export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count.toLocaleString()} ${Math.abs(count) === 1 ? singular : plural}`
+}

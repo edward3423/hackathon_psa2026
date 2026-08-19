@@ -72,8 +72,11 @@ function installFetch() {
         const mode = url.includes('mode=DEMO_REPLAY') ? 'DEMO_REPLAY' : runMode
         return jsonResponse(runCreated(mode))
       }
-      if (path.endsWith('/api/runs/run-1/dispute-resolution')) return jsonResponse({})
-      if (path.endsWith('/api/runs/run-1/approval')) return jsonResponse({})
+      // Both endpoints return the whole updated WorkflowState, and the app
+      // stores what they return. Answering them with {} made every field the
+      // app reads afterwards silently undefined.
+      if (path.endsWith('/api/runs/run-1/dispute-resolution')) return jsonResponse(currentState)
+      if (path.endsWith('/api/runs/run-1/approval')) return jsonResponse(currentState)
       if (path.endsWith('/api/runs/run-1')) return jsonResponse(currentState)
       if (path.endsWith('/api/reset')) return jsonResponse(scenario)
       throw new Error(`Unexpected request: ${method} ${url}`)

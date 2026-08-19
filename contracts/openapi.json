@@ -2716,6 +2716,16 @@
               }
             ]
           },
+          "approved_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanArchetype"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "dispatched_actions": {
             "items": {
               "$ref": "#/components/schemas/MockedAction"

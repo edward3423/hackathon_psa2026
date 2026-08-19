@@ -303,6 +303,11 @@ export function RecoveryWorkspace({
             AI agents propose actions. Deterministic Python engines calculate every numerical
             outcome and enforce physical constraints.
           </p>
+          <p>
+            Every figure on this page is what a plan is projected to achieve. The Connections and
+            Reefers pages report the pre-recovery baseline it is measured against, so the two sets
+            of numbers are not expected to match.
+          </p>
         </div>
         <span className="calculated-badge">Calculated by deterministic engine</span>
       </div>
@@ -339,8 +344,8 @@ export function RecoveryWorkspace({
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
               <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
-              <XAxis dataKey="plan" stroke="#8292a1" fontSize={11} />
-              <YAxis stroke="#8292a1" fontSize={11} width={34} />
+              <XAxis dataKey="plan" stroke="#8292a1" fontSize={12} />
+              <YAxis stroke="#8292a1" fontSize={12} width={34} />
               <Tooltip
                 contentStyle={{
                   background: '#111b24',
@@ -349,7 +354,7 @@ export function RecoveryWorkspace({
                   fontSize: 12,
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#a9b7c3' }} />
+              <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
               <Bar dataKey="Critical cargo protected" fill="#4ea3a8" isAnimationActive={false} />
               <Bar dataKey="Yard peak" fill="#c59a52" isAnimationActive={false} />
               <Bar dataKey="Missed connections" fill="#c86d68" isAnimationActive={false} />

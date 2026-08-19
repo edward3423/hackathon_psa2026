@@ -1,6 +1,6 @@
 import type { AlternativeSailingResult, ConnectionAnalysis, YardForecast } from '../api/types'
 import { groupTotals, yardPeakPercent } from '../lib/derive'
-import { formatDateTime } from '../lib/format'
+import { formatDateTime, pluralize } from '../lib/format'
 
 interface MetricsPanelProps {
   analysis: ConnectionAnalysis | null
@@ -51,12 +51,16 @@ export function MetricsPanel({ analysis, baselineYard, sailings }: MetricsPanelP
           data-tour="reefer-alert"
         >
           <h3 id="reefer-shortage-title">Refrigerated container plug shortage</h3>
-          {baselineYard.reefer_shortages.map((shortage) => (
-            <p key={`${shortage.block_id}-${shortage.start_time}`}>
-              Block {shortage.block_id} needs {shortage.required_plugs} electrical plugs, but only{' '}
-              {shortage.available_plugs} are available from {formatDateTime(shortage.start_time)}.
-            </p>
-          ))}
+          {baselineYard.reefer_shortages.map((shortage) => {
+            const needed = pluralize(shortage.required_plugs, 'electrical plug')
+            const availability = shortage.available_plugs === 1 ? 'is' : 'are'
+            return (
+              <p key={`${shortage.block_id}-${shortage.start_time}`}>
+                {`Block ${shortage.block_id} needs ${needed}, but only ${shortage.available_plugs} `}
+                {`${availability} available from ${formatDateTime(shortage.start_time)}.`}
+              </p>
+            )
+          })}
         </aside>
       )}
 

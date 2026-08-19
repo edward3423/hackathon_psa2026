@@ -1,5 +1,8 @@
+import { useRef } from 'react'
+
 import type { TraceEvent, WorkflowStage } from '../api/types'
 import { spaced } from '../lib/format'
+import { usePublishedHeight } from '../lib/usePublishedHeight'
 
 const TIMELINE_HOURS = [0, 6, 12, 24, 48, 72] as const
 
@@ -49,6 +52,11 @@ export function OperationsTimeline({
   stage,
   events,
 }: OperationsTimelineProps) {
+  const timelineRef = useRef<HTMLElement>(null)
+  // Pinned to the bottom of the workspace, so anything that wants to stay clear
+  // of the bottom of the viewport needs to know how much of it this covers.
+  usePublishedHeight(timelineRef, '--operations-timeline-height')
+
   const selectedIndex = nearestMilestoneIndex(cursorHour)
   const selectedHour = TIMELINE_HOURS[selectedIndex]
   const labels = milestoneLabels(events, stage)
@@ -58,7 +66,11 @@ export function OperationsTimeline({
   )
 
   return (
-    <section className="operations-timeline" aria-labelledby="operations-timeline-title">
+    <section
+      ref={timelineRef}
+      className="operations-timeline"
+      aria-labelledby="operations-timeline-title"
+    >
       <header className="operations-timeline__header">
         <div>
           <h2 id="operations-timeline-title">72-hour operations timeline</h2>
