@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Golden fixtures are hashed byte-for-byte, so platform checkout settings must
+# never rewrite their line endings.
+*.csv text eol=lf
+*.json text eol=lf

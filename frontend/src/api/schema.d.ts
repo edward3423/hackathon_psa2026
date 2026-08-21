@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ais/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ais Status */
+        get: operations["ais_status_api_ais_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs": {
         parameters: {
             query?: never;
@@ -49,6 +66,23 @@ export interface paths {
         put?: never;
         /** Create Run */
         post: operations["create_run_api_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ais/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Ais */
+        get: operations["stream_ais_api_ais_stream_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -231,6 +265,20 @@ export interface components {
          * @enum {string}
          */
         AgentStatus: "WAITING" | "RUNNING" | "COMPLETED" | "BLOCKED" | "FAILED";
+        /**
+         * AisStatus
+         * @description Whether live vessel traffic is available without exposing credentials.
+         */
+        AisStatus: {
+            /** Available */
+            available: boolean;
+            /** Provider */
+            provider: string | null;
+            /** Coverage */
+            coverage: string;
+            /** Bounding Boxes */
+            bounding_boxes: number[][][];
+        };
         /** AlternativeSailing */
         AlternativeSailing: {
             /** Vessel Name */
@@ -1251,6 +1299,26 @@ export interface operations {
             };
         };
     };
+    ais_status_api_ais_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AisStatus"];
+                };
+            };
+        };
+    };
     create_run_api_runs_post: {
         parameters: {
             query?: {
@@ -1283,6 +1351,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_ais_api_ais_stream_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

@@ -4,6 +4,10 @@ import path from 'node:path'
 // The e2e project lives inside the repository but is intentionally not part of
 // the npm workspace. Both web servers are launched from the repository root.
 const repoRoot = path.resolve(__dirname, '..')
+const viewport = {
+  width: Number(process.env.E2E_VIEWPORT_WIDTH ?? 1600),
+  height: Number(process.env.E2E_VIEWPORT_HEIGHT ?? 900),
+}
 
 export default defineConfig({
   testDir: './specs',
@@ -23,7 +27,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1600, height: 900 } },
+      use: { ...devices['Desktop Chrome'], viewport },
     },
   ],
   webServer: [

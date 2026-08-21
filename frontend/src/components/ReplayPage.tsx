@@ -8,6 +8,7 @@ import {
   humanizeOperationalText,
   spaced,
 } from '../lib/format'
+import { DeckVesselMap } from './DeckVesselMap'
 
 interface ReplayPageProps {
   initialCursor?: number
@@ -120,6 +121,8 @@ export function ReplayPage({
           <strong>{current.label}</strong>
         </div>
       </header>
+
+      <DeckVesselMap cursor={cursor} eventCount={milestones.length} />
 
       <section className="replay-controls" aria-label="Replay controls">
         <div className="replay-transport">

@@ -48,6 +48,27 @@
         }
       }
     },
+    "/api/ais/status": {
+      "get": {
+        "tags": [
+          "vessel-traffic"
+        ],
+        "summary": "Ais Status",
+        "operationId": "ais_status_api_ais_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AisStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "post": {
         "tags": [
@@ -103,6 +124,25 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ais/stream": {
+      "get": {
+        "tags": [
+          "vessel-traffic"
+        ],
+        "summary": "Stream Ais",
+        "operationId": "stream_ais_api_ais_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -561,6 +601,51 @@
           "FAILED"
         ],
         "title": "AgentStatus"
+      },
+      "AisStatus": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "coverage": {
+            "type": "string",
+            "title": "Coverage"
+          },
+          "bounding_boxes": {
+            "items": {
+              "items": {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Bounding Boxes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "provider",
+          "coverage",
+          "bounding_boxes"
+        ],
+        "title": "AisStatus",
+        "description": "Whether live vessel traffic is available without exposing credentials."
       },
       "AlternativeSailing": {
         "properties": {
