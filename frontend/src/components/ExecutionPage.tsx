@@ -1,7 +1,7 @@
 import { CheckCircle2, ClipboardCheck, FileCheck2, LockKeyhole, RadioTower } from 'lucide-react'
 
 import type { ActionReceipt, MockedAction } from '../api/types'
-import { titleCase } from '../lib/format'
+import { humanizeOperationalText, titleCase } from '../lib/format'
 
 interface ExecutionPageProps {
   actions?: MockedAction[] | null
@@ -40,7 +40,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
         </div>
       ) : (
         <>
-          <div className="execution-safety-notice" role="note">
+          <div className="execution-safety-notice" role="note" data-tour="execution-safety">
             <LockKeyhole aria-hidden="true" size={20} />
             <div>
               <strong>NO REAL-WORLD ACTIONS WERE EXECUTED</strong>
@@ -49,7 +49,11 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
           </div>
 
           {actionItems.length > 0 && (
-            <section className="mock-action-section" aria-labelledby="mock-actions-title">
+            <section
+              className="mock-action-section"
+              aria-labelledby="mock-actions-title"
+              data-tour="execution-actions"
+            >
               <header className="panel-heading">
                 <div>
                   <h3 id="mock-actions-title">Mocked action register</h3>
@@ -69,11 +73,15 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                           <Icon aria-hidden="true" size={18} />
                         </span>
                         <div>
-                          <p className="action-type">{titleCase(action.action_type)}</p>
+                          <p className="action-type">
+                            {humanizeOperationalText(action.action_type)}
+                          </p>
                           <h4>{action.action_id}</h4>
                         </div>
                       </header>
-                      <p className="action-description">{action.description}</p>
+                      <p className="action-description">
+                        {humanizeOperationalText(action.description)}
+                      </p>
                       <details className="execution-details">
                         <summary>Inspect action details</summary>
                         <dl>
@@ -83,7 +91,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                           </div>
                           <div>
                             <dt>Payload summary</dt>
-                            <dd>{action.payload_summary}</dd>
+                            <dd>{humanizeOperationalText(action.payload_summary)}</dd>
                           </div>
                           <div>
                             <dt>Validation</dt>
@@ -99,7 +107,11 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
           )}
 
           {receiptItems.length > 0 && (
-            <section className="receipt-section" aria-labelledby="execution-receipts-title">
+            <section
+              className="receipt-section"
+              aria-labelledby="execution-receipts-title"
+              data-tour="execution-receipts"
+            >
               <header className="panel-heading">
                 <div>
                   <h3 id="execution-receipts-title">EXECUTION RECEIPTS (MOCKED)</h3>
@@ -121,7 +133,7 @@ export function ExecutionPage({ actions = [], receipts = [] }: ExecutionPageProp
                       </span>
                     </summary>
                     <div className="receipt-detail">
-                      <p>{receipt.detail}</p>
+                      <p>{humanizeOperationalText(receipt.detail)}</p>
                       <dl>
                         <div>
                           <dt>Source</dt>

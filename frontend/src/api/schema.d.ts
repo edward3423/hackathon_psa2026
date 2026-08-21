@@ -38,40 +38,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ais/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Ais Status */
-        get: operations["ais_status_api_ais_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ais/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stream Ais */
-        get: operations["stream_ais_api_ais_stream_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/runs": {
         parameters: {
             query?: never;
@@ -83,23 +49,6 @@ export interface paths {
         put?: never;
         /** Create Run */
         post: operations["create_run_api_runs_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/ais/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stream Ais */
-        get: operations["stream_ais_api_ais_stream_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -168,6 +117,57 @@ export interface paths {
         put?: never;
         /** Decide Approval */
         post: operations["decide_approval_api_runs__run_id__approval_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/benchmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Benchmark */
+        post: operations["create_benchmark_api_benchmarks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/benchmarks/{benchmark_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stream Benchmark */
+        get: operations["stream_benchmark_api_benchmarks__benchmark_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/benchmarks/{benchmark_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Benchmark */
+        get: operations["get_benchmark_api_benchmarks__benchmark_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -259,6 +259,39 @@ export interface components {
             stale_notice?: string | null;
         };
         /**
+         * AnchorComparison
+         * @description A recorded scalar held next to what the baseline arm produced.
+         *
+         *     ``within_tolerance`` is context, not a grade. The simulation is driven by
+         *     Singapore's recorded arrival and volume series, and those series measure
+         *     throughput - which congestion suppresses - rather than the load that caused
+         *     it. The model therefore cannot be expected to reproduce the recorded crisis,
+         *     and these rows are published so the gap is visible instead of hidden. See
+         *     ``BenchmarkResult.notice``.
+         */
+        AnchorComparison: {
+            /** Anchor Key */
+            anchor_key: string;
+            /** Label */
+            label: string;
+            /** Recorded Value */
+            recorded_value: number;
+            recorded_provenance: components["schemas"]["SeriesProvenance"];
+            /** Simulated Value */
+            simulated_value: number;
+            /** Unit */
+            unit: string;
+            /** Tolerance */
+            tolerance: number;
+            /** Within Tolerance */
+            within_tolerance: boolean;
+            /**
+             * Interpretation
+             * @default
+             */
+            interpretation: string;
+        };
+        /**
          * ApprovalDecision
          * @enum {string}
          */
@@ -269,6 +302,185 @@ export interface components {
             decision: components["schemas"]["ApprovalDecision"];
             /** Note */
             note?: string | null;
+        };
+        /** ArmComparison */
+        ArmComparison: {
+            arm: components["schemas"]["FleetArm"];
+            versus: components["schemas"]["FleetArm"];
+            /** Peak Wait Delta Days */
+            peak_wait_delta_days: number;
+            /** Peak Wait Reduction Pct */
+            peak_wait_reduction_pct: number;
+            /** Recovery Days Saved */
+            recovery_days_saved?: number | null;
+            /** Mean Wait Delta Days */
+            mean_wait_delta_days: number;
+            /** Wait Cost Delta Usd */
+            wait_cost_delta_usd: number;
+            /** Wins On Peak */
+            wins_on_peak: boolean;
+            /** Wins On Recovery */
+            wins_on_recovery: boolean;
+        };
+        /** ArmResult */
+        ArmResult: {
+            arm: components["schemas"]["FleetArm"];
+            /** Label */
+            label: string;
+            provenance: components["schemas"]["SeriesProvenance"];
+            /** Is Simulation */
+            is_simulation: boolean;
+            /** Daily */
+            daily: components["schemas"]["DailyKpi"][];
+            metrics: components["schemas"]["FleetMetrics"];
+            /** Decisions */
+            decisions?: components["schemas"]["RecordedDecision"][];
+            blind_audit?: components["schemas"]["BlindAuditSummary"] | null;
+            calibration?: components["schemas"]["CalibrationReport"] | null;
+            /** Caveat */
+            caveat?: string | null;
+        };
+        /**
+         * AuditVerdict
+         * @enum {string}
+         */
+        AuditVerdict: "PASS" | "FAIL";
+        /** BenchmarkConfig */
+        BenchmarkConfig: {
+            /** Seed */
+            seed: number;
+            /** Arms */
+            arms: components["schemas"]["FleetArm"][];
+            world: components["schemas"]["FleetWorldConfig"];
+            /** @default SCRIPTED */
+            brain: components["schemas"]["FleetBrainMode"];
+            /**
+             * Rolling Window Days
+             * @default 3
+             */
+            rolling_window_days: number;
+            /**
+             * Recovery Threshold Days
+             * @default 2
+             */
+            recovery_threshold_days: number;
+            /**
+             * Recovery Sustain Days
+             * @default 5
+             */
+            recovery_sustain_days: number;
+        };
+        /** BenchmarkCreated */
+        BenchmarkCreated: {
+            /** Benchmark Id */
+            benchmark_id: string;
+            stage: components["schemas"]["BenchmarkStage"];
+            /** Events Url */
+            events_url: string;
+            /** Playback Notice */
+            playback_notice: string;
+        };
+        /** BenchmarkEvent */
+        BenchmarkEvent: {
+            /** Event Id */
+            event_id: string;
+            /** Sequence */
+            sequence: number;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            kind: components["schemas"]["BenchmarkEventKind"];
+            arm?: components["schemas"]["FleetArm"] | null;
+            day?: components["schemas"]["DailyKpi"] | null;
+            decision?: components["schemas"]["RecordedDecision"] | null;
+            /** Message */
+            message: string;
+            /** Error */
+            error?: string | null;
+        };
+        /**
+         * BenchmarkEventKind
+         * @enum {string}
+         */
+        BenchmarkEventKind: "BENCHMARK_STARTED" | "ARM_STARTED" | "DAY_TICK" | "DECISION_TAKEN" | "ARM_COMPLETED" | "BENCHMARK_COMPLETED" | "BENCHMARK_FAILED";
+        /** BenchmarkResult */
+        BenchmarkResult: {
+            /** Benchmark Id */
+            benchmark_id: string;
+            config: components["schemas"]["BenchmarkConfig"];
+            calibration_window: components["schemas"]["DateWindow"];
+            blind_window: components["schemas"]["DateWindow"];
+            historical_arm_provenance: components["schemas"]["SeriesProvenance"];
+            /** Arms */
+            arms: components["schemas"]["ArmResult"][];
+            /** Comparisons */
+            comparisons: components["schemas"]["ArmComparison"][];
+            /** Anchor Comparisons */
+            anchor_comparisons: components["schemas"]["AnchorComparison"][];
+            /** Fixture Hashes */
+            fixture_hashes: {
+                [key: string]: string;
+            };
+            /** Runtime Ms */
+            runtime_ms: number;
+            /** Notice */
+            notice: string;
+        };
+        /**
+         * BenchmarkStage
+         * @enum {string}
+         */
+        BenchmarkStage: "READY" | "RUNNING" | "COMPLETE" | "FAILED";
+        /** BenchmarkState */
+        BenchmarkState: {
+            /** Benchmark Id */
+            benchmark_id: string;
+            stage: components["schemas"]["BenchmarkStage"];
+            config: components["schemas"]["BenchmarkConfig"];
+            /** Events */
+            events?: components["schemas"]["BenchmarkEvent"][];
+            result?: components["schemas"]["BenchmarkResult"] | null;
+            /** Playback Notice */
+            playback_notice: string;
+            /** Error */
+            error?: string | null;
+        };
+        /** BerthPoolConfig */
+        BerthPoolConfig: {
+            /** Active Berths */
+            active_berths: number;
+            /** Reserve Tranches */
+            reserve_tranches?: components["schemas"]["ReserveBerthTranche"][];
+        };
+        /** BlindAuditEntry */
+        BlindAuditEntry: {
+            /** Day Index */
+            day_index: number;
+            /**
+             * Clock
+             * Format: date-time
+             */
+            clock: string;
+            /**
+             * Requested Until
+             * Format: date-time
+             */
+            requested_until: string;
+            /** Lookahead Seconds */
+            lookahead_seconds: number;
+        };
+        /** BlindAuditSummary */
+        BlindAuditSummary: {
+            /** Total Reads */
+            total_reads: number;
+            /** Max Lookahead Seconds */
+            max_lookahead_seconds: number;
+            /** Violations */
+            violations: number;
+            verdict: components["schemas"]["AuditVerdict"];
+            worst_entry?: components["schemas"]["BlindAuditEntry"] | null;
         };
         /** BlockForecast */
         BlockForecast: {
@@ -285,6 +497,31 @@ export interface components {
              * Format: date-time
              */
             peak_time: string;
+        };
+        /** CalibrationReport */
+        CalibrationReport: {
+            window: components["schemas"]["DateWindow"];
+            fitted: components["schemas"]["ServiceModelConfig"];
+            /** Effective Berths */
+            effective_berths: number;
+            /** Observed Mean Daily Portcalls */
+            observed_mean_daily_portcalls: number;
+            /** Simulated Mean Daily Portcalls */
+            simulated_mean_daily_portcalls: number;
+            /** Throughput Error Pct */
+            throughput_error_pct: number;
+            /** Simulated Mean Wait Days */
+            simulated_mean_wait_days: number;
+            /** Simulated Mean Port Stay Hours */
+            simulated_mean_port_stay_hours: number;
+            /** Erlang C Wait Days */
+            erlang_c_wait_days: number;
+            /** Utilisation */
+            utilisation: number;
+            /** Passed */
+            passed: boolean;
+            /** Notes */
+            notes?: string[];
         };
         /**
          * CargoType
@@ -371,6 +608,23 @@ export interface components {
              */
             illustrative: boolean;
         };
+        /** CreateBenchmarkRequest */
+        CreateBenchmarkRequest: {
+            /**
+             * Seed
+             * @default 42
+             */
+            seed: number;
+            /** Arms */
+            arms?: components["schemas"]["FleetArm"][] | null;
+            /** @default SCRIPTED */
+            brain: components["schemas"]["FleetBrainMode"];
+            /**
+             * Playback Speed
+             * @default 1
+             */
+            playback_speed: number;
+        };
         /**
          * CreateRunRequest
          * @description Scenario controls plus explicit run-mode selection.
@@ -391,6 +645,54 @@ export interface components {
             /** @default LIVE_STUB */
             mode: components["schemas"]["RunMode"];
         };
+        /** DailyKpi */
+        DailyKpi: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Day Index */
+            day_index: number;
+            /** Arrivals */
+            arrivals: number;
+            /** Berthings */
+            berthings: number;
+            /** Departures */
+            departures: number;
+            /** Queue Length */
+            queue_length: number;
+            /** Mean Wait Days */
+            mean_wait_days: number;
+            /** Rolling Wait Days */
+            rolling_wait_days: number;
+            /** Active Berths */
+            active_berths: number;
+            /** Teu Waiting */
+            teu_waiting: number;
+            /** Utilisation */
+            utilisation: number;
+        };
+        /** DateWindow */
+        DateWindow: {
+            /** Label */
+            label: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+        };
+        /**
+         * DecisionSource
+         * @enum {string}
+         */
+        DecisionSource: "SCRIPTED" | "MODEL" | "SCRIPTED_FALLBACK";
         /** Dispute */
         Dispute: {
             /** Dispute Id */
@@ -456,6 +758,94 @@ export interface components {
          * @enum {string}
          */
         EventKind: "RUN_STARTED" | "AGENT_STARTED" | "TOOL_CALLED" | "AGENT_COMPLETED" | "HANDOFF" | "DISPUTE_OPENED" | "HUMAN_DECISION" | "APPROVAL_REQUIRED" | "ACTION_DISPATCHED" | "ERROR" | "RUN_COMPLETED";
+        /**
+         * FleetArm
+         * @description One line on the benchmark chart.
+         * @enum {string}
+         */
+        FleetArm: "HISTORICAL" | "REACTIVE_BASELINE" | "CASCADE_AGENTIC" | "CASCADE_NO_EXTRA_CAPACITY";
+        /**
+         * FleetBrainMode
+         * @description Which brain supplies weekly strategy. SCRIPTED is the scored default.
+         * @enum {string}
+         */
+        FleetBrainMode: "SCRIPTED" | "LIVE_GEMINI" | "LIVE_CLAUDE";
+        /**
+         * FleetDecision
+         * @description One lever pull. Numeric effect is fixed by the engine, never by a model.
+         */
+        FleetDecision: {
+            type: components["schemas"]["FleetDecisionType"];
+            /** Tranche Id */
+            tranche_id?: string | null;
+            discipline?: components["schemas"]["QueueDiscipline"] | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Surge Level */
+            surge_level?: number | null;
+            /** Rationale */
+            rationale: string;
+        };
+        /**
+         * FleetDecisionType
+         * @enum {string}
+         */
+        FleetDecisionType: "ACTIVATE_RESERVE_BERTHS" | "SET_QUEUE_DISCIPLINE" | "FAST_CONNECTION_MODE" | "WORKFORCE_SURGE" | "HOLD";
+        /** FleetMetrics */
+        FleetMetrics: {
+            /** Peak Wait Days */
+            peak_wait_days: number;
+            /**
+             * Peak Wait Date
+             * Format: date
+             */
+            peak_wait_date: string;
+            /** Recovery Date */
+            recovery_date?: string | null;
+            /** Days Above Two Day Wait */
+            days_above_two_day_wait: number;
+            /** Mean Wait Days */
+            mean_wait_days: number;
+            /** Mean Port Stay Hours */
+            mean_port_stay_hours: number;
+            /** Port Stay Inflation Pct */
+            port_stay_inflation_pct: number;
+            /** Vessels Served */
+            vessels_served: number;
+            /** Teu Served */
+            teu_served: number;
+            /** Missed Connection Proxy */
+            missed_connection_proxy: number;
+            /** Wait Cost Usd */
+            wait_cost_usd: number;
+        };
+        /**
+         * FleetWorldConfig
+         * @description Parallel to WorldFixture, for the fleet scale. Never replaces it.
+         */
+        FleetWorldConfig: {
+            /** Seed */
+            seed: number;
+            berths: components["schemas"]["BerthPoolConfig"];
+            service: components["schemas"]["ServiceModelConfig"];
+            /**
+             * Arrival Jitter Hours
+             * @default 0
+             */
+            arrival_jitter_hours: number;
+            /**
+             * Service Rate Multiplier
+             * @default 1
+             */
+            service_rate_multiplier: number;
+            /**
+             * Berth Delta
+             * @default 0
+             */
+            berth_delta: number;
+            /** Activation Lead Override Days */
+            activation_lead_override_days?: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -557,6 +947,30 @@ export interface components {
          */
         PriorityEmphasis: "CARGO_PROTECTION" | "CONGESTION_REDUCTION" | "BALANCED";
         /**
+         * QueueDiscipline
+         * @enum {string}
+         */
+        QueueDiscipline: "FCFS" | "CONNECTION_WEIGHTED" | "PRIORITY_DISCHARGE";
+        /** RecordedDecision */
+        RecordedDecision: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Day Index */
+            day_index: number;
+            agent: components["schemas"]["AgentName"];
+            decision: components["schemas"]["FleetDecision"];
+            /** Accepted */
+            accepted: boolean;
+            /** Rejection Reason */
+            rejection_reason?: string | null;
+            source: components["schemas"]["DecisionSource"];
+            /** Effective Date */
+            effective_date?: string | null;
+        };
+        /**
          * RecoveryActionType
          * @enum {string}
          */
@@ -585,6 +999,21 @@ export interface components {
             /** Available Plugs */
             available_plugs: number;
         };
+        /** ReserveBerthTranche */
+        ReserveBerthTranche: {
+            /** Tranche Id */
+            tranche_id: string;
+            /** Label */
+            label: string;
+            /** Berths */
+            berths: number;
+            /** Activation Lead Days */
+            activation_lead_days: number;
+            /** Available From */
+            available_from?: string | null;
+            /** Basis */
+            basis: string;
+        };
         /** RunCreated */
         RunCreated: {
             /** Run Id */
@@ -606,6 +1035,7 @@ export interface components {
             planned_yard?: components["schemas"]["YardForecast"] | null;
             alternative_sailings?: components["schemas"]["AlternativeSailingResult"] | null;
             plan_comparison?: components["schemas"]["PlanComparison"] | null;
+            approved_plan?: components["schemas"]["PlanArchetype"] | null;
             /** Dispatched Actions */
             dispatched_actions?: components["schemas"]["MockedAction"][];
             /** Receipts */
@@ -645,6 +1075,40 @@ export interface components {
             controls: components["schemas"]["ScenarioControls"];
             /** Synthetic Notice */
             synthetic_notice: string;
+        };
+        /**
+         * SeriesProvenance
+         * @description How a displayed number came to exist. Never inferred, always carried.
+         * @enum {string}
+         */
+        SeriesProvenance: "RECORDED" | "RECONSTRUCTED" | "SIMULATED";
+        /**
+         * ServiceModelConfig
+         * @description Vessel service time model. Fitted on the calibration window only.
+         */
+        ServiceModelConfig: {
+            /** Base Hours */
+            base_hours: number;
+            /** Cranes Per Berth */
+            cranes_per_berth: number;
+            /** Moves Per Crane Hour */
+            moves_per_crane_hour: number;
+            /** Teu Per Move */
+            teu_per_move: number;
+            /** Efficiency */
+            efficiency: number;
+            /** Congestion Alpha */
+            congestion_alpha: number;
+            /** Congestion Queue Ref */
+            congestion_queue_ref: number;
+            /** Congestion Cap */
+            congestion_cap: number;
+            /** Surge Alpha Factor */
+            surge_alpha_factor: number;
+            /** Surge Efficiency Gain */
+            surge_efficiency_gain: number;
+            /** Fast Connection Speedup */
+            fast_connection_speedup: number;
         };
         /** TraceEvent */
         TraceEvent: {
@@ -787,48 +1251,6 @@ export interface operations {
             };
         };
     };
-    ais_status_api_ais_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    stream_ais_api_ais_stream_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
     create_run_api_runs_post: {
         parameters: {
             query?: {
@@ -861,26 +1283,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stream_ais_api_ais_stream_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
         };
@@ -1004,6 +1406,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkflowState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_benchmark_api_benchmarks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBenchmarkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_benchmark_api_benchmarks__benchmark_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                benchmark_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_benchmark_api_benchmarks__benchmark_id__get: {
+        parameters: {
+            query?: {
+                /** @description Skip events already received over SSE. */
+                since?: number;
+            };
+            header?: never;
+            path: {
+                benchmark_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkState"];
                 };
             };
             /** @description Validation Error */

@@ -48,48 +48,6 @@
         }
       }
     },
-    "/api/ais/status": {
-      "get": {
-        "tags": [
-          "vessel-traffic"
-        ],
-        "summary": "Ais Status",
-        "operationId": "ais_status_api_ais_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Ais Status Api Ais Status Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/ais/stream": {
-      "get": {
-        "tags": [
-          "vessel-traffic"
-        ],
-        "summary": "Stream Ais",
-        "operationId": "stream_ais_api_ais_stream_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/runs": {
       "post": {
         "tags": [
@@ -145,25 +103,6 @@
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/ais/stream": {
-      "get": {
-        "tags": [
-          "vessel-traffic"
-        ],
-        "summary": "Stream Ais",
-        "operationId": "stream_ais_api_ais_stream_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
               }
             }
           }
@@ -339,6 +278,142 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WorkflowState"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks": {
+      "post": {
+        "tags": [
+          "benchmark"
+        ],
+        "summary": "Create Benchmark",
+        "operationId": "create_benchmark_api_benchmarks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBenchmarkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks/{benchmark_id}/events": {
+      "get": {
+        "tags": [
+          "benchmark"
+        ],
+        "summary": "Stream Benchmark",
+        "operationId": "stream_benchmark_api_benchmarks__benchmark_id__events_get",
+        "parameters": [
+          {
+            "name": "benchmark_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Benchmark Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks/{benchmark_id}": {
+      "get": {
+        "tags": [
+          "benchmark"
+        ],
+        "summary": "Get Benchmark",
+        "operationId": "get_benchmark_api_benchmarks__benchmark_id__get",
+        "parameters": [
+          {
+            "name": "benchmark_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Benchmark Id"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Skip events already received over SSE.",
+              "default": 0,
+              "title": "Since"
+            },
+            "description": "Skip events already received over SSE."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkState"
                 }
               }
             }
@@ -556,6 +631,60 @@
         ],
         "title": "AlternativeSailingResult"
       },
+      "AnchorComparison": {
+        "properties": {
+          "anchor_key": {
+            "type": "string",
+            "title": "Anchor Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "recorded_value": {
+            "type": "number",
+            "title": "Recorded Value"
+          },
+          "recorded_provenance": {
+            "$ref": "#/components/schemas/SeriesProvenance"
+          },
+          "simulated_value": {
+            "type": "number",
+            "title": "Simulated Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "tolerance": {
+            "type": "number",
+            "title": "Tolerance"
+          },
+          "within_tolerance": {
+            "type": "boolean",
+            "title": "Within Tolerance"
+          },
+          "interpretation": {
+            "type": "string",
+            "title": "Interpretation",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "anchor_key",
+          "label",
+          "recorded_value",
+          "recorded_provenance",
+          "simulated_value",
+          "unit",
+          "tolerance",
+          "within_tolerance"
+        ],
+        "title": "AnchorComparison",
+        "description": "A recorded scalar held next to what the baseline arm produced.\n\n``within_tolerance`` is context, not a grade. The simulation is driven by\nSingapore's recorded arrival and volume series, and those series measure\nthroughput - which congestion suppresses - rather than the load that caused\nit. The model therefore cannot be expected to reproduce the recorded crisis,\nand these rows are published so the gap is visible instead of hidden. See\n``BenchmarkResult.notice``."
+      },
       "ApprovalDecision": {
         "type": "string",
         "enum": [
@@ -591,6 +720,547 @@
           "decision"
         ],
         "title": "ApprovalRequest"
+      },
+      "ArmComparison": {
+        "properties": {
+          "arm": {
+            "$ref": "#/components/schemas/FleetArm"
+          },
+          "versus": {
+            "$ref": "#/components/schemas/FleetArm"
+          },
+          "peak_wait_delta_days": {
+            "type": "number",
+            "title": "Peak Wait Delta Days"
+          },
+          "peak_wait_reduction_pct": {
+            "type": "number",
+            "title": "Peak Wait Reduction Pct"
+          },
+          "recovery_days_saved": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Days Saved"
+          },
+          "mean_wait_delta_days": {
+            "type": "number",
+            "title": "Mean Wait Delta Days"
+          },
+          "wait_cost_delta_usd": {
+            "type": "number",
+            "title": "Wait Cost Delta Usd"
+          },
+          "wins_on_peak": {
+            "type": "boolean",
+            "title": "Wins On Peak"
+          },
+          "wins_on_recovery": {
+            "type": "boolean",
+            "title": "Wins On Recovery"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "arm",
+          "versus",
+          "peak_wait_delta_days",
+          "peak_wait_reduction_pct",
+          "mean_wait_delta_days",
+          "wait_cost_delta_usd",
+          "wins_on_peak",
+          "wins_on_recovery"
+        ],
+        "title": "ArmComparison"
+      },
+      "ArmResult": {
+        "properties": {
+          "arm": {
+            "$ref": "#/components/schemas/FleetArm"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/SeriesProvenance"
+          },
+          "is_simulation": {
+            "type": "boolean",
+            "title": "Is Simulation"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DailyKpi"
+            },
+            "type": "array",
+            "title": "Daily"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/FleetMetrics"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/RecordedDecision"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "blind_audit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlindAuditSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calibration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalibrationReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caveat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "arm",
+          "label",
+          "provenance",
+          "is_simulation",
+          "daily",
+          "metrics"
+        ],
+        "title": "ArmResult"
+      },
+      "AuditVerdict": {
+        "type": "string",
+        "enum": [
+          "PASS",
+          "FAIL"
+        ],
+        "title": "AuditVerdict"
+      },
+      "BenchmarkConfig": {
+        "properties": {
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "arms": {
+            "items": {
+              "$ref": "#/components/schemas/FleetArm"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Arms"
+          },
+          "world": {
+            "$ref": "#/components/schemas/FleetWorldConfig"
+          },
+          "brain": {
+            "$ref": "#/components/schemas/FleetBrainMode",
+            "default": "SCRIPTED"
+          },
+          "rolling_window_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Rolling Window Days",
+            "default": 3
+          },
+          "recovery_threshold_days": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Recovery Threshold Days",
+            "default": 2.0
+          },
+          "recovery_sustain_days": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Recovery Sustain Days",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seed",
+          "arms",
+          "world"
+        ],
+        "title": "BenchmarkConfig"
+      },
+      "BenchmarkCreated": {
+        "properties": {
+          "benchmark_id": {
+            "type": "string",
+            "title": "Benchmark Id"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/BenchmarkStage"
+          },
+          "events_url": {
+            "type": "string",
+            "title": "Events Url"
+          },
+          "playback_notice": {
+            "type": "string",
+            "title": "Playback Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "benchmark_id",
+          "stage",
+          "events_url",
+          "playback_notice"
+        ],
+        "title": "BenchmarkCreated"
+      },
+      "BenchmarkEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Sequence"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/BenchmarkEventKind"
+          },
+          "arm": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FleetArm"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "day": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DailyKpi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordedDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "sequence",
+          "timestamp",
+          "kind",
+          "message"
+        ],
+        "title": "BenchmarkEvent"
+      },
+      "BenchmarkEventKind": {
+        "type": "string",
+        "enum": [
+          "BENCHMARK_STARTED",
+          "ARM_STARTED",
+          "DAY_TICK",
+          "DECISION_TAKEN",
+          "ARM_COMPLETED",
+          "BENCHMARK_COMPLETED",
+          "BENCHMARK_FAILED"
+        ],
+        "title": "BenchmarkEventKind"
+      },
+      "BenchmarkResult": {
+        "properties": {
+          "benchmark_id": {
+            "type": "string",
+            "title": "Benchmark Id"
+          },
+          "config": {
+            "$ref": "#/components/schemas/BenchmarkConfig"
+          },
+          "calibration_window": {
+            "$ref": "#/components/schemas/DateWindow"
+          },
+          "blind_window": {
+            "$ref": "#/components/schemas/DateWindow"
+          },
+          "historical_arm_provenance": {
+            "$ref": "#/components/schemas/SeriesProvenance"
+          },
+          "arms": {
+            "items": {
+              "$ref": "#/components/schemas/ArmResult"
+            },
+            "type": "array",
+            "title": "Arms"
+          },
+          "comparisons": {
+            "items": {
+              "$ref": "#/components/schemas/ArmComparison"
+            },
+            "type": "array",
+            "title": "Comparisons"
+          },
+          "anchor_comparisons": {
+            "items": {
+              "$ref": "#/components/schemas/AnchorComparison"
+            },
+            "type": "array",
+            "title": "Anchor Comparisons"
+          },
+          "fixture_hashes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Fixture Hashes"
+          },
+          "runtime_ms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Runtime Ms"
+          },
+          "notice": {
+            "type": "string",
+            "title": "Notice"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "benchmark_id",
+          "config",
+          "calibration_window",
+          "blind_window",
+          "historical_arm_provenance",
+          "arms",
+          "comparisons",
+          "anchor_comparisons",
+          "fixture_hashes",
+          "runtime_ms",
+          "notice"
+        ],
+        "title": "BenchmarkResult"
+      },
+      "BenchmarkStage": {
+        "type": "string",
+        "enum": [
+          "READY",
+          "RUNNING",
+          "COMPLETE",
+          "FAILED"
+        ],
+        "title": "BenchmarkStage"
+      },
+      "BenchmarkState": {
+        "properties": {
+          "benchmark_id": {
+            "type": "string",
+            "title": "Benchmark Id"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/BenchmarkStage"
+          },
+          "config": {
+            "$ref": "#/components/schemas/BenchmarkConfig"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/BenchmarkEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BenchmarkResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "playback_notice": {
+            "type": "string",
+            "title": "Playback Notice"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "benchmark_id",
+          "stage",
+          "config",
+          "playback_notice"
+        ],
+        "title": "BenchmarkState"
+      },
+      "BerthPoolConfig": {
+        "properties": {
+          "active_berths": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Active Berths"
+          },
+          "reserve_tranches": {
+            "items": {
+              "$ref": "#/components/schemas/ReserveBerthTranche"
+            },
+            "type": "array",
+            "title": "Reserve Tranches"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "active_berths"
+        ],
+        "title": "BerthPoolConfig"
+      },
+      "BlindAuditEntry": {
+        "properties": {
+          "day_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Day Index"
+          },
+          "clock": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Clock"
+          },
+          "requested_until": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested Until"
+          },
+          "lookahead_seconds": {
+            "type": "number",
+            "title": "Lookahead Seconds"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "day_index",
+          "clock",
+          "requested_until",
+          "lookahead_seconds"
+        ],
+        "title": "BlindAuditEntry"
+      },
+      "BlindAuditSummary": {
+        "properties": {
+          "total_reads": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Reads"
+          },
+          "max_lookahead_seconds": {
+            "type": "number",
+            "title": "Max Lookahead Seconds"
+          },
+          "violations": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Violations"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/AuditVerdict"
+          },
+          "worst_entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlindAuditEntry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "total_reads",
+          "max_lookahead_seconds",
+          "violations",
+          "verdict"
+        ],
+        "title": "BlindAuditSummary"
       },
       "BlockForecast": {
         "properties": {
@@ -631,6 +1301,76 @@
           "peak_time"
         ],
         "title": "BlockForecast"
+      },
+      "CalibrationReport": {
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/DateWindow"
+          },
+          "fitted": {
+            "$ref": "#/components/schemas/ServiceModelConfig"
+          },
+          "effective_berths": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Effective Berths"
+          },
+          "observed_mean_daily_portcalls": {
+            "type": "number",
+            "title": "Observed Mean Daily Portcalls"
+          },
+          "simulated_mean_daily_portcalls": {
+            "type": "number",
+            "title": "Simulated Mean Daily Portcalls"
+          },
+          "throughput_error_pct": {
+            "type": "number",
+            "title": "Throughput Error Pct"
+          },
+          "simulated_mean_wait_days": {
+            "type": "number",
+            "title": "Simulated Mean Wait Days"
+          },
+          "simulated_mean_port_stay_hours": {
+            "type": "number",
+            "title": "Simulated Mean Port Stay Hours"
+          },
+          "erlang_c_wait_days": {
+            "type": "number",
+            "title": "Erlang C Wait Days"
+          },
+          "utilisation": {
+            "type": "number",
+            "title": "Utilisation"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "window",
+          "fitted",
+          "effective_berths",
+          "observed_mean_daily_portcalls",
+          "simulated_mean_daily_portcalls",
+          "throughput_error_pct",
+          "simulated_mean_wait_days",
+          "simulated_mean_port_stay_hours",
+          "erlang_c_wait_days",
+          "utilisation",
+          "passed"
+        ],
+        "title": "CalibrationReport"
       },
       "CargoType": {
         "type": "string",
@@ -844,6 +1584,43 @@
         ],
         "title": "CostEstimate"
       },
+      "CreateBenchmarkRequest": {
+        "properties": {
+          "seed": {
+            "type": "integer",
+            "title": "Seed",
+            "default": 42
+          },
+          "arms": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/FleetArm"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arms"
+          },
+          "brain": {
+            "$ref": "#/components/schemas/FleetBrainMode",
+            "default": "SCRIPTED"
+          },
+          "playback_speed": {
+            "type": "number",
+            "maximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Playback Speed",
+            "default": 1.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CreateBenchmarkRequest"
+      },
       "CreateRunRequest": {
         "properties": {
           "delay_hours": {
@@ -871,6 +1648,116 @@
         "type": "object",
         "title": "CreateRunRequest",
         "description": "Scenario controls plus explicit run-mode selection."
+      },
+      "DailyKpi": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "day_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Day Index"
+          },
+          "arrivals": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Arrivals"
+          },
+          "berthings": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Berthings"
+          },
+          "departures": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Departures"
+          },
+          "queue_length": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Queue Length"
+          },
+          "mean_wait_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Mean Wait Days"
+          },
+          "rolling_wait_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Rolling Wait Days"
+          },
+          "active_berths": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Active Berths"
+          },
+          "teu_waiting": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Teu Waiting"
+          },
+          "utilisation": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Utilisation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "day_index",
+          "arrivals",
+          "berthings",
+          "departures",
+          "queue_length",
+          "mean_wait_days",
+          "rolling_wait_days",
+          "active_berths",
+          "teu_waiting",
+          "utilisation"
+        ],
+        "title": "DailyKpi"
+      },
+      "DateWindow": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "start",
+          "end"
+        ],
+        "title": "DateWindow"
+      },
+      "DecisionSource": {
+        "type": "string",
+        "enum": [
+          "SCRIPTED",
+          "MODEL",
+          "SCRIPTED_FALLBACK"
+        ],
+        "title": "DecisionSource"
       },
       "Dispute": {
         "properties": {
@@ -1024,6 +1911,234 @@
           "RUN_COMPLETED"
         ],
         "title": "EventKind"
+      },
+      "FleetArm": {
+        "type": "string",
+        "enum": [
+          "HISTORICAL",
+          "REACTIVE_BASELINE",
+          "CASCADE_AGENTIC",
+          "CASCADE_NO_EXTRA_CAPACITY"
+        ],
+        "title": "FleetArm",
+        "description": "One line on the benchmark chart."
+      },
+      "FleetBrainMode": {
+        "type": "string",
+        "enum": [
+          "SCRIPTED",
+          "LIVE_GEMINI",
+          "LIVE_CLAUDE"
+        ],
+        "title": "FleetBrainMode",
+        "description": "Which brain supplies weekly strategy. SCRIPTED is the scored default."
+      },
+      "FleetDecision": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FleetDecisionType"
+          },
+          "tranche_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tranche Id"
+          },
+          "discipline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueueDiscipline"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "surge_level": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surge Level"
+          },
+          "rationale": {
+            "type": "string",
+            "title": "Rationale"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "rationale"
+        ],
+        "title": "FleetDecision",
+        "description": "One lever pull. Numeric effect is fixed by the engine, never by a model."
+      },
+      "FleetDecisionType": {
+        "type": "string",
+        "enum": [
+          "ACTIVATE_RESERVE_BERTHS",
+          "SET_QUEUE_DISCIPLINE",
+          "FAST_CONNECTION_MODE",
+          "WORKFORCE_SURGE",
+          "HOLD"
+        ],
+        "title": "FleetDecisionType"
+      },
+      "FleetMetrics": {
+        "properties": {
+          "peak_wait_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Peak Wait Days"
+          },
+          "peak_wait_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Peak Wait Date"
+          },
+          "recovery_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Date"
+          },
+          "days_above_two_day_wait": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Days Above Two Day Wait"
+          },
+          "mean_wait_days": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Mean Wait Days"
+          },
+          "mean_port_stay_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Mean Port Stay Hours"
+          },
+          "port_stay_inflation_pct": {
+            "type": "number",
+            "title": "Port Stay Inflation Pct"
+          },
+          "vessels_served": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Vessels Served"
+          },
+          "teu_served": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Teu Served"
+          },
+          "missed_connection_proxy": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Missed Connection Proxy"
+          },
+          "wait_cost_usd": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Wait Cost Usd"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "peak_wait_days",
+          "peak_wait_date",
+          "days_above_two_day_wait",
+          "mean_wait_days",
+          "mean_port_stay_hours",
+          "port_stay_inflation_pct",
+          "vessels_served",
+          "teu_served",
+          "missed_connection_proxy",
+          "wait_cost_usd"
+        ],
+        "title": "FleetMetrics"
+      },
+      "FleetWorldConfig": {
+        "properties": {
+          "seed": {
+            "type": "integer",
+            "title": "Seed"
+          },
+          "berths": {
+            "$ref": "#/components/schemas/BerthPoolConfig"
+          },
+          "service": {
+            "$ref": "#/components/schemas/ServiceModelConfig"
+          },
+          "arrival_jitter_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Arrival Jitter Hours",
+            "default": 0.0
+          },
+          "service_rate_multiplier": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Service Rate Multiplier",
+            "default": 1.0
+          },
+          "berth_delta": {
+            "type": "integer",
+            "title": "Berth Delta",
+            "default": 0
+          },
+          "activation_lead_override_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activation Lead Override Days"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "seed",
+          "berths",
+          "service"
+        ],
+        "title": "FleetWorldConfig",
+        "description": "Parallel to WorldFixture, for the fleet scale. Never replaces it."
       },
       "HTTPValidationError": {
         "properties": {
@@ -1320,6 +2435,76 @@
         ],
         "title": "PriorityEmphasis"
       },
+      "QueueDiscipline": {
+        "type": "string",
+        "enum": [
+          "FCFS",
+          "CONNECTION_WEIGHTED",
+          "PRIORITY_DISCHARGE"
+        ],
+        "title": "QueueDiscipline"
+      },
+      "RecordedDecision": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "day_index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Day Index"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentName"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/FleetDecision"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DecisionSource"
+          },
+          "effective_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective Date"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "day_index",
+          "agent",
+          "decision",
+          "accepted",
+          "source"
+        ],
+        "title": "RecordedDecision"
+      },
       "RecoveryActionType": {
         "type": "string",
         "enum": [
@@ -1393,6 +2578,54 @@
           "available_plugs"
         ],
         "title": "ReeferShortage"
+      },
+      "ReserveBerthTranche": {
+        "properties": {
+          "tranche_id": {
+            "type": "string",
+            "title": "Tranche Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "berths": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Berths"
+          },
+          "activation_lead_days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Activation Lead Days"
+          },
+          "available_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available From"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tranche_id",
+          "label",
+          "berths",
+          "activation_lead_days",
+          "basis"
+        ],
+        "title": "ReserveBerthTranche"
       },
       "RunCreated": {
         "properties": {
@@ -1477,6 +2710,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/PlanComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approved_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanArchetype"
               },
               {
                 "type": "null"
@@ -1574,6 +2817,94 @@
           "synthetic_notice"
         ],
         "title": "ScenarioState"
+      },
+      "SeriesProvenance": {
+        "type": "string",
+        "enum": [
+          "RECORDED",
+          "RECONSTRUCTED",
+          "SIMULATED"
+        ],
+        "title": "SeriesProvenance",
+        "description": "How a displayed number came to exist. Never inferred, always carried."
+      },
+      "ServiceModelConfig": {
+        "properties": {
+          "base_hours": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Base Hours"
+          },
+          "cranes_per_berth": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Cranes Per Berth"
+          },
+          "moves_per_crane_hour": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Moves Per Crane Hour"
+          },
+          "teu_per_move": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Teu Per Move"
+          },
+          "efficiency": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Efficiency"
+          },
+          "congestion_alpha": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Congestion Alpha"
+          },
+          "congestion_queue_ref": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Congestion Queue Ref"
+          },
+          "congestion_cap": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Congestion Cap"
+          },
+          "surge_alpha_factor": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Surge Alpha Factor"
+          },
+          "surge_efficiency_gain": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Surge Efficiency Gain"
+          },
+          "fast_connection_speedup": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Fast Connection Speedup"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "base_hours",
+          "cranes_per_berth",
+          "moves_per_crane_hour",
+          "teu_per_move",
+          "efficiency",
+          "congestion_alpha",
+          "congestion_queue_ref",
+          "congestion_cap",
+          "surge_alpha_factor",
+          "surge_efficiency_gain",
+          "fast_connection_speedup"
+        ],
+        "title": "ServiceModelConfig",
+        "description": "Vessel service time model. Fitted on the calibration window only."
       },
       "TraceEvent": {
         "properties": {

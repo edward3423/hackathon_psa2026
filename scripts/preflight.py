@@ -6,7 +6,8 @@ Run from the repository root:
 
 Checks, in order:
   1. Ports 8620 and 5620 are free or occupied by our own services.
-  2. Repository fixtures parse against the shared contracts.
+  2. Repository fixtures parse against the shared contracts, and every input
+     the crisis manifest names still hashes to what it recorded.
   3. GEMINI_API_KEY presence in .env (warning only).
   4. With --live and a key present: one cheap Gemini generate call.
 
@@ -14,6 +15,7 @@ Exit code is nonzero when any hard check fails. Warnings never fail the run.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import socket
@@ -30,7 +32,15 @@ from pydantic import TypeAdapter, ValidationError
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from cascade.contracts import ScenarioState, TraceEvent, WorldFixture  # noqa: E402
+from cascade.contracts import (  # noqa: E402
+    ArrivalStreamFixture,
+    BenchmarkResult,
+    FixtureManifest,
+    GroundTruthFixture,
+    ScenarioState,
+    TraceEvent,
+    WorldFixture,
+)
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -110,6 +120,43 @@ def _validate_fixture(path: Path, adapter: TypeAdapter[Any] | None, required: bo
     return CheckResult(name, PASS, "parses against contracts")
 
 
+def check_manifest_hashes() -> CheckResult:
+    """Every input the manifest names must still hash to what it recorded.
+
+    The manifest is what a ``BenchmarkResult`` carries to say which data
+    produced it, so a stale entry is worse than a missing one: the result would
+    claim provenance it does not have. Hashing the bytes on disk is the only
+    way to tell, and it is cheap enough to do on every preflight.
+    """
+    name = "crisis fixture manifest hashes"
+    path = REPO_ROOT / "fixtures" / "crisis_manifest.json"
+    if not path.exists():
+        return CheckResult(name, FAIL, "fixtures/crisis_manifest.json is missing")
+    try:
+        manifest = FixtureManifest.model_validate_json(path.read_text(encoding="utf-8"))
+    except (ValidationError, OSError, UnicodeDecodeError) as error:
+        return CheckResult(name, FAIL, f"unreadable manifest: {error}")
+
+    missing: list[str] = []
+    stale: list[str] = []
+    for relative, expected in sorted(manifest.hashes.items()):
+        target = REPO_ROOT / relative
+        if not target.exists():
+            missing.append(relative)
+        elif hashlib.sha256(target.read_bytes()).hexdigest() != expected:
+            stale.append(relative)
+    if missing or stale:
+        parts = [f"missing {', '.join(missing)}"] if missing else []
+        if stale:
+            parts.append(f"changed since the manifest was written: {', '.join(stale)}")
+        return CheckResult(
+            name,
+            FAIL,
+            f"{'; '.join(parts)}; re-run scripts/build_crisis_fixture.py",
+        )
+    return CheckResult(name, PASS, f"{len(manifest.hashes)} input(s) match")
+
+
 def check_fixtures() -> list[CheckResult]:
     fixtures_dir = REPO_ROOT / "fixtures"
     trace_list = TypeAdapter(list[TraceEvent])
@@ -119,11 +166,22 @@ def check_fixtures() -> list[CheckResult]:
         ("replay_events.json", trace_list, True),
         ("golden_world.json", TypeAdapter(WorldFixture), False),
         ("evidence_pack.json", None, False),
+        # Act 2 crisis benchmark. Required: the benchmark, its API surface and
+        # its golden all read these, and a demo missing them fails loudly
+        # rather than quietly running Act 1 only.
+        ("crisis_arrivals.json", TypeAdapter(ArrivalStreamFixture), True),
+        ("crisis_ground_truth.json", TypeAdapter(GroundTruthFixture), True),
+        ("crisis_manifest.json", TypeAdapter(FixtureManifest), True),
+        # The pinned seed-42 benchmark. Validating it here catches a golden
+        # written by an older contract before a test has to.
+        ("benchmark_golden.json", TypeAdapter(BenchmarkResult), True),
     ]
-    return [
+    results = [
         _validate_fixture(fixtures_dir / filename, adapter, required)
         for filename, adapter, required in plan
     ]
+    results.append(check_manifest_hashes())
+    return results
 
 
 def _load_env_key() -> str | None:

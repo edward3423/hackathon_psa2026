@@ -1,5 +1,8 @@
 import type {
   ApprovalRequest,
+  BenchmarkCreated,
+  BenchmarkState,
+  CreateBenchmarkRequest,
   DisputeResolutionRequest,
   RunCreated,
   RunMode,
@@ -67,28 +70,6 @@ export function getScenario(): Promise<ScenarioState> {
   return request<ScenarioState>('/api/scenario')
 }
 
-export interface AisStatus {
-  available: boolean
-  provider: string | null
-  coverage: string
-}
-
-export interface AisPosition {
-  mmsi: string
-  name: string
-  latitude: number
-  longitude: number
-  course: number | null
-  speed_knots: number | null
-  heading: number | null
-  timestamp: string | null
-  source: 'LIVE_AIS'
-}
-
-export function getAisStatus(): Promise<AisStatus> {
-  return request<AisStatus>('/api/ais/status')
-}
-
 /**
  * Create a run. When `mode` is given (DEMO_REPLAY), it is sent both as a
  * query parameter and as an extra body field so either backend contract
@@ -113,6 +94,19 @@ export function postDisputeResolution(
 
 export function postApproval(runId: string, body: ApprovalRequest): Promise<WorkflowState> {
   return postJson<WorkflowState>(`/api/runs/${runId}/approval`, body)
+}
+
+export function createBenchmark(body: CreateBenchmarkRequest): Promise<BenchmarkCreated> {
+  return postJson<BenchmarkCreated>('/api/benchmarks', body)
+}
+
+/**
+ * Fetch benchmark state. `since` skips events the caller already streamed; a
+ * full run carries thousands of day ticks and only the final result is needed
+ * once the stream has ended.
+ */
+export function getBenchmark(benchmarkId: string, since = 0): Promise<BenchmarkState> {
+  return request<BenchmarkState>(`/api/benchmarks/${benchmarkId}?since=${since}`)
 }
 
 export async function resetDemo(): Promise<void> {

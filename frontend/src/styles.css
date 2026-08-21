@@ -23,6 +23,18 @@
   --green: #67a87a;
   --blue: #527f9d;
   --mono: "Cascadia Mono", Consolas, monospace;
+
+  /*
+   * The small end of the type scale. This is a dense operations console and it
+   * had drifted to sixteen different sub-12px sizes, the smallest rendering at
+   * 8.8px: manual QA measured 198 of 336 elements on one page below 12px. The
+   * three tokens below replace all of them. 12px is the floor - nothing on
+   * screen is allowed to be smaller - and the three steps keep the label /
+   * caption / body hierarchy the old spread was expressing.
+   */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
 }
 
 * {
@@ -128,8 +140,22 @@ time,
   padding: 16px 18px 28px;
 }
 
+/*
+ * How much of the bottom of the viewport the fixed approval strip covers.
+ * It measures itself and publishes its height, then the workspace reserves
+ * the same space so its final content remains reachable.
+ */
+:root {
+  --approval-bar-height: 0px;
+}
+
 .with-approval .app-content {
-  padding-bottom: 150px;
+  padding-bottom: calc(var(--approval-bar-height) + 28px);
+}
+
+/* The sidebar ends above the bar instead of running behind it. */
+.with-approval .operations-sidebar {
+  height: calc(100vh - var(--approval-bar-height));
 }
 
 .operations-sidebar {
@@ -183,7 +209,7 @@ time,
 
 .operations-sidebar__heading span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .operations-sidebar__heading strong {
@@ -265,7 +291,7 @@ time,
 
 .operations-sidebar__replay-dot {
   color: var(--amber);
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
@@ -286,13 +312,13 @@ time,
   align-items: center;
   gap: 7px;
   color: var(--amber);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
 .operations-sidebar__demo-badge {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -308,7 +334,7 @@ time,
 
 .operations-sidebar__environment {
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: var(--text-sm);
 }
 
 .operations-sidebar__backdrop {
@@ -331,19 +357,22 @@ time,
   border-bottom: 1px solid var(--amber);
   color: var(--muted-strong);
   background: #171711;
-  font-size: 0.73rem;
+  font-size: var(--text-md);
 }
 
 .replay-badge {
   color: var(--amber);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
   font-weight: 750;
 }
 
 .masthead-row {
   min-height: 70px;
   display: grid;
-  grid-template-columns: auto minmax(170px, 0.7fr) minmax(600px, 2.4fr) minmax(160px, 0.7fr);
+  /* Three tracks, because .mobile-nav-trigger is display:none above the
+     sidebar collapse and so is not a grid item: identity, status grid,
+     run state. The breakpoint that reveals the trigger declares four. */
+  grid-template-columns: minmax(260px, auto) minmax(600px, 2.4fr) minmax(160px, 0.7fr);
   align-items: stretch;
   gap: 12px;
   padding: 9px 18px;
@@ -354,12 +383,24 @@ time,
   align-self: center;
 }
 
-.page-identity {
+/* The identity block and the tour launcher share one grid cell, so adding the
+   launcher does not shift every other masthead column at four breakpoints.
+   That cell is the leading track, because .mobile-nav-trigger is display:none
+   on desktop and therefore is not a grid item at all. */
+.masthead-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   align-self: center;
   min-width: 0;
 }
 
+.page-identity {
+  min-width: 0;
+}
+
 .page-identity h1 {
+  white-space: nowrap;
   font-size: 1.45rem;
   line-height: 1;
   letter-spacing: 0.08em;
@@ -397,13 +438,13 @@ time,
 .run-state > span,
 .run-state small {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .top-status-grid strong {
   overflow: hidden;
   color: var(--muted-strong);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -452,7 +493,7 @@ time,
 
 .disruption-primary > span {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .alert-vessel {
@@ -473,18 +514,18 @@ time,
 
 .alert-figures dt {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .alert-figures dd {
   color: var(--muted-strong);
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .demo-assurance {
   color: var(--muted-strong);
-  font-size: 0.66rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
@@ -493,7 +534,7 @@ time,
   gap: 8px;
   padding: 7px 18px 0;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
   line-height: 1.4;
 }
 
@@ -525,7 +566,7 @@ time,
   border-top: 1px solid var(--line);
   color: var(--muted);
   background: transparent;
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
   text-align: left;
 }
 
@@ -565,7 +606,7 @@ time,
 .synthetic-notice {
   padding: 5px 18px 9px;
   color: #748492;
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .control-strip {
@@ -584,7 +625,7 @@ time,
   display: grid;
   gap: 4px;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -593,6 +634,7 @@ time,
 .approval-bar select,
 .approval-bar input,
 .connections-filters select,
+.connections-page__page-size select,
 .constraint-freetext,
 .replay-speed-control select {
   min-height: 32px;
@@ -619,7 +661,7 @@ time,
 .control-strip output {
   color: var(--muted-strong);
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .failure-toggle {
@@ -648,7 +690,7 @@ time,
   padding: 0 13px;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
-  font-size: 0.74rem;
+  font-size: var(--text-md);
   font-weight: 650;
   white-space: nowrap;
 }
@@ -695,7 +737,7 @@ time,
   border-radius: 2px;
   color: var(--muted-strong);
   background: var(--panel);
-  font-size: 0.74rem;
+  font-size: var(--text-md);
 }
 
 .offline-banner {
@@ -732,7 +774,7 @@ time,
 .operations-timeline__header p {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 0.73rem;
+  font-size: var(--text-md);
   line-height: 1.45;
 }
 
@@ -743,6 +785,38 @@ time,
   line-height: 1.5;
 }
 
+.command-center-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 14px;
+  align-items: start;
+}
+
+/*
+ * The rail is live run telemetry running alongside the workspace, and it is
+ * routinely much taller than the column beside it: five agent cards, the impact
+ * summary and the trace drawer stack up while the workspace column ends. Left
+ * in normal flow the rail is what sets the page height, so scrolling to the
+ * bottom of the agents leaves most of the screen as an empty column. Pinning it
+ * and letting it scroll inside itself makes the page as long as its main column
+ * and keeps the agents in view while the workspace is read.
+ *
+ * It stops short of the approval strip, so its last card remains reachable.
+ * Below 1050px the grid collapses to one column and the rail is ordinary page
+ * content again.
+ */
+@media (min-width: 1051px) {
+  .command-center-rail {
+    position: sticky;
+    top: 16px;
+    max-height: calc(
+      100vh - var(--approval-bar-height) - 44px
+    );
+    overflow-y: auto;
+  }
+}
+
+.command-center-rail,
 .agent-workspace,
 .recovery-page-stack,
 .connections-workspace {
@@ -763,6 +837,8 @@ time,
 .recovery-workspace,
 .execution-page,
 .replay-page,
+.benchmark-page,
+.system-status-page,
 .operations-timeline {
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -787,7 +863,7 @@ time,
   align-items: center;
   gap: 7px;
   color: var(--amber);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .operations-overview__metrics {
@@ -810,7 +886,7 @@ time,
 
 .operations-overview__metric dt {
   color: var(--muted);
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
 }
 
 .operations-overview__metric dd {
@@ -826,7 +902,7 @@ time,
   margin-top: 3px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -854,32 +930,36 @@ time,
 .operations-overview__disruption-copy > p {
   margin-top: 7px;
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: var(--text-md);
   line-height: 1.45;
 }
 
-.operations-overview__disruption-facts {
+.operations-overview__disruption-facts,
+.operations-overview__vessel-facts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--line);
 }
 
-.operations-overview__disruption-facts div {
+.operations-overview__disruption-facts div,
+.operations-overview__vessel-facts div {
   padding: 8px 10px;
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
-.operations-overview__disruption-facts dt {
+.operations-overview__disruption-facts dt,
+.operations-overview__vessel-facts dt {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
-.operations-overview__disruption-facts dd {
+.operations-overview__disruption-facts dd,
+.operations-overview__vessel-facts dd {
   margin-top: 3px;
   color: var(--muted-strong);
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
 }
 
 .operations-overview__workflow {
@@ -912,7 +992,7 @@ time,
   border-radius: 0;
   color: var(--muted);
   background: transparent;
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   text-align: left;
 }
 
@@ -965,7 +1045,7 @@ time,
 .operations-overview__map-note {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
 }
 
 .operations-overview__layers {
@@ -979,7 +1059,7 @@ time,
   border-right: 0;
   color: var(--muted);
   background: transparent;
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
 }
 
 .operations-overview__layers button:last-child {
@@ -991,40 +1071,75 @@ time,
   background: #183039;
 }
 
+/* Water, berth line, yard: three grid columns, seaward to inland. Grid columns
+   cannot overlap each other, so no vessel card can ever come to rest on a yard
+   block whatever the viewport width. The two water zones stack as rows rather
+   than columns, because vertical room is plentiful here and horizontal room is
+   what a vessel card actually needs. */
 .operations-overview__port-canvas {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(0, 0.95fr);
   min-height: 380px;
   margin-top: 12px;
-  overflow: hidden;
   border: 1px solid var(--line-strong);
   background: #0a151e;
 }
 
-.operations-overview__water {
-  position: absolute;
-  inset: 0 58% 0 0;
-  display: flex;
-  align-items: end;
-  padding: 12px;
+.operations-overview__seaward {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   border-right: 1px solid #30536a;
-  color: #7fa0b5;
   background: #0d2331;
-  font-size: 0.64rem;
+}
+
+.operations-overview__channel,
+.operations-overview__quayside,
+.operations-overview__terminal {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.operations-overview__quayside {
+  border-top: 1px dashed #23485c;
+}
+
+.operations-overview__terminal {
+  background: #0a151e;
+}
+
+.operations-overview__vessel-stack {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.operations-overview__zone-label {
+  align-self: start;
+  color: #7fa0b5;
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operations-overview__terminal .operations-overview__zone-label {
+  color: var(--muted);
 }
 
 .operations-overview__berth {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 42%;
-  width: 34px;
-  display: flex;
-  align-items: center;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-items: center;
+  gap: 8px;
+  padding: 10px 0;
   border-right: 1px solid var(--line-strong);
   border-left: 1px solid var(--line-strong);
   color: var(--muted);
   background: #161d21;
-  padding: 0;
   cursor: pointer;
 }
 
@@ -1034,69 +1149,75 @@ time,
   background: #1a252b;
 }
 
+/* Out of flow so the 34px column never has to fit the label's unrotated
+   width, and centred on the whole strip so it clears the anchor icon. */
 .operations-overview__berth span {
   position: absolute;
-  left: 7px;
+  top: 50%;
+  left: 50%;
   white-space: nowrap;
-  transform: rotate(-90deg) translateX(-50%);
-  transform-origin: left center;
-  font-size: 0.6rem;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
 }
 
 .operations-overview__vessel {
-  position: absolute;
-  z-index: 3;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 2px solid currentColor;
-  border-radius: 50%;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
   color: var(--muted-strong);
-  background: #0a151e;
-  transform: translate(-50%, -50%);
+  background: #0e1a23;
+  text-align: left;
 }
 
 .operations-overview__vessel:hover,
-.operations-overview__vessel:focus-visible {
-  background: currentColor;
-  outline: 2px solid #d9e6ec;
-  outline-offset: 3px;
-}
-
-.operations-overview__vessel-core {
-  position: absolute;
-  inset: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.operations-overview__vessel-tooltip {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 12px);
-  z-index: 8;
-  width: 230px;
-  display: none;
-  gap: 3px;
-  padding: 9px 10px;
-  border: 1px solid var(--line-strong);
-  color: var(--muted);
-  background: #0c161f;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.35);
-  font-size: 0.62rem;
-  line-height: 1.35;
-  text-align: left;
-  transform: translateY(-50%);
-}
-
-.operations-overview__vessel-tooltip strong {
+.operations-overview__vessel[aria-pressed="true"] {
+  border-color: var(--accent);
   color: var(--ink);
-  font-size: 0.7rem;
 }
 
-.operations-overview__vessel:hover .operations-overview__vessel-tooltip,
-.operations-overview__vessel:focus-visible .operations-overview__vessel-tooltip {
+.operations-overview__vessel-text {
+  min-width: 0;
   display: grid;
+  gap: 2px;
+}
+
+/* Berth and risk share the second line, so the name gets the full card width. */
+.operations-overview__vessel-meta {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.operations-overview__vessel strong,
+.operations-overview__vessel small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operations-overview__vessel strong {
+  font-size: var(--text-sm);
+}
+
+.operations-overview__vessel small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+}
+
+.operations-overview__vessel em {
+  flex: none;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 750;
 }
 
 .operations-overview__risk--low em,
@@ -1117,25 +1238,22 @@ time,
 }
 
 .operations-overview__yard-blocks {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  left: 49%;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 9px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
+  gap: 5px;
 }
 
 .operations-overview__yard-block {
-  min-height: 82px;
+  min-height: 50px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 9px;
-  padding: 8px;
+  gap: 5px 7px;
+  padding: 7px 8px;
   border: 1px solid var(--line);
   color: var(--muted-strong);
-  background: #101a20;
+  background: #111b22;
   font: inherit;
   text-align: left;
 }
@@ -1144,68 +1262,10 @@ time,
   border-color: var(--accent);
 }
 
-.operations-overview__building {
-  position: relative;
-  width: 54px;
-  height: 48px;
-  display: block;
-}
-
-.operations-overview__building-roof {
-  position: absolute;
-  top: 2px;
-  left: 4px;
-  width: 46px;
-  height: 18px;
-  border: 1px solid #52616a;
-  background: #25343c;
-  transform: skewY(-10deg);
-}
-
-.operations-overview__building-front {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 7px;
-  height: 31px;
-  display: flex;
-  align-items: end;
-  justify-content: space-around;
-  padding: 0 5px 4px;
-  border: 1px solid #52616a;
-  background: #1a282f;
-}
-
-.operations-overview__building-front > span {
-  width: 9px;
-  height: 18px;
-  border: 1px solid #52616a;
-  background: #0b151b;
-}
-
-.operations-overview__building-front--reefer {
-  align-items: center;
-  justify-content: center;
-  color: #8fb6ce;
-}
-
-.operations-overview__building-label {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.operations-overview__building-label strong {
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 0.66rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.operations-overview__building-label > span {
+.operations-overview__yard-block span {
+  grid-column: 1 / -1;
   color: var(--muted);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
 }
 
 .operations-overview__yard-block--warning {
@@ -1217,6 +1277,7 @@ time,
 }
 
 .operations-overview__yard-block--reefer {
+  grid-column: 1 / -1;
   border-color: var(--blue);
   color: #8fb6ce;
 }
@@ -1226,13 +1287,13 @@ time,
   gap: 12px;
   margin-top: 8px;
   color: var(--muted);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
 }
 
 .operations-overview__cargo-explanation {
   margin: 8px 0 12px;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
   line-height: 1.45;
 }
 
@@ -1264,16 +1325,16 @@ time,
 .operations-overview__cargo-copy > span,
 .operations-overview__cargo-count span {
   color: var(--muted);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
 }
 
 .operations-overview__cargo-copy strong {
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .operations-overview__cargo-copy p {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   line-height: 1.35;
 }
 
@@ -1301,7 +1362,7 @@ time,
 .operations-overview__safety-note {
   margin-top: 10px;
   color: var(--muted);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -1350,13 +1411,17 @@ time,
   margin: 12px 0;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
+}
+
+.operations-overview__vessel-facts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .drawer-context {
   margin-bottom: 4px;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .operations-overview__infrastructure-detail {
@@ -1372,7 +1437,7 @@ time,
 
 .operations-overview__infrastructure-detail p {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
   line-height: 1.5;
 }
 
@@ -1394,7 +1459,7 @@ time,
 .simulation-badge,
 .demo-environment-badge {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -1470,7 +1535,7 @@ time,
 .agent-card header p {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   line-height: 1.35;
 }
 
@@ -1485,7 +1550,7 @@ time,
   align-items: center;
   gap: 5px;
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -1533,7 +1598,7 @@ time,
   display: block;
   margin-top: 8px;
   color: var(--accent-strong);
-  font-size: 0.63rem;
+  font-size: var(--text-xs);
 }
 
 .active-tool {
@@ -1547,7 +1612,7 @@ time,
 .agent-result {
   margin-top: 7px;
   color: var(--muted-strong);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -1557,7 +1622,7 @@ time,
   border: 0;
   color: var(--accent-strong);
   background: transparent;
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
 }
 
 .agent-detail-grid {
@@ -1576,7 +1641,7 @@ time,
 .connection-drawer__facts dt,
 .cost-breakdown dt {
   color: var(--muted);
-  font-size: 0.61rem;
+  font-size: var(--text-xs);
   font-weight: 650;
 }
 
@@ -1589,7 +1654,7 @@ time,
 .cost-breakdown dd {
   margin-top: 2px;
   color: var(--muted-strong);
-  font-size: 0.66rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -1615,7 +1680,7 @@ time,
 
 .metric-grid dt {
   color: var(--muted);
-  font-size: 0.61rem;
+  font-size: var(--text-xs);
 }
 
 .metric-grid dd {
@@ -1653,7 +1718,7 @@ time,
 }
 
 .operational-notice h3 {
-  font-size: 0.73rem;
+  font-size: var(--text-md);
 }
 
 .operational-notice--critical h3 {
@@ -1667,7 +1732,7 @@ time,
 .operational-notice p {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   line-height: 1.42;
 }
 
@@ -1695,20 +1760,20 @@ time,
 }
 
 .drawer-toggle strong {
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .drawer-count,
 .drawer-chevron {
   color: var(--muted);
-  font-size: 0.63rem;
+  font-size: var(--text-xs);
 }
 
 .empty-trace {
   padding: 12px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
 }
 
 .trace-list {
@@ -1733,7 +1798,7 @@ time,
   border: 0;
   color: var(--muted);
   background: transparent;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   text-align: left;
 }
 
@@ -1749,7 +1814,7 @@ time,
 .trace-summary strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1830,7 +1895,7 @@ time,
 
 .agent-topology__node span,
 .agent-topology__node strong {
-  font-size: 0.7rem;
+  font-size: var(--text-md);
 }
 
 .agent-topology__node small {
@@ -1838,7 +1903,7 @@ time,
   overflow: hidden;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1858,7 +1923,7 @@ time,
   gap: 5px;
   margin-bottom: 6px;
   color: var(--muted);
-  font-size: 0.63rem;
+  font-size: var(--text-xs);
 }
 
 .agent-topology__parallel > div {
@@ -1885,7 +1950,7 @@ time,
 .agent-topology__inspection > p {
   margin-top: 7px;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
   line-height: 1.4;
 }
 
@@ -1917,7 +1982,7 @@ time,
 
 .graph-totals dt {
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
 }
 
 .graph-totals dd {
@@ -1927,47 +1992,207 @@ time,
   font-weight: 700;
 }
 
-.graph-canvas {
-  height: 420px;
+.connection-map {
+  display: grid;
+  grid-template-columns: 190px 54px minmax(0, 1fr);
+  align-items: stretch;
   margin-top: 12px;
-  overflow: hidden;
   border: 1px solid var(--line-strong);
   background: #09131b;
 }
 
-.graph-canvas .react-flow {
-  background: #09131b;
-}
-
-.graph-canvas .react-flow__attribution {
-  background: transparent;
-}
-
-.graph-canvas .react-flow__attribution a {
-  color: #667986;
-  font-size: 9px;
-}
-
-.graph-vessel,
-.graph-group {
+.connection-map__origin {
+  align-self: center;
   display: grid;
-  gap: 3px;
-  text-align: left;
+  gap: 5px;
+  margin: 14px;
+  padding: 13px;
+  border: 1px solid var(--amber);
+  background: #111c24;
 }
 
-.graph-node-kind,
-.graph-node-meta,
-.graph-status {
-  font-size: 0.58rem;
+.connection-map__origin span,
+.connection-lane header span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.graph-node-kind {
+.connection-map__origin strong {
+  font-size: var(--text-md);
+}
+
+.connection-map__origin small {
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.connection-map__origin b {
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.connection-map__handoff {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto 1fr;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 0;
   color: var(--muted);
 }
 
-.graph-node-meta {
-  color: var(--amber);
+.connection-map__handoff span {
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.connection-map__handoff small {
+  font-size: var(--text-xs);
+  writing-mode: vertical-rl;
+  text-transform: uppercase;
+}
+
+.connection-map__lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+  padding: 12px;
+  border-left: 1px solid var(--line-strong);
+}
+
+.connection-lane {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.connection-lane > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.connection-lane h3 {
+  margin-top: 3px;
+  font-size: var(--text-sm);
+}
+
+.connection-lane > header > strong {
+  color: var(--accent-strong);
   font-family: var(--mono);
+  font-size: var(--text-md);
+}
+
+.connection-lane ul {
+  display: grid;
+  gap: 5px;
+  padding: 7px;
+  list-style: none;
+}
+
+.connection-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 7px;
+  border-left: 3px solid var(--line-strong);
+  background: #0c171f;
+}
+
+.connection-group > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.connection-group > div strong {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.connection-group > div span {
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+  line-height: 1.25;
+}
+
+.connection-group em {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.connection-group--safe {
+  border-left-color: var(--green);
+}
+
+.connection-group--safe em {
+  color: var(--green);
+}
+
+.connection-group--at-risk {
+  border-left-color: var(--amber);
+}
+
+.connection-group--at-risk em {
+  color: var(--amber);
+}
+
+.connection-group--missed {
+  border-left-color: var(--red);
+}
+
+.connection-group--missed em {
+  color: var(--red);
+}
+
+.connection-group--resolved {
+  border-left-color: var(--accent-strong);
+}
+
+.connection-group--resolved em {
+  color: var(--accent-strong);
+}
+
+@media (max-width: 900px) {
+  .connection-map {
+    grid-template-columns: 1fr;
+  }
+
+  .connection-map__handoff {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto;
+    align-items: center;
+    padding: 0 14px;
+  }
+
+  .connection-map__handoff span {
+    width: 100%;
+    height: 1px;
+  }
+
+  .connection-map__handoff small {
+    writing-mode: initial;
+  }
+
+  .connection-map__lanes {
+    border-top: 1px solid var(--line-strong);
+    border-left: 0;
+  }
 }
 
 .connections-page {
@@ -1982,7 +2207,7 @@ time,
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
@@ -2001,7 +2226,7 @@ time,
   padding: 8px 10px;
   border-right: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .cargo-key-item:last-child {
@@ -2014,7 +2239,7 @@ time,
 
 .cargo-key-item strong {
   color: var(--muted-strong);
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
 }
 
 .connections-filters {
@@ -2034,20 +2259,87 @@ time,
   align-self: center;
   margin-right: 4px;
   color: var(--muted-strong);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .connections-filters label {
   display: grid;
   gap: 4px;
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
+}
+
+.connections-page__baseline-notice {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  background: var(--panel-muted);
+}
+
+.connections-page__baseline-notice strong {
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+}
+
+.connections-page__baseline-notice p {
+  max-width: 104ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.connections-page__result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 7px;
 }
 
 .connections-page__result-count {
-  margin: 10px 0 7px;
+  margin: 0;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
+}
+
+.connections-page__page-size {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.connections-pager {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.connections-pager button {
+  padding: 5px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-raised);
+  color: var(--muted-strong);
+  font-size: var(--text-xs);
+}
+
+.connections-pager button:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.connections-pager button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .connections-table-region,
@@ -2066,7 +2358,7 @@ time,
   width: 100%;
   border-collapse: collapse;
   color: var(--muted-strong);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   text-align: left;
 }
 
@@ -2124,7 +2416,7 @@ time,
   border: 0;
   color: var(--accent-strong);
   background: transparent;
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .connections-table__cargo {
@@ -2134,7 +2426,7 @@ time,
 }
 
 .connection-status {
-  font-size: 0.61rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -2194,7 +2486,7 @@ time,
 .drawer-section p {
   margin-top: 6px;
   color: var(--muted);
-  font-size: 0.69rem;
+  font-size: var(--text-sm);
   line-height: 1.45;
 }
 
@@ -2203,14 +2495,18 @@ time,
 .yard-panel,
 .recovery-workspace,
 .execution-page,
-.replay-page {
+.replay-page,
+.benchmark-page,
+.system-status-page {
   padding: 16px;
 }
 
 .yard-operations-page > .page-section-header,
 .recovery-workspace > .page-section-header,
 .execution-page > .page-section-header,
-.replay-page > .page-section-header {
+.replay-page > .page-section-header,
+.benchmark-page > .page-section-header,
+.system-status-page > .page-section-header {
   padding-bottom: 13px;
   border-bottom: 1px solid var(--line);
 }
@@ -2218,7 +2514,7 @@ time,
 .yard-cursor-context {
   margin: 12px 0 9px;
   color: var(--muted);
-  font-size: 0.69rem;
+  font-size: var(--text-sm);
 }
 
 .operations-empty-state {
@@ -2254,7 +2550,7 @@ time,
 .yard-legend-note {
   max-width: 420px;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   text-align: right;
 }
 
@@ -2275,7 +2571,7 @@ time,
 .yard-block figcaption {
   margin-bottom: 6px;
   color: var(--muted-strong);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
 }
 
 /* Recovery planning */
@@ -2299,13 +2595,13 @@ time,
 }
 
 .deterministic-notice strong {
-  font-size: 0.73rem;
+  font-size: var(--text-md);
 }
 
 .deterministic-notice p {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -2313,12 +2609,25 @@ time,
   color: var(--accent-strong);
 }
 
+/*
+ * The three cards are read side by side and compared line for line, so what
+ * lines up matters. The card is a column with the actions pushed to its foot,
+ * which puts the Select plan buttons on one line across the row however much
+ * copy each card carries above them.
+ */
 .recovery-plan-card {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 2px;
   background: #0a141c;
+}
+
+.recovery-plan-card .plan-card-actions {
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .recovery-plan-card.is-selected {
@@ -2339,10 +2648,20 @@ time,
   font-size: 0.84rem;
 }
 
+/*
+ * Only the recommended card carries a badge above its risk chip. The row is
+ * reserved in every card so all three headers are the same height and the
+ * feasibility line and metric grid beneath them stay level across the row.
+ */
 .plan-status-stack {
   display: grid;
+  grid-template-rows: 1lh auto;
   gap: 3px;
   justify-items: end;
+}
+
+.plan-status-stack .risk-badge {
+  grid-row: 2;
 }
 
 .recommended-badge {
@@ -2369,7 +2688,7 @@ time,
   padding-top: 8px;
   border-top: 1px solid var(--line);
   color: var(--muted-strong);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .is-infeasible .plan-feasibility {
@@ -2399,13 +2718,13 @@ time,
   align-items: center;
   gap: 5px;
   color: var(--muted);
-  font-size: 0.59rem;
+  font-size: var(--text-xs);
 }
 
 .plan-metric dd {
   margin-top: 3px;
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
 }
 
 .plan-rejections {
@@ -2413,7 +2732,7 @@ time,
   padding-top: 8px;
   border-top: 1px solid #594045;
   color: #d99a96;
-  font-size: 0.64rem;
+  font-size: var(--text-sm);
 }
 
 .plan-rejections ul,
@@ -2425,7 +2744,7 @@ time,
   margin-top: 6px;
   padding-left: 17px;
   color: var(--muted);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -2442,7 +2761,7 @@ time,
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   color: var(--muted-strong);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
   line-height: 1.45;
 }
 
@@ -2521,7 +2840,7 @@ time,
 
 .execution-empty-state p,
 .execution-empty-state strong {
-  font-size: 0.7rem;
+  font-size: var(--text-md);
 }
 
 .execution-safety-notice {
@@ -2537,7 +2856,7 @@ time,
 
 .execution-safety-notice strong,
 .execution-safety-notice p {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .execution-safety-notice p {
@@ -2577,19 +2896,19 @@ time,
 
 .action-type {
   color: var(--muted);
-  font-size: 0.61rem;
+  font-size: var(--text-xs);
 }
 
 .mock-action-card h4 {
   margin-top: 2px;
   font-family: var(--mono);
-  font-size: 0.7rem;
+  font-size: var(--text-md);
 }
 
 .action-description {
   margin-top: 9px;
   color: var(--muted-strong);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -2603,7 +2922,7 @@ time,
 .receipt-card summary {
   padding: 8px 0;
   color: var(--accent-strong);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -2645,7 +2964,7 @@ time,
 }
 
 .receipt-status {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   font-weight: 750;
 }
 
@@ -2662,205 +2981,17 @@ time,
 .receipt-detail {
   padding: 0 30px 10px;
   color: var(--muted);
-  font-size: 0.67rem;
+  font-size: var(--text-sm);
 }
 
 /* Replay */
-.deck-vessel-map {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  background: #0b151c;
-}
-
-.deck-vessel-map__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel-raised);
-}
-
-.deck-vessel-map__header h3 {
-  color: var(--ink);
-  font-size: 0.78rem;
-}
-
-.deck-vessel-map__header p {
-  margin-top: 2px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.61rem;
-  letter-spacing: 0.05em;
-}
-
-.deck-vessel-map__legend {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--muted-strong);
-  font-family: var(--mono);
-  font-size: 0.61rem;
-  letter-spacing: 0.04em;
-}
-
-.deck-vessel-map__legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  letter-spacing: 0.04em;
-}
-
-.deck-vessel-map__key {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--muted);
-}
-
-.deck-vessel-map__key--planned {
-  background: var(--amber);
-}
-
-.deck-vessel-map__key--live {
-  background: var(--accent-strong);
-}
-
-.deck-vessel-map__canvas {
-  position: relative;
-  height: clamp(360px, 48vw, 570px);
-  background: #0b1c26;
-}
-
-.deck-vessel-map__canvas > div,
-.deck-vessel-map__canvas .mapboxgl-map {
-  width: 100%;
-  height: 100%;
-}
-
-.mapbox-simulated-vessel {
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.mapbox-simulated-vessel__marker {
-  position: relative;
-  width: 24px;
-  height: 24px;
-  display: grid;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  place-items: center;
-}
-
-.mapbox-simulated-vessel__dot {
-  width: 18px;
-  height: 18px;
-  border: 3px solid #f7faf8;
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgb(244 185 66 / 0.3), 0 2px 7px rgb(0 0 0 / 0.8);
-}
-
-.mapbox-simulated-vessel__name {
-  position: absolute;
-  bottom: 26px;
-  left: 50%;
-  color: #f7faf8;
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-shadow: 0 1px 2px #040b10, 0 0 4px #040b10;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.mapbox-simulated-vessel__tooltip {
-  position: absolute;
-  z-index: 6;
-  top: 19px;
-  left: 19px;
-  width: max-content;
-  max-width: 240px;
-  display: none;
-  gap: 3px;
-  padding: 8px 10px;
-  border: 1px solid var(--amber);
-  border-radius: 2px;
-  background: #101a20;
-  box-shadow: 0 7px 18px rgb(0 0 0 / 0.45);
-  color: var(--muted-strong);
-  font-size: 0.65rem;
-  pointer-events: none;
-}
-
-.mapbox-simulated-vessel:hover .mapbox-simulated-vessel__tooltip,
-.mapbox-simulated-vessel:focus-within .mapbox-simulated-vessel__tooltip {
-  display: grid;
-}
-
-.mapbox-simulated-vessel__tooltip strong {
-  color: var(--ink);
-}
-
-.mapbox-simulated-vessel__tooltip span:last-child {
-  color: var(--muted);
-  font-family: var(--mono);
-}
-
-.deck-vessel-map__tooltip {
-  position: absolute;
-  z-index: 5;
-  width: max-content;
-  max-width: 280px;
-  display: grid;
-  gap: 3px;
-  padding: 8px 10px;
-  border: 1px solid var(--amber);
-  border-radius: 2px;
-  background: #101a20;
-  box-shadow: 0 7px 18px rgb(0 0 0 / 0.34);
-  color: var(--muted-strong);
-  font-size: 0.65rem;
-  pointer-events: none;
-  transform: translate(10px, calc(-100% - 10px));
-}
-
-.deck-vessel-map__tooltip[data-live='true'] {
-  border-color: var(--accent-strong);
-}
-
-.deck-vessel-map__tooltip strong {
-  color: var(--ink);
-  font-size: 0.7rem;
-}
-
-.deck-vessel-map__tooltip span:last-child {
-  color: var(--muted);
-  font-family: var(--mono);
-}
-
-.deck-vessel-map__notice {
-  padding: 7px 12px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.62rem;
-  line-height: 1.45;
-}
-
 .replay-position {
   display: grid;
   grid-template-columns: auto auto;
   align-items: center;
   gap: 2px 7px;
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: var(--text-sm);
 }
 
 .replay-position strong {
@@ -2868,7 +2999,7 @@ time,
   max-width: 360px;
   overflow: hidden;
   color: var(--muted-strong);
-  font-size: 0.69rem;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2891,7 +3022,7 @@ time,
   display: grid;
   gap: 4px;
   color: var(--muted);
-  font-size: 0.63rem;
+  font-size: var(--text-xs);
 }
 
 .replay-scrubber {
@@ -2902,7 +3033,7 @@ time,
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: var(--text-sm);
 }
 
 .replay-scrubber input {
@@ -2954,21 +3085,181 @@ time,
 
 .replay-milestone-list time,
 .replay-milestone-list small {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
 .replay-milestone-list strong {
   overflow: hidden;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* System status */
+.system-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.system-health-panel,
+.agent-mode-panel,
+.architecture-panel {
+  padding: 12px;
+  border: 1px solid var(--line);
+}
+
+.status-row-list {
+  margin-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.status-row dt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted-strong);
+  font-size: var(--text-sm);
+}
+
+.status-row dd {
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+}
+
+.status-healthy {
+  color: var(--green);
+}
+
+.status-isolated {
+  color: var(--amber);
+}
+
+.agent-mode-options {
+  display: grid;
+  gap: 0;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.agent-mode-options button {
+  display: grid;
+  gap: 2px;
+  padding: 9px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  background: transparent;
+  text-align: left;
+}
+
+.agent-mode-options button.is-selected {
+  color: var(--accent-strong);
+}
+
+.agent-mode-options strong {
+  font-size: var(--text-md);
+}
+
+.agent-mode-options span {
+  font-size: var(--text-sm);
+}
+
+.architecture-panel {
+  margin-top: 12px;
+}
+
+.architecture-flow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.architecture-flow li {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.architecture-node {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  color: var(--muted-strong);
+  text-align: center;
+}
+
+.architecture-node span {
+  font-size: var(--text-xs);
+}
+
+.architecture-arrow {
+  flex: 0 0 auto;
+  color: var(--line-strong);
+  transform: rotate(-90deg);
+}
+
+.architecture-support-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.architecture-support-grid > div {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.architecture-support-grid strong {
+  font-size: var(--text-sm);
+}
+
+.architecture-support-grid span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.system-boundaries {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.system-boundaries ul {
+  display: flex;
+  gap: 24px;
+  margin-top: 5px;
+  padding-left: 17px;
+}
+
 /* Global forecast timeline */
 .operations-timeline {
-  position: sticky;
-  bottom: 0;
-  z-index: 30;
+  position: relative;
   margin-top: 14px;
   padding: 10px 12px;
   background: #0b151e;
@@ -2981,7 +3272,7 @@ time,
 .operations-timeline__selection {
   color: var(--accent-strong);
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .operations-timeline__scrubber {
@@ -2994,7 +3285,7 @@ time,
 
 .operations-timeline__scrubber label {
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
 .operations-timeline__scrubber input {
@@ -3036,17 +3327,17 @@ time,
 
 .operations-timeline__milestones time {
   color: var(--accent-strong);
-  font-size: 0.63rem;
+  font-size: var(--text-xs);
 }
 
 .operations-timeline__milestones span {
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
 }
 
 .operations-timeline__trace-context {
   margin-top: 6px;
   color: var(--muted);
-  font-size: 0.61rem;
+  font-size: var(--text-xs);
 }
 
 /* Human gates */
@@ -3073,7 +3364,7 @@ time,
 .dialog-context {
   margin-bottom: 5px;
   color: var(--amber);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .dispute-overlay h2 {
@@ -3101,7 +3392,7 @@ time,
 .dispute-position p,
 .dispute-position li {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -3135,7 +3426,7 @@ time,
   border-radius: 2px;
   color: var(--muted-strong);
   background: transparent;
-  font-size: 0.69rem;
+  font-size: var(--text-sm);
   text-align: left;
 }
 
@@ -3176,7 +3467,7 @@ time,
 
 .approval-label {
   color: var(--amber);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
@@ -3191,7 +3482,7 @@ time,
 .approval-consequences {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -3205,7 +3496,7 @@ time,
   display: grid;
   gap: 3px;
   color: var(--muted);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
 .approval-note {
@@ -3250,20 +3541,20 @@ time,
 .approval-confirmation header p {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 #approval-confirmation-consequences {
   margin-top: 12px;
   color: var(--muted-strong);
-  font-size: 0.72rem;
+  font-size: var(--text-md);
   line-height: 1.5;
 }
 
 .approval-confirmation-safety {
   margin-top: 9px;
   color: var(--green);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .approval-confirmation-actions {
@@ -3275,7 +3566,7 @@ time,
 
 @media (max-width: 1320px) {
   .masthead-row {
-    grid-template-columns: auto minmax(150px, 0.5fr) minmax(480px, 2fr) 140px;
+    grid-template-columns: minmax(240px, auto) minmax(480px, 2fr) 140px;
   }
 
   .top-status-grid {
@@ -3296,6 +3587,10 @@ time,
 
   .failure-toggle {
     margin-left: 0;
+  }
+
+  .command-center-grid {
+    grid-template-columns: minmax(0, 1fr) 300px;
   }
 
   .operations-overview__metrics {
@@ -3376,6 +3671,7 @@ time,
     grid-template-columns: auto minmax(150px, 0.6fr) minmax(400px, 2fr) 140px;
   }
 
+  .command-center-grid,
   .operations-overview__lower-grid,
   .agent-workspace,
   .agent-topology__workspace {
@@ -3491,7 +3787,9 @@ time,
   .operations-overview__workflow-list,
   .connections-page__cargo-key,
   .yard-grid,
-  .recovery-plan-grid {
+  .recovery-plan-grid,
+  .system-status-grid,
+  .architecture-support-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -3527,20 +3825,7 @@ time,
     min-height: 520px;
   }
 
-  .operations-overview__water {
-    right: 50%;
-  }
-
-  .operations-overview__berth {
-    left: 50%;
-  }
-
-  .operations-overview__vessel {
-    width: 126px;
-  }
-
   .operations-overview__yard-blocks {
-    left: 55%;
     grid-template-columns: 1fr;
   }
 
@@ -3549,23 +3834,6 @@ time,
   .approval-actions {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .deck-vessel-map__header,
-  .deck-vessel-map__legend {
-    align-items: flex-start;
-    flex-direction: column;
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .deck-vessel-map__legend {
-    gap: 7px;
-  }
-
-  .deck-vessel-map__canvas {
-    height: 300px;
-    min-height: 250px;
   }
 
   .connections-filters label,
@@ -3591,8 +3859,27 @@ time,
     padding-left: 16px;
   }
 
+  .architecture-flow {
+    display: grid;
+  }
+
+  .architecture-flow li {
+    display: grid;
+  }
+
+  .architecture-arrow {
+    margin: 4px auto;
+    transform: none;
+  }
+
+  .system-boundaries ul {
+    display: grid;
+    gap: 4px;
+  }
+
   .operations-timeline {
     position: relative;
+    bottom: 0;
   }
 
   .operations-timeline__milestones {
@@ -3631,10 +3918,6 @@ time,
     grid-column: 1 / -1;
   }
 
-  .with-approval .app-content {
-    padding-bottom: 280px;
-  }
-
   .replay-milestone-list button {
     grid-template-columns: 9px 70px 1fr;
   }
@@ -3652,5 +3935,647 @@ time,
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+/* Act 2: Red Sea 2024 crisis benchmark */
+.benchmark-page {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.benchmark-run-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--accent-strong);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.benchmark-run-button:hover:not(:disabled) {
+  background: rgba(78, 163, 168, 0.12);
+}
+
+.benchmark-run-button:disabled {
+  border-color: var(--line-strong);
+  color: var(--muted);
+  cursor: default;
+}
+
+.benchmark-result-summary {
+  display: grid;
+  grid-template-columns: minmax(320px, auto) minmax(0, 1fr);
+  gap: 10px;
+}
+
+/* The benchmark's central honesty statement. Sits directly under the header so
+   nobody reads the chart before reading what it does and does not claim. */
+.benchmark-scope-notice {
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-left-width: 2px;
+  border-radius: 3px;
+  background: var(--panel-muted);
+}
+
+.benchmark-scope-notice h3 {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.benchmark-scope-notice p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: var(--text-md);
+  line-height: 1.6;
+}
+
+.benchmark-scope-notice details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.benchmark-scope-notice summary {
+  width: fit-content;
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.benchmark-scope-notice details p {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 900px) {
+  .benchmark-result-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.benchmark-notice,
+.benchmark-error {
+  margin: 0;
+  padding: 8px 11px;
+  border-left: 2px solid var(--line-strong);
+  background: var(--panel-muted);
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.5;
+}
+
+.benchmark-notice.is-offline {
+  border-left-color: var(--amber);
+  color: var(--amber);
+}
+
+.benchmark-error {
+  border-left-color: var(--red);
+  color: var(--red);
+}
+
+.benchmark-chart {
+  margin: 0;
+  padding: 12px 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-chart figcaption {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+.benchmark-headline {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--panel-muted);
+  color: var(--muted-strong);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.benchmark-headline strong {
+  color: var(--accent-strong);
+}
+
+.benchmark-arm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.benchmark-arm-card {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-arm-card header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
+}
+
+.benchmark-arm-card h3 {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.benchmark-arm-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.benchmark-provenance {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+}
+
+.benchmark-provenance--reconstructed {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.benchmark-provenance--recorded {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.benchmark-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin: 11px 0 0;
+}
+
+.benchmark-kpis dt {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.benchmark-kpis dd {
+  margin: 3px 0 1px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+}
+
+.benchmark-kpis span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.benchmark-caveat {
+  margin: 11px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.benchmark-audit {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid var(--green);
+  border-radius: 3px;
+  background: rgba(103, 168, 122, 0.07);
+  color: var(--green);
+  font-size: var(--text-md);
+  line-height: 1.45;
+}
+
+.benchmark-audit.is-fail {
+  border-color: var(--red);
+  background: rgba(200, 109, 104, 0.07);
+  color: var(--red);
+}
+
+.benchmark-audit strong {
+  flex-shrink: 0;
+  letter-spacing: 0.06em;
+}
+
+.benchmark-audit span {
+  color: var(--muted);
+}
+
+.benchmark-anchors,
+.benchmark-decisions {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--panel-raised);
+}
+
+.benchmark-table {
+  width: 100%;
+  margin-top: 11px;
+  border-collapse: collapse;
+  font-size: var(--text-md);
+}
+
+.benchmark-table th,
+.benchmark-table td {
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.benchmark-table thead th {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.benchmark-table tbody th {
+  color: var(--muted-strong);
+  font-weight: 500;
+}
+
+.benchmark-table td {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+/* The anchor rows are context, not a grade, so the gap column is never
+   coloured pass/fail. The reading sits under its row and carries the reason. */
+.benchmark-anchor-row th,
+.benchmark-anchor-row td {
+  border-bottom: 0;
+}
+
+.benchmark-anchor-reading td {
+  padding-top: 0;
+  color: var(--muted);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.benchmark-cell-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
+.benchmark-decision-list {
+  margin: 11px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.benchmark-decision-list li {
+  display: grid;
+  /* Wide enough for a collapsed run's "1 Apr - 26 Aug" without wrapping. */
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--accent);
+  background: var(--panel-muted);
+}
+
+.benchmark-decision-list li[data-accepted='no'] {
+  border-left-color: var(--red);
+}
+
+.benchmark-decision-date {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+}
+
+.benchmark-decision-list strong {
+  color: var(--ink);
+  font-size: var(--text-md);
+  letter-spacing: 0.03em;
+}
+
+.benchmark-decision-repeat {
+  margin-left: 7px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
+.benchmark-decision-list p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.benchmark-decision-rejected {
+  color: var(--red);
+}
+
+.benchmark-provenance-footer {
+  display: grid;
+  gap: 7px;
+  padding: 11px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.benchmark-provenance-footer p {
+  margin: 0;
+}
+
+/* Guided tour
+   ------------------------------------------------------------------
+   The tour draws over the running product without joining its layout.
+   Everything here is fixed-position and, apart from the transport bar,
+   pointer-transparent, so the app underneath keeps behaving normally
+   while the tour clicks its real controls. */
+
+.tour-launch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  background: rgb(78 163 168 / 0.12);
+  color: var(--accent-strong);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.tour-launch-button:hover {
+  background: rgb(78 163 168 / 0.2);
+}
+
+/* Still clickable when the backend is down: the card it opens explains
+   what is missing, which tells a first-time viewer more than a dead
+   control would. */
+.tour-launch-button.is-unavailable {
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+}
+
+/* Below the sidebar collapse the masthead has no room to spare, and the tour
+   is written for a desktop viewport anyway. */
+@media (max-width: 1050px) {
+  .tour-launch-button {
+    display: none;
+  }
+}
+
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+}
+
+.tour-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(4 9 14 / 0.74);
+}
+
+/* A hole in the dimming, cut with a spread shadow rather than by raising
+   the anchor's z-index - the approval bar and the dispute overlay have
+   stacking contexts of their own that must not be reordered. */
+.tour-spotlight {
+  position: fixed;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  box-shadow: 0 0 0 9999px rgb(4 9 14 / 0.74);
+  transition: left 220ms ease, top 220ms ease, width 220ms ease, height 220ms ease;
+}
+
+.tour-bubble {
+  position: fixed;
+  z-index: 320;
+  display: grid;
+  gap: 7px;
+  max-height: 240px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--panel-raised);
+  box-shadow: 0 18px 42px rgb(2 6 10 / 0.6);
+  pointer-events: auto;
+  /* Glides between anchors instead of teleporting, which on a recording reads
+     as one bubble moving rather than two bubbles appearing. */
+  transition:
+    left 260ms ease,
+    top 260ms ease;
+}
+
+.tour-bubble--center {
+  border-color: var(--line-strong);
+  text-align: center;
+}
+
+.tour-bubble__chapter {
+  color: var(--accent-strong);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tour-bubble h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.tour-bubble p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.tour-bubble__stall {
+  color: var(--amber);
+}
+
+.tour-bubble .secondary-action {
+  justify-self: center;
+  margin-top: 4px;
+}
+
+/* A cursor the camera can follow. The real click fires on the real
+   control; this only shows the viewer where it landed. */
+.tour-cursor {
+  position: fixed;
+  left: -9px;
+  top: -9px;
+  z-index: 340;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent-strong);
+  border-radius: 50%;
+  background: rgb(105 187 192 / 0.28);
+  transition: transform 450ms cubic-bezier(0.33, 0.9, 0.35, 1);
+}
+
+.tour-cursor.is-pressing {
+  border-color: var(--ink);
+  background: rgb(229 237 243 / 0.5);
+  box-shadow: 0 0 0 10px rgb(105 187 192 / 0.16);
+}
+
+.tour-transport {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 330;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px rgb(2 6 10 / 0.55);
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.tour-transport.is-top {
+  top: 18px;
+  bottom: auto;
+}
+
+/* Out of the way of a hands-off recording, back on the first mouse move. The
+   contents fade, not the bar: fading the bar itself makes its own background
+   translucent, and page text showing through a control strip reads as a
+   rendering fault rather than as a deliberate retreat. */
+.tour-transport.is-idle > * {
+  opacity: 0.42;
+}
+
+.tour-transport > * {
+  transition: opacity 300ms ease;
+}
+
+.tour-transport__identity {
+  display: grid;
+  gap: 2px;
+  min-width: 200px;
+}
+
+.tour-transport__identity strong {
+  color: var(--ink);
+  font-size: var(--text-md);
+}
+
+.tour-transport__identity span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+}
+
+.tour-transport__progress {
+  width: 160px;
+  height: 3px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.tour-transport__progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 300ms ease;
+}
+
+.tour-transport__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tour-transport__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--panel-muted);
+  color: var(--muted-strong);
+  cursor: pointer;
+}
+
+.tour-transport__actions button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.tour-transport__actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight,
+  .tour-bubble,
+  .tour-cursor,
+  .tour-transport > *,
+  .tour-transport__progress span {
+    transition: none;
   }
 }

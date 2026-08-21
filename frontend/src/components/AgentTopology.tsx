@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 
 import type { AgentActivity, AgentName, TraceEvent } from '../api/types'
 import { deriveAgentViews } from '../lib/derive'
-import { formatElapsed } from '../lib/format'
+import { formatElapsed, humanizeOperationalText } from '../lib/format'
 
 interface AgentTopologyProps {
   events: TraceEvent[]
@@ -27,6 +27,9 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
     if (!view) return null
     return (
       <button
+        // Keyed here rather than at the call site, because the parallel branch
+        // renders a list of these and each agent appears in the flow once.
+        key={agent}
         type="button"
         className={`agent-topology__node status-${view.status.toLowerCase()}`}
         aria-pressed={selectedAgent === agent}
@@ -34,13 +37,17 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
       >
         <span>{view.agent.replace(' Agent', '')}</span>
         <strong>{view.status}</strong>
-        <small>{view.toolsCalled.at(-1) ?? 'No tool call'}</small>
+        <small>
+          {view.toolsCalled.at(-1)
+            ? humanizeOperationalText(view.toolsCalled.at(-1) ?? '')
+            : 'No tool call'}
+        </small>
       </button>
     )
   }
 
   return (
-    <section className="agent-topology" aria-labelledby="agent-topology-title">
+    <section className="agent-topology" aria-labelledby="agent-topology-title" data-tour="agent-topology">
       <header className="page-section-header">
         <div>
           <h2 id="agent-topology-title">Agent handoff topology</h2>
@@ -75,12 +82,14 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
               {selected.status}
             </span>
           </header>
-          <p>{selected.objective}</p>
+          <p>{humanizeOperationalText(selected.objective)}</p>
           <dl>
             <div>
               <dt>Active or latest tool</dt>
               <dd>
-                <code>{selected.toolsCalled.at(-1) ?? 'None recorded'}</code>
+                {selected.toolsCalled.at(-1)
+                  ? humanizeOperationalText(selected.toolsCalled.at(-1) ?? '')
+                  : 'None recorded'}
               </dd>
             </div>
             <div>
@@ -89,11 +98,19 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
             </div>
             <div>
               <dt>Evidence</dt>
-              <dd>{selected.evidence.at(-1) ?? selected.lastSummary ?? 'Waiting for evidence.'}</dd>
+              <dd>
+                {humanizeOperationalText(
+                  selected.evidence.at(-1) ?? selected.lastSummary ?? 'Waiting for evidence.',
+                )}
+              </dd>
             </div>
             <div>
               <dt>Assumptions</dt>
-              <dd>{selected.assumptions.join(' ') || 'No assumptions recorded.'}</dd>
+              <dd>
+                {humanizeOperationalText(
+                  selected.assumptions.join(' ') || 'No assumptions recorded.',
+                )}
+              </dd>
             </div>
             <div>
               <dt>Next handoff</dt>

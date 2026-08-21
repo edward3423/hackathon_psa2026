@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Factory, Filter, Package, Ship, Snowflake, X } from 'lucide-react'
 
-import type { CargoType, ConnectionAnalysis, ConnectionStatus } from '../api/types'
+import type {
+  CargoType,
+  ConnectionAnalysis,
+  ConnectionStatus,
+  PlanEvaluation,
+} from '../api/types'
 import { MOCK_CONNECTION_ANALYSIS } from '../data/demo'
 import { formatDateTime } from '../lib/format'
 
@@ -40,6 +45,14 @@ const STATUS_LABEL: Record<ConnectionStatus, string> = {
   RESOLVED: 'RESOLVED',
 }
 
+/** Sentence case for the filter menu; STATUS_LABEL is the shouty table badge. */
+const STATUS_FILTER_LABEL: Record<ConnectionStatus, string> = {
+  SAFE: 'Safe',
+  AT_RISK: 'At risk',
+  MISSED: 'Expected miss',
+  RESOLVED: 'Resolved',
+}
+
 const DESTINATION_BY_VESSEL: Record<string, string> = {
   'MV MERIDIAN WAVE': 'Busan',
   'MV PACIFIC LINK': 'Port Klang',
@@ -57,9 +70,14 @@ interface ConnectionView extends Connection {
 
 export interface ConnectionsPageProps {
   analysis?: ConnectionAnalysis | null
+  /** The plan the controller approved, once one has been. */
+  approved?: PlanEvaluation | null
   inboundVessel?: string
   offline?: boolean
 }
+
+/** Row counts offered per page. 360 rows on one page is 13,000px of scroll. */
+const PAGE_SIZES = [50, 100, 250] as const
 
 function requiredTransferHours(cargoType: CargoType): number {
   if (cargoType === 'PHARMA_REEFER') return 3.5
@@ -113,6 +131,7 @@ function cargoIcon(cargoType: CargoType) {
 
 export function ConnectionsPage({
   analysis,
+  approved = null,
   inboundVessel = 'MV ATLAS STAR',
   offline = false,
 }: ConnectionsPageProps) {
@@ -121,6 +140,8 @@ export function ConnectionsPage({
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL')
   const [destinationFilter, setDestinationFilter] = useState('ALL')
   const [vesselFilter, setVesselFilter] = useState('ALL')
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0])
+  const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<ConnectionView | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const returnFocusRef = useRef<HTMLButtonElement | null>(null)
@@ -161,6 +182,24 @@ export function ConnectionsPage({
     [destinationFilter, priorityFilter, rows, statusFilter, vesselFilter],
   )
 
+  // Only statuses the classifier actually produces are offered. The engine has
+  // never emitted RESOLVED, so a hardcoded option was a filter that could only
+  // ever return nothing.
+  const statuses = useMemo(
+    () => [...new Set(rows.map((row) => row.status))].sort(),
+    [rows],
+  )
+
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize))
+  const currentPage = Math.min(page, pageCount - 1)
+  const pageStart = currentPage * pageSize
+  const pageRows = filteredRows.slice(pageStart, pageStart + pageSize)
+
+  // Any filter change can shrink the result set past the current page.
+  useEffect(() => {
+    setPage(0)
+  }, [destinationFilter, pageSize, priorityFilter, statusFilter, vesselFilter])
+
   const closeDrawer = () => {
     setSelected(null)
     window.requestAnimationFrame(() => returnFocusRef.current?.focus())
@@ -190,13 +229,29 @@ export function ConnectionsPage({
           <Ship aria-hidden="true" size={17} />
           <span>
             {analysis != null
-              ? 'LIVE RUN ANALYSIS'
+              ? approved
+                ? 'PRE-RECOVERY BASELINE'
+                : 'LIVE RUN ANALYSIS'
               : offline
                 ? 'OFFLINE DEMO DATA'
                 : 'AWAITING RUN ANALYSIS'}
           </span>
         </div>
       </header>
+
+      {approved && (
+        <aside className="connections-page__baseline-notice" role="note">
+          <strong>These rows are the baseline, before recovery.</strong>
+          <p>
+            Every container below is classified against the delayed schedule as first assessed.
+            The approved {approved.plan.title.toLowerCase()} plan projects{' '}
+            {approved.metrics.missed_connections} missed connections and{' '}
+            {Math.round(approved.metrics.critical_cargo_protected_pct)}% of critical cargo
+            protected once its actions are carried out. The Recovery page reports that projection;
+            this page reports what it is measured against, and the two are not expected to agree.
+          </p>
+        </aside>
+      )}
 
       <div className="connections-page__cargo-key" aria-label="Cargo priority order">
         {(Object.entries(CARGO_DETAILS) as [CargoType, (typeof CARGO_DETAILS)[CargoType]][]).map(
@@ -221,10 +276,11 @@ export function ConnectionsPage({
           Risk status
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}>
             <option value="ALL">All statuses</option>
-            <option value="SAFE">Safe</option>
-            <option value="AT_RISK">At risk</option>
-            <option value="MISSED">Expected miss</option>
-            <option value="RESOLVED">Resolved</option>
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {STATUS_FILTER_LABEL[status]}
+              </option>
+            ))}
           </select>
         </label>
         <label>
@@ -256,9 +312,25 @@ export function ConnectionsPage({
         </label>
       </form>
 
-      <p className="connections-page__result-count" aria-live="polite">
-        Showing {filteredRows.length} of {rows.length} containers
-      </p>
+      <div className="connections-page__result-bar">
+        <p className="connections-page__result-count" aria-live="polite">
+          {filteredRows.length === 0
+            ? `Showing 0 of ${rows.length} containers`
+            : `Showing ${pageStart + 1} to ${pageStart + pageRows.length} of ${filteredRows.length} matching containers${
+                filteredRows.length === rows.length ? '' : ` (${rows.length} in total)`
+              }`}
+        </p>
+        <label className="connections-page__page-size">
+          Rows per page
+          <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+            {PAGE_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="connections-table-region" role="region" aria-label="Threatened connection table" tabIndex={0}>
         <table className="connections-table">
@@ -278,7 +350,7 @@ export function ConnectionsPage({
             </tr>
           </thead>
           <tbody>
-            {filteredRows.map((row) => {
+            {pageRows.map((row) => {
               const cargo = CARGO_DETAILS[row.cargo_type]
               return (
                 <tr
@@ -337,6 +409,28 @@ export function ConnectionsPage({
           </p>
         )}
       </div>
+
+      {pageCount > 1 && (
+        <nav className="connections-pager" aria-label="Connection table pages">
+          <button
+            type="button"
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage === 0}
+          >
+            Previous
+          </button>
+          <span aria-live="polite">
+            Page {currentPage + 1} of {pageCount}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage(currentPage + 1)}
+            disabled={currentPage >= pageCount - 1}
+          >
+            Next
+          </button>
+        </nav>
+      )}
 
       {selected && (
         <div className="connection-drawer-backdrop" onMouseDown={(event) => {

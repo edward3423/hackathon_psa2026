@@ -1,10 +1,17 @@
 import type {
   AlternativeSailingResult,
+  AnchorComparison,
+  ArmResult,
+  BenchmarkResult,
   ConnectionAnalysis,
+  DailyKpi,
   Dispute,
+  FleetArm,
+  FleetMetrics,
   MockedAction,
   PlanComparison,
   PriorityEmphasis,
+  RecordedDecision,
   ScenarioState,
   TraceEvent,
   WorkflowStage,
@@ -20,7 +27,19 @@ export type PageId =
   | 'agents'
   | 'execution'
   | 'replay'
+  | 'benchmark'
+  | 'system'
 
+/**
+ * A named starting position for the scenario controls, and nothing more.
+ *
+ * A preset used to carry its own container, risk, yard and reefer figures.
+ * They were hand-written, they disagreed with what the engine actually
+ * produced, and the run overwrote them the moment it started. The expected
+ * figures now come from `scenarioPreview()`, computed by the engine for
+ * whatever the controls currently say - including after the delay slider moves,
+ * which a per-preset constant could never follow.
+ */
 export interface ScenarioPreset {
   id: string
   title: string
@@ -28,11 +47,6 @@ export interface ScenarioPreset {
   delayHours: number
   priorityEmphasis: PriorityEmphasis
   lookupFailure: boolean
-  affected: number
-  atRisk: number
-  expectedMisses: number
-  yardPeak: number
-  reeferDemand: number
 }
 
 export const SCENARIO_PRESETS: ScenarioPreset[] = [
@@ -43,11 +57,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 6,
     priorityEmphasis: 'BALANCED',
     lookupFailure: false,
-    affected: 438,
-    atRisk: 42,
-    expectedMisses: 8,
-    yardPeak: 78,
-    reeferDemand: 386,
   },
   {
     id: 'severe-delay',
@@ -56,11 +65,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'BALANCED',
     lookupFailure: true,
-    affected: 400,
-    atRisk: 126,
-    expectedMisses: 60,
-    yardPeak: 94,
-    reeferDemand: 432,
   },
   {
     id: 'reefer-crisis',
@@ -69,11 +73,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 14,
     priorityEmphasis: 'CARGO_PROTECTION',
     lookupFailure: false,
-    affected: 472,
-    atRisk: 151,
-    expectedMisses: 41,
-    yardPeak: 89,
-    reeferDemand: 468,
   },
   {
     id: 'yard-congestion',
@@ -82,11 +81,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 12,
     priorityEmphasis: 'CONGESTION_REDUCTION',
     lookupFailure: false,
-    affected: 510,
-    atRisk: 118,
-    expectedMisses: 29,
-    yardPeak: 99,
-    reeferDemand: 409,
   },
   {
     id: 'agent-conflict',
@@ -95,11 +89,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'CARGO_PROTECTION',
     lookupFailure: false,
-    affected: 438,
-    atRisk: 127,
-    expectedMisses: 34,
-    yardPeak: 92,
-    reeferDemand: 439,
   },
   {
     id: 'lookup-failure',
@@ -108,11 +97,6 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     delayHours: 18,
     priorityEmphasis: 'BALANCED',
     lookupFailure: true,
-    affected: 400,
-    atRisk: 126,
-    expectedMisses: 60,
-    yardPeak: 94,
-    reeferDemand: 432,
   },
 ]
 
@@ -150,62 +134,57 @@ export interface PortVessel {
   containers: number
   connections: number
   risk: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
-  x: number
-  y: number
 }
 
+/**
+ * The port call as fixtures/golden_world.json models it. `connections` is the
+ * count of transshipment containers moving off MV ATLAS STAR onto that vessel,
+ * so the vessel detail cannot disagree with the Command Center's own totals.
+ */
 export const PORT_VESSELS: PortVessel[] = [
   {
     id: 'SGSIN-PSA-2042',
     name: 'MV ATLAS STAR',
     role: 'INBOUND',
     berth: 'T1 B06',
-    eta: '15 Sep, 00:00 UTC',
-    departure: '15 Sep, 16:00 UTC',
+    eta: '2026-09-15T00:00:00Z',
+    departure: '2026-09-15T16:00:00Z',
     containers: 1284,
-    connections: 438,
+    connections: 360,
     risk: 'CRITICAL',
-    x: 18,
-    y: 43,
   },
   {
     id: 'SGSIN-PSA-2043',
     name: 'MV MERIDIAN WAVE',
     role: 'OUTBOUND',
     berth: 'T1 B03',
-    eta: '14 Sep, 20:00 UTC',
-    departure: '15 Sep, 10:00 UTC',
+    eta: '2026-09-14T20:00:00Z',
+    departure: '2026-09-15T10:00:00Z',
     containers: 208,
-    connections: 118,
+    connections: 105,
     risk: 'HIGH',
-    x: 36,
-    y: 21,
   },
   {
     id: 'SGSIN-PSA-2044',
     name: 'MV CORAL EMPRESS',
     role: 'OUTBOUND',
     berth: 'T1 B04',
-    eta: '15 Sep, 04:00 UTC',
-    departure: '15 Sep, 18:00 UTC',
+    eta: '2026-09-15T04:00:00Z',
+    departure: '2026-09-15T18:00:00Z',
     containers: 146,
-    connections: 86,
+    connections: 105,
     risk: 'HIGH',
-    x: 36,
-    y: 47,
   },
   {
     id: 'SGSIN-PSA-2045',
     name: 'MV PACIFIC HARRIER',
     role: 'OUTBOUND',
     berth: 'T1 B07',
-    eta: '15 Sep, 08:00 UTC',
-    departure: '15 Sep, 22:00 UTC',
+    eta: '2026-09-15T08:00:00Z',
+    departure: '2026-09-15T22:00:00Z',
     containers: 164,
-    connections: 74,
+    connections: 90,
     risk: 'MEDIUM',
-    x: 36,
-    y: 72,
   },
 ]
 
@@ -632,3 +611,359 @@ export const OFFLINE_OPENING_STEPS: OfflineStep[] = [
     },
   },
 ]
+
+// --- Act 2 offline fallback -------------------------------------------------
+//
+// The Crisis Benchmark page has to stay legible when the API is unreachable
+// (the same offline-fallback convention as the mocks above). These curves are
+// hand-shaped illustrations, not the simulator's output: the page labels itself
+// OFFLINE ILLUSTRATION whenever it is showing them, and the real run replaces
+// every figure the moment the backend answers.
+//
+// The shapes are kept in the same relation as the real benchmark's: the
+// reconstructed 2024 curve peaks at 7 days, and the two simulated arms peak
+// far below it because the recorded arrival stream measures throughput, which
+// congestion suppresses. An offline mock that had the simulation matching the
+// recorded peak would rehearse a claim the benchmark explicitly does not make.
+
+/** The honesty statement the backend attaches to every result, mirrored here. */
+const BENCHMARK_NOTICE =
+  'A controlled policy comparison, not a reproduction of history. The reactive baseline ' +
+  'and CASCADE arms are discrete-event simulations of the recorded 2024 arrival stream, ' +
+  'run blind: no arm can read a day it has not yet reached. They share one world, one ' +
+  'calibration and one stream, and differ only in policy, so the comparison between them ' +
+  'is the result this benchmark stands behind. The recorded arm is a reconstruction, not a ' +
+  'measurement. The simulation does not reproduce the recorded 2024 congestion and is not ' +
+  'claimed to: the recorded daily port calls and volumes measure throughput, ' +
+  'which congestion suppresses. The recorded anchors are published alongside the simulated ' +
+  'figures so that gap stays visible.'
+
+/**
+ * Shown in place of the backend's playback notice when the API is unreachable.
+ * Kept separate from `BenchmarkResult.notice`: one says how the curves were
+ * obtained, the other says what the benchmark does and does not claim.
+ */
+export const OFFLINE_BENCHMARK_NOTICE =
+  'OFFLINE ILLUSTRATION. The API is unreachable, so these curves are hand-shaped ' +
+  'placeholders, not simulator output.'
+
+const BENCHMARK_DAYS = 153
+const BENCHMARK_START = Date.UTC(2024, 3, 1)
+
+interface ArmShape {
+  arm: FleetArm
+  label: string
+  base: number
+  peak: number
+  /** Level the curve decays towards after the peak. */
+  settle: number
+  peakDay: number
+  riseWidth: number
+  fallWidth: number
+}
+
+const BENCHMARK_SHAPES: ArmShape[] = [
+  {
+    arm: 'HISTORICAL',
+    label: 'Recorded 2024 (reconstructed)',
+    base: 0.4,
+    peak: 7.0,
+    settle: 0.9,
+    peakDay: 55,
+    riseWidth: 16,
+    fallWidth: 22,
+  },
+  {
+    // The reactive arm never adds capacity, so it plateaus instead of
+    // recovering. Its peak is nowhere near the reconstructed 7 days.
+    arm: 'REACTIVE_BASELINE',
+    label: 'Reactive baseline',
+    base: 0.4,
+    peak: 2.02,
+    settle: 2.02,
+    peakDay: 60,
+    riseWidth: 18,
+    fallWidth: 30,
+  },
+  {
+    arm: 'CASCADE_AGENTIC',
+    label: 'CASCADE agentic',
+    base: 0.4,
+    peak: 1.55,
+    settle: 0.5,
+    peakDay: 52,
+    riseWidth: 15,
+    fallWidth: 14,
+  },
+]
+
+/** The controller reviews policy weekly, so most epochs end in a HOLD. */
+const CASCADE_EPOCH_DAYS = 7
+const RESERVE_DECISION_DAY = 28
+/** Conservative Keppel reactivation lead, the same one the engine enforces. */
+const RESERVE_LEAD_DAYS = 14
+const RESERVE_EFFECTIVE_DAY = RESERVE_DECISION_DAY + RESERVE_LEAD_DAYS
+
+function benchmarkDate(index: number): string {
+  return new Date(BENCHMARK_START + index * 86_400_000).toISOString().slice(0, 10)
+}
+
+function shapedWait(shape: ArmShape, index: number): number {
+  const rising = index <= shape.peakDay
+  const width = rising ? shape.riseWidth : shape.fallWidth
+  const floor = rising ? shape.base : shape.settle
+  const offset = index - shape.peakDay
+  const bump = Math.exp(-(offset * offset) / (2 * width * width))
+  return Number((floor + (shape.peak - floor) * bump).toFixed(2))
+}
+
+function mockDaily(shape: ArmShape): DailyKpi[] {
+  return Array.from({ length: BENCHMARK_DAYS }, (_, index) => {
+    const wait = shapedWait(shape, index)
+    const queue = Math.round(wait * 12)
+    return {
+      date: benchmarkDate(index),
+      day_index: index,
+      arrivals: 14,
+      berthings: 14,
+      departures: 14,
+      queue_length: queue,
+      mean_wait_days: wait,
+      rolling_wait_days: wait,
+      // Derived from the reserve decision below rather than stated twice, so
+      // the extra berths appear exactly when the mock says they were ordered.
+      active_berths:
+        shape.arm === 'CASCADE_AGENTIC' && index >= RESERVE_EFFECTIVE_DAY ? 46 : 42,
+      teu_waiting: queue * 1500,
+      utilisation: Number(Math.min(0.99, 0.72 + wait * 0.03).toFixed(2)),
+    }
+  })
+}
+
+/**
+ * The offline demo used to drop the decision panel entirely, which read as
+ * "CASCADE did nothing" rather than "the backend is unreachable". These are the
+ * weekly epochs of the agentic arm: three levers and a HOLD on every other
+ * week, the same shape the scripted controller produces on a real run.
+ */
+function mockDecisions(daily: DailyKpi[]): RecordedDecision[] {
+  const decisions: RecordedDecision[] = []
+  for (let index = 0; index < daily.length; index += CASCADE_EPOCH_DAYS) {
+    const common = { date: daily[index].date, day_index: index, accepted: true, source: 'SCRIPTED' as const }
+    if (index === RESERVE_DECISION_DAY) {
+      decisions.push({
+        ...common,
+        agent: 'Yard Agent',
+        decision: {
+          type: 'ACTIVATE_RESERVE_BERTHS',
+          tranche_id: 'keppel-reserve-1',
+          rationale: `Rolling wait is climbing; ordering the Keppel tranche now so it is live in ${RESERVE_LEAD_DAYS} days.`,
+        },
+        effective_date: daily[RESERVE_EFFECTIVE_DAY].date,
+      })
+    } else if (index === 35) {
+      decisions.push({
+        ...common,
+        agent: 'Recovery Agent',
+        decision: {
+          type: 'SET_QUEUE_DISCIPLINE',
+          discipline: 'CONNECTION_WEIGHTED',
+          rationale: 'Backlog is deep enough that connection risk, not arrival order, decides the cost of waiting.',
+        },
+      })
+    } else if (index === 42) {
+      decisions.push({
+        ...common,
+        agent: 'Execution Agent',
+        decision: {
+          type: 'FAST_CONNECTION_MODE',
+          enabled: true,
+          rationale: 'Transhipment boxes are missing their onward sailings; expedite delivery for the connection window.',
+        },
+      })
+    } else {
+      decisions.push({
+        ...common,
+        agent: 'Coordinator Agent',
+        decision: { type: 'HOLD', rationale: 'Queue within tolerance; no lever justified this week.' },
+      })
+    }
+  }
+  return decisions
+}
+
+function mockMetrics(daily: DailyKpi[]): FleetMetrics {
+  const peak = daily.reduce((best, day) =>
+    day.rolling_wait_days > best.rolling_wait_days ? day : best,
+  )
+  // An arm that never crossed the two-day threshold has nothing to recover
+  // from; reporting a recovery date for it would invent an event.
+  const breached = daily.some((day) => day.rolling_wait_days > 2)
+  const recovered = breached
+    ? daily.find((day) => day.day_index > peak.day_index && day.rolling_wait_days <= 2)
+    : undefined
+  const mean = daily.reduce((total, day) => total + day.rolling_wait_days, 0) / daily.length
+  return {
+    peak_wait_days: peak.rolling_wait_days,
+    peak_wait_date: peak.date,
+    recovery_date: recovered?.date ?? null,
+    days_above_two_day_wait: daily.filter((day) => day.rolling_wait_days > 2).length,
+    mean_wait_days: Number(mean.toFixed(2)),
+    mean_port_stay_hours: Number((28 + mean * 18).toFixed(1)),
+    port_stay_inflation_pct: Number((mean * 14).toFixed(1)),
+    vessels_served: 2142,
+    teu_served: 17_400_000,
+    missed_connection_proxy: Math.round(mean * 420),
+    wait_cost_usd: Math.round(mean * 9_600_000),
+  }
+}
+
+function mockArm(shape: ArmShape): ArmResult {
+  const daily = mockDaily(shape)
+  const historical = shape.arm === 'HISTORICAL'
+  return {
+    arm: shape.arm,
+    label: shape.label,
+    provenance: historical ? 'RECONSTRUCTED' : 'SIMULATED',
+    is_simulation: !historical,
+    daily,
+    // The reconstruction is a wait curve and nothing else, so its port-stay
+    // fields are left at zero exactly as the backend leaves them, rather than
+    // shaped into a number no source supports.
+    metrics: historical
+      ? { ...mockMetrics(daily), mean_port_stay_hours: 0, port_stay_inflation_pct: 0 }
+      : mockMetrics(daily),
+    decisions: shape.arm === 'CASCADE_AGENTIC' ? mockDecisions(daily) : [],
+    blind_audit: historical
+      ? null
+      : { total_reads: 153, max_lookahead_seconds: 0, violations: 0, verdict: 'PASS' },
+    calibration: null,
+    caveat: historical
+      ? 'Reconstructed from IMF PortWatch daily port calls, anchored to published 2024 figures.'
+      : null,
+  }
+}
+
+/**
+ * Recorded anchors held next to what the reactive baseline produced. Each row
+ * carries the reason it lands where it does, written from the structure of the
+ * model rather than from the numbers, so a row that happens to fall inside
+ * tolerance still says why that is not agreement.
+ */
+function mockAnchors(baseline: ArmResult): AnchorComparison[] {
+  const lastDay = baseline.daily[baseline.daily.length - 1]
+  const rows: Array<Omit<AnchorComparison, 'within_tolerance'>> = [
+    {
+      anchor_key: 'peak_berthing_delay_days',
+      label: 'Peak berthing delay at Singapore, late May 2024',
+      recorded_value: 7,
+      recorded_provenance: 'RECORDED',
+      simulated_value: baseline.metrics.peak_wait_days,
+      unit: 'days',
+      tolerance: 2,
+      interpretation:
+        'Expected to under-predict. The recorded peak was driven largely by vessels ' +
+        'arriving off-schedule - 90% in 2024 against 77% in 2023 - and PortWatch records ' +
+        'the day a ship arrived, not the day it was due, so that bunching is absent from ' +
+        'the stream the simulation is fed.',
+    },
+    {
+      anchor_key: 'recovered_wait_days',
+      label: 'Average wait time at the port after mitigation',
+      recorded_value: 2,
+      recorded_provenance: 'RECORDED',
+      simulated_value: lastDay.rolling_wait_days,
+      unit: 'days',
+      tolerance: 1,
+      interpretation:
+        'Read with care. This is the baseline wait on the last day of the window, not a ' +
+        'recovery: the reactive arm never recovers, because it never adds capacity. The ' +
+        'recorded port recovered because PSA reactivated Keppel berths and hired around ' +
+        '1,500 staff. Proximity to the recorded figure here is coincidence, not agreement.',
+    },
+    {
+      anchor_key: 'port_stay_inflation_pct',
+      label: 'Vessel port stays at PSA versus the same period in 2023',
+      recorded_value: 22,
+      recorded_provenance: 'RECORDED',
+      simulated_value: baseline.metrics.port_stay_inflation_pct,
+      unit: 'percent',
+      tolerance: 12,
+      interpretation:
+        'Expected to over-predict. The simulated figure compounds the recorded rise in ' +
+        'volume per call with the congestion feedback in the model, while the recorded ' +
+        '+22% is the net outcome at a port that was actively adding capacity throughout ' +
+        'the period.',
+    },
+  ]
+  return rows.map((row) => ({
+    ...row,
+    within_tolerance: Math.abs(row.simulated_value - row.recorded_value) <= row.tolerance,
+  }))
+}
+
+export const MOCK_BENCHMARK_RESULT: BenchmarkResult = (() => {
+  const arms = BENCHMARK_SHAPES.map(mockArm)
+  const baseline = arms[1].metrics
+  const cascade = arms[2].metrics
+  return {
+    benchmark_id: 'offline-benchmark',
+    config: {
+      seed: 42,
+      arms: BENCHMARK_SHAPES.map((shape) => shape.arm),
+      world: {
+        seed: 42,
+        berths: { active_berths: 42, reserve_tranches: [] },
+        service: {
+          base_hours: 2,
+          cranes_per_berth: 4,
+          moves_per_crane_hour: 28,
+          teu_per_move: 1.6,
+          efficiency: 1,
+          congestion_alpha: 0.15,
+          congestion_queue_ref: 20,
+          congestion_cap: 3,
+          surge_alpha_factor: 0.75,
+          surge_efficiency_gain: 0.06,
+          fast_connection_speedup: 0.92,
+        },
+        arrival_jitter_hours: 0,
+        service_rate_multiplier: 1,
+        berth_delta: 0,
+        activation_lead_override_days: null,
+      },
+      brain: 'SCRIPTED',
+      rolling_window_days: 3,
+      recovery_threshold_days: 2,
+      recovery_sustain_days: 5,
+    },
+    calibration_window: { label: 'Pre-crisis calibration', start: '2023-01-01', end: '2024-02-29' },
+    blind_window: { label: 'Red Sea 2024 blind replay', start: '2024-04-01', end: '2024-08-31' },
+    historical_arm_provenance: 'RECONSTRUCTED',
+    arms,
+    comparisons: [
+      {
+        arm: 'CASCADE_AGENTIC',
+        versus: 'REACTIVE_BASELINE',
+        peak_wait_delta_days: Number((cascade.peak_wait_days - baseline.peak_wait_days).toFixed(2)),
+        peak_wait_reduction_pct: Number(
+          (
+            ((baseline.peak_wait_days - cascade.peak_wait_days) / baseline.peak_wait_days) *
+            100
+          ).toFixed(1),
+        ),
+        // The reactive arm never recovers, so there is no recovery gap to
+        // quote; the page says so rather than inventing a day count.
+        recovery_days_saved: null,
+        mean_wait_delta_days: Number((cascade.mean_wait_days - baseline.mean_wait_days).toFixed(2)),
+        wait_cost_delta_usd: cascade.wait_cost_usd - baseline.wait_cost_usd,
+        wins_on_peak: true,
+        wins_on_recovery: true,
+      },
+    ],
+    anchor_comparisons: mockAnchors(arms[1]),
+    fixture_hashes: {},
+    runtime_ms: 0,
+    notice: BENCHMARK_NOTICE,
+  }
+})()

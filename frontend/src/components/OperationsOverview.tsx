@@ -1,22 +1,26 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Anchor,
   ArrowRight,
   Boxes,
   Factory,
+  Ship,
   Snowflake,
+  Warehouse,
   X,
   Zap,
 } from 'lucide-react'
 
 import type {
   ConnectionAnalysis,
+  ScenarioControls,
   ScenarioState,
   WorkflowStage,
   YardForecast,
 } from '../api/types'
 import type { PortVessel, ScenarioPreset } from '../data/demo'
 import { PORT_VESSELS } from '../data/demo'
+import { scenarioPreview } from '../data/scenarioPreview.generated'
 import { formatDateTime, spaced } from '../lib/format'
 
 interface WorkflowStep {
@@ -47,16 +51,17 @@ const STAGE_RANK: Record<WorkflowStage, number> = {
   FAILED: -1,
 }
 
-const REEFER_PLUG_CAPACITY = 450
-
 export interface OperationsOverviewProps {
   scenario: ScenarioState
   preset: ScenarioPreset
+  /** The live control state, which the delay slider can move before a run starts. */
+  controls: ScenarioControls
   stage: WorkflowStage
   analysis?: ConnectionAnalysis | null
   baselineYard?: YardForecast | null
   cursorHour?: number
   onStageSelect?: (stage: WorkflowStage) => void
+  onVesselSelect?: (vessel: PortVessel | null) => void
 }
 
 interface InfrastructureSelection {
@@ -81,60 +86,71 @@ function riskStatus(vessel: PortVessel): string {
 export function OperationsOverview({
   scenario,
   preset,
+  controls,
   stage,
   analysis = null,
   baselineYard = null,
   cursorHour = 0,
   onStageSelect,
+  onVesselSelect,
 }: OperationsOverviewProps) {
+  const [selectedVesselId, setSelectedVesselId] = useState<string | null>(null)
   const [selectedInfrastructure, setSelectedInfrastructure] =
     useState<InfrastructureSelection | null>(null)
   const [layers, setLayers] = useState({ connections: true, yard: true, reefers: true })
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
 
+  const selectedVessel =
+    PORT_VESSELS.find((vessel) => vessel.id === selectedVesselId) ?? null
   const inboundVessel = PORT_VESSELS.find((vessel) => vessel.role === 'INBOUND')
   const currentRank = STAGE_RANK[stage]
+
+  // Before a run there is no analysis, so the panel shows what the engine will
+  // produce for the current controls. Preview and result are the same numbers
+  // from the same computation, so starting the run no longer changes them.
+  const preview = scenarioPreview(controls.delay_hours, controls.priority_emphasis)
   const affectedContainers = analysis
     ? analysis.groups.reduce((total, group) => total + group.container_count, 0)
-    : preset.affected
-  const atRiskContainers = analysis?.at_risk_count ?? preset.atRisk
-  const expectedMisses = analysis?.missed_count ?? preset.expectedMisses
+    : preview.affected
+  const atRiskContainers = analysis?.at_risk_count ?? preview.atRisk
+  const expectedMisses = analysis?.missed_count ?? preview.missed
 
   const cargoBreakdown = useMemo(() => {
-    const priorityOne = Math.round(affectedContainers * 0.1)
-    const priorityTwo = Math.round(affectedContainers * 0.15)
+    const counts = analysis
+      ? analysis.groups.reduce<Record<string, number>>((totals, group) => {
+          totals[group.cargo_type] = (totals[group.cargo_type] ?? 0) + group.container_count
+          return totals
+        }, {})
+      : preview.cargo
     return [
       {
         priority: 1,
         label: 'Refrigerated medicine',
-        count: priorityOne,
+        count: counts.PHARMA_REEFER ?? 0,
         description: 'Highest priority. Electrical plug capacity is protected first.',
         icon: Snowflake,
       },
       {
         priority: 2,
         label: 'Time-critical manufacturing cargo',
-        count: priorityTwo,
+        count: counts.TIME_CRITICAL_MANUFACTURING ?? 0,
         description: 'Components needed to keep a production line moving.',
         icon: Factory,
       },
       {
         priority: 3,
         label: 'Standard dry cargo',
-        count: affectedContainers - priorityOne - priorityTwo,
+        count: counts.GENERAL_DRY ?? 0,
         description: 'Cargo that can usually tolerate a longer onward delay.',
         icon: Boxes,
       },
     ]
-  }, [affectedContainers])
+  }, [analysis, preview.cargo])
 
   const yardBlocks = useMemo(() => {
     if (!baselineYard) {
-      return [
-        { id: 'YB1', occupancy: Math.max(48, preset.yardPeak - 16) },
-        { id: 'YB2', occupancy: Math.max(52, preset.yardPeak - 9) },
-        { id: 'YB3', occupancy: preset.yardPeak },
-        { id: 'YB4', occupancy: Math.max(45, preset.yardPeak - 21) },
-      ]
+      return preview.blocks.map((block) => ({ id: block.id, occupancy: block.peak }))
     }
 
     return baselineYard.blocks.map((block) => {
@@ -150,7 +166,7 @@ export function OperationsOverview({
         occupancy: Math.round((occupancy / block.container_capacity) * 100),
       }
     })
-  }, [baselineYard, cursorHour, preset.yardPeak])
+  }, [baselineYard, cursorHour, preview.blocks])
 
   const yardPeak = baselineYard
     ? Math.round(
@@ -161,18 +177,76 @@ export function OperationsOverview({
           ),
         ),
       )
-    : preset.yardPeak
+    : preview.yardPeak
   const reeferShortage = baselineYard?.reefer_shortages[0]
-  const reeferDemand = reeferShortage?.required_plugs ?? preset.reeferDemand
-  const reeferCapacity = reeferShortage?.available_plugs ?? REEFER_PLUG_CAPACITY
+  const reeferDemand = reeferShortage?.required_plugs ?? preview.reeferDemand
+  const reeferCapacity = reeferShortage?.available_plugs ?? preview.reeferCapacity
+
+  useEffect(() => {
+    if (!selectedVessel) return
+
+    closeButtonRef.current?.focus()
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      setSelectedVesselId(null)
+      onVesselSelect?.(null)
+      lastTriggerRef.current?.focus()
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [onVesselSelect, selectedVessel])
+
+  const selectVessel = (vessel: PortVessel, trigger: HTMLButtonElement) => {
+    lastTriggerRef.current = trigger
+    setSelectedInfrastructure(null)
+    setSelectedVesselId(vessel.id)
+    onVesselSelect?.(vessel)
+  }
+
+  const closeVesselDetails = () => {
+    setSelectedVesselId(null)
+    onVesselSelect?.(null)
+    lastTriggerRef.current?.focus()
+  }
 
   const inspectInfrastructure = (selection: InfrastructureSelection) => {
+    setSelectedVesselId(null)
+    onVesselSelect?.(null)
     setSelectedInfrastructure(selection)
   }
 
+  const renderVessel = (vessel: PortVessel) => (
+    <button
+      key={vessel.id}
+      type="button"
+      className={`operations-overview__vessel operations-overview__vessel--${vessel.role.toLowerCase()} operations-overview__risk--${vessel.risk.toLowerCase()}`}
+      onClick={(event) => selectVessel(vessel, event.currentTarget)}
+      aria-pressed={selectedVesselId === vessel.id}
+      aria-controls="overview-vessel-details"
+    >
+      <Ship size={18} aria-hidden="true" />
+      <span className="operations-overview__vessel-text">
+        <strong>{vessel.name}</strong>
+        <span className="operations-overview__vessel-meta">
+          <small>{vessel.berth}</small>
+          <em>{vessel.risk}</em>
+        </span>
+      </span>
+    </button>
+  )
+
+  const inboundVessels = PORT_VESSELS.filter((vessel) => vessel.role === 'INBOUND')
+  const alongsideVessels = layers.connections
+    ? PORT_VESSELS.filter((vessel) => vessel.role !== 'INBOUND')
+    : []
+
   return (
     <div className="operations-overview">
-      <section className="operations-overview__situation" aria-labelledby="situation-title">
+      <section
+        className="operations-overview__situation"
+        aria-labelledby="situation-title"
+        data-tour="situation-card"
+      >
         <div className="operations-overview__section-heading">
           <div>
             <h2 id="situation-title">{preset.title}</h2>
@@ -250,7 +324,11 @@ export function OperationsOverview({
         </dl>
       </section>
 
-      <section className="operations-overview__workflow" aria-labelledby="workflow-title">
+      <section
+        className="operations-overview__workflow"
+        aria-labelledby="workflow-title"
+        data-tour="workflow-rail"
+      >
         <div className="operations-overview__section-heading">
           <div>
             <h2 id="workflow-title">Disruption response</h2>
@@ -296,7 +374,11 @@ export function OperationsOverview({
       </section>
 
       <div className="operations-overview__lower-grid">
-        <section className="operations-overview__port" aria-labelledby="port-title">
+        <section
+          className="operations-overview__port"
+          aria-labelledby="port-title"
+          data-tour="port-schematic"
+        >
           <div className="operations-overview__section-heading">
             <div>
               <h2 id="port-title">Port and yard schematic</h2>
@@ -320,10 +402,27 @@ export function OperationsOverview({
             </div>
           </div>
 
+          {/* Three zones in one grid, seaward to inland: the approach channel,
+              the berth line, the yard. Vessels used to be absolutely positioned
+              on hardcoded percentages, which put the outbound calls on top of
+              the yard blocks at every viewport width. Columns cannot overlap,
+              so the collision is now impossible rather than merely tuned away. */}
           <div className="operations-overview__port-canvas">
-            <div className="operations-overview__water" aria-hidden="true">
-              <span>Approach channel</span>
+            <div className="operations-overview__seaward">
+              <div className="operations-overview__channel">
+                <span className="operations-overview__zone-label">Approach channel</span>
+                <div className="operations-overview__vessel-stack">
+                  {inboundVessels.map(renderVessel)}
+                </div>
+              </div>
+              <div className="operations-overview__quayside">
+                <span className="operations-overview__zone-label">Alongside Terminal 1</span>
+                <div className="operations-overview__vessel-stack">
+                  {alongsideVessels.map(renderVessel)}
+                </div>
+              </div>
             </div>
+
             <button
               type="button"
               className="operations-overview__berth"
@@ -338,104 +437,69 @@ export function OperationsOverview({
                 })
               }
             >
-              <Anchor size={16} />
+              <Anchor size={16} aria-hidden="true" />
               <span>Terminal 1 berth line</span>
             </button>
 
-            {PORT_VESSELS.filter(
-              (vessel) => vessel.role === 'INBOUND' || layers.connections,
-            ).map((vessel) => (
-              <button
-                key={vessel.id}
-                type="button"
-                className={`operations-overview__vessel operations-overview__vessel--${vessel.role.toLowerCase()} operations-overview__risk--${vessel.risk.toLowerCase()}`}
-                style={{ left: `${vessel.x}%`, top: `${vessel.y}%` }}
-                aria-label={`${vessel.name}, ${vessel.risk.toLowerCase()} risk, ${vessel.role.toLowerCase()} vessel`}
-                aria-describedby={`vessel-tooltip-${vessel.id}`}
-              >
-                <span className="operations-overview__vessel-core" aria-hidden="true" />
-                <span
-                  className="operations-overview__vessel-tooltip"
-                  id={`vessel-tooltip-${vessel.id}`}
-                  role="tooltip"
+            <div className="operations-overview__terminal">
+              <span className="operations-overview__zone-label">Terminal yard</span>
+              {layers.yard && (
+                <div
+                  className="operations-overview__yard-blocks"
+                  aria-label="Synthetic yard blocks"
                 >
-                  <strong>{vessel.name}</strong>
-                  <span>{vessel.role === 'INBOUND' ? 'Inbound vessel' : 'Outbound vessel'}</span>
-                  <span>{vessel.berth} · {riskStatus(vessel)}</span>
-                  <span>{vessel.eta} · {vessel.containers.toLocaleString()} containers</span>
-                  <span>{vessel.connections.toLocaleString()} onward connections · {vessel.risk} risk</span>
-                </span>
-              </button>
-            ))}
-
-            {layers.yard && (
-            <div className="operations-overview__yard-blocks" aria-label="Synthetic yard blocks">
-              {yardBlocks.map((block) => (
-                <button
-                  type="button"
-                  key={block.id}
-                  className={`operations-overview__yard-block operations-overview__storage-building${
-                    block.occupancy >= 100
-                      ? ' operations-overview__yard-block--critical'
-                      : block.occupancy >= 85
-                        ? ' operations-overview__yard-block--warning'
-                        : ''
-                  }`}
-                  onClick={() =>
-                    inspectInfrastructure({
-                      kind: 'Yard block',
-                      title: `Block ${block.id}`,
-                      status: `${block.occupancy}% occupied near H+${cursorHour}`,
-                      detail:
-                        block.occupancy >= 85
-                          ? 'This block is above the congestion threshold and needs recovery-plan relief.'
-                          : 'This block remains within the modeled operating threshold.',
-                    })
-                  }
-                  aria-label={`Inspect storage building ${block.id}, ${block.occupancy}% occupied`}
-                >
-                  <span className="operations-overview__building" aria-hidden="true">
-                    <span className="operations-overview__building-roof" />
-                    <span className="operations-overview__building-front">
-                      <span /><span /><span />
-                    </span>
-                  </span>
-                  <span className="operations-overview__building-label">
-                    <strong>Storage {block.id}</strong>
-                    <span>{block.occupancy}% occupied</span>
-                  </span>
-                </button>
-              ))}
-              {layers.reefers && (
-              <button
-                type="button"
-                className="operations-overview__yard-block operations-overview__storage-building operations-overview__yard-block--reefer"
-                onClick={() =>
-                  inspectInfrastructure({
-                    kind: 'Reefer rack',
-                    title: 'Refrigerated container racks',
-                    status: `${reeferDemand} of ${reeferCapacity} plugs forecast`,
-                    detail:
-                      reeferDemand > reeferCapacity
-                        ? 'Forecast demand exceeds physical electrical plug capacity.'
-                        : 'Forecast demand stays within reported electrical plug capacity.',
-                  })
-                }
-              >
-                <span className="operations-overview__building" aria-hidden="true">
-                  <span className="operations-overview__building-roof" />
-                  <span className="operations-overview__building-front operations-overview__building-front--reefer">
-                    <Zap size={13} />
-                  </span>
-                </span>
-                <span className="operations-overview__building-label">
-                  <strong>Cold storage</strong>
-                  <span>{reeferDemand} plugs needed</span>
-                </span>
-              </button>
+                  {yardBlocks.map((block) => (
+                    <button
+                      type="button"
+                      key={block.id}
+                      className={`operations-overview__yard-block${
+                        block.occupancy >= 100
+                          ? ' operations-overview__yard-block--critical'
+                          : block.occupancy >= 85
+                            ? ' operations-overview__yard-block--warning'
+                            : ''
+                      }`}
+                      onClick={() =>
+                        inspectInfrastructure({
+                          kind: 'Yard block',
+                          title: `Block ${block.id}`,
+                          status: `${block.occupancy}% occupied near H+${cursorHour}`,
+                          detail:
+                            block.occupancy >= 85
+                              ? 'This block is above the congestion threshold and needs recovery-plan relief.'
+                              : 'This block remains within the modeled operating threshold.',
+                        })
+                      }
+                    >
+                      <Warehouse size={15} aria-hidden="true" />
+                      <strong>{block.id}</strong>
+                      <span>{block.occupancy}% forecast</span>
+                    </button>
+                  ))}
+                  {layers.reefers && (
+                    <button
+                      type="button"
+                      className="operations-overview__yard-block operations-overview__yard-block--reefer"
+                      onClick={() =>
+                        inspectInfrastructure({
+                          kind: 'Reefer rack',
+                          title: 'Refrigerated container racks',
+                          status: `${reeferDemand} of ${reeferCapacity} plugs forecast`,
+                          detail:
+                            reeferDemand > reeferCapacity
+                              ? 'Forecast demand exceeds physical electrical plug capacity.'
+                              : 'Forecast demand stays within reported electrical plug capacity.',
+                        })
+                      }
+                    >
+                      <Zap size={15} aria-hidden="true" />
+                      <strong>Reefer racks</strong>
+                      <span>{reeferDemand} plugs forecast</span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-            )}
           </div>
 
           <div className="operations-overview__risk-legend" aria-label="Vessel risk legend">
@@ -447,7 +511,11 @@ export function OperationsOverview({
           </div>
         </section>
 
-        <section className="operations-overview__cargo" aria-labelledby="cargo-title">
+        <section
+          className="operations-overview__cargo"
+          aria-labelledby="cargo-title"
+          data-tour="cargo-order"
+        >
           <div className="operations-overview__section-heading">
             <div>
               <h2 id="cargo-title">Protection order</h2>
@@ -493,6 +561,71 @@ export function OperationsOverview({
           </div>
         </section>
       </div>
+
+      {selectedVessel && (
+        <aside
+          className="operations-overview__vessel-drawer"
+          id="overview-vessel-details"
+          aria-labelledby="overview-vessel-title"
+        >
+          <div className="operations-overview__vessel-drawer-header">
+            <div>
+              <h2 id="overview-vessel-title">{selectedVessel.name}</h2>
+            </div>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className="operations-overview__vessel-drawer-close"
+              onClick={closeVesselDetails}
+              aria-label="Close vessel details"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
+          <div className={`operations-overview__vessel-risk operations-overview__risk--${selectedVessel.risk.toLowerCase()}`}>
+            <span>{selectedVessel.risk} RISK</span>
+            <strong>{riskStatus(selectedVessel)}</strong>
+          </div>
+          <dl className="operations-overview__vessel-facts">
+            <div>
+              <dt>Vessel ID</dt>
+              <dd>{selectedVessel.id}</dd>
+            </div>
+            <div>
+              <dt>Role</dt>
+              <dd>{selectedVessel.role}</dd>
+            </div>
+            <div>
+              <dt>Estimated arrival</dt>
+              <dd>{formatDateTime(selectedVessel.eta)}</dd>
+            </div>
+            <div>
+              <dt>Departure</dt>
+              <dd>{formatDateTime(selectedVessel.departure)}</dd>
+            </div>
+            <div>
+              <dt>Berth</dt>
+              <dd>{selectedVessel.berth}</dd>
+            </div>
+            <div>
+              <dt>Containers</dt>
+              <dd>{selectedVessel.containers.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt>Connections</dt>
+              <dd>{selectedVessel.connections.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt>Delay status</dt>
+              <dd>{riskStatus(selectedVessel)}</dd>
+            </div>
+            <div>
+              <dt>Current risk</dt>
+              <dd>{selectedVessel.risk}</dd>
+            </div>
+          </dl>
+        </aside>
+      )}
 
       {selectedInfrastructure && (
         <aside

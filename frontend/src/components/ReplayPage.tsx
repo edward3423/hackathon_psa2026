@@ -2,8 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Clock3, Pause, Play, RotateCcw, SkipBack, SkipForward } from 'lucide-react'
 
 import type { TraceEvent } from '../api/types'
-import { formatTime, spaced } from '../lib/format'
-import { DeckVesselMap } from './DeckVesselMap'
+import {
+  DISPLAY_TIME_ZONE_LABEL,
+  formatTime,
+  humanizeOperationalText,
+  spaced,
+} from '../lib/format'
 
 interface ReplayPageProps {
   initialCursor?: number
@@ -32,13 +36,14 @@ export function ReplayPage({
         ? [...events]
             .sort((left, right) => left.sequence - right.sequence)
             .map((event) => ({
-              time: `${formatTime(event.timestamp)} UTC`,
-              label:
+              time: `${formatTime(event.timestamp)} ${DISPLAY_TIME_ZONE_LABEL}`,
+              label: humanizeOperationalText(
                 event.error ??
-                event.result ??
-                event.decision_summary ??
-                event.objective ??
-                spaced(event.kind),
+                  event.result ??
+                  event.decision_summary ??
+                  event.objective ??
+                  spaced(event.kind),
+              ),
               stage: event.stage,
               kind: spaced(event.kind),
               sequence: event.sequence,
@@ -105,12 +110,16 @@ export function ReplayPage({
         </div>
         <div className="replay-position" aria-live="polite" role="status" aria-label="Replay mode">
           <Clock3 aria-hidden="true" size={16} />
-          <span>{live && liveFollow ? 'Following live' : live ? 'Live follow paused' : 'Recorded replay'}</span>
+          <span>
+            {live && liveFollow
+              ? 'Following live'
+              : live
+                ? 'Live follow paused'
+                : 'Recorded replay'}
+          </span>
           <strong>{current.label}</strong>
         </div>
       </header>
-
-      <DeckVesselMap cursor={cursor} eventCount={milestones.length} />
 
       <section className="replay-controls" aria-label="Replay controls">
         <div className="replay-transport">

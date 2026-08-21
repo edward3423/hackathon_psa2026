@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test'
 
 import {
-  navigateTo,
   openDashboard,
   resetBackend,
   resolveReeferDispute,
@@ -18,7 +17,6 @@ test.beforeEach(async ({ request }) => {
 
 test('timeout path: visible error, labeled cached fallback, MEDIUM confidence, approval required', async ({ page }) => {
   await openDashboard(page)
-  await navigateTo(page, 'Recovery')
 
   // Enable the controlled failure (defaults on; assert then keep on).
   const failureToggle = page.getByRole('checkbox', { name: /sailing lookup timeout/i })
@@ -40,7 +38,6 @@ test('timeout path: visible error, labeled cached fallback, MEDIUM confidence, a
   await expect(fallback).toContainText(/medium confidence/i)
 
   // The trace records the tool error itself, not just the summary callout.
-  await navigateTo(page, 'Agents')
   await page.getByRole('button', { name: /execution trace/i }).click()
   const errorRow = page.locator('.trace-list li', { hasText: 'find_alternative_sailings' })
   await expect(errorRow.first()).toContainText(/timed out/i)

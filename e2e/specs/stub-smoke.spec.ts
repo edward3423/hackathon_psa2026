@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test'
 
 import {
-  navigateTo,
   openDashboard,
   resetBackend,
   resolveReeferDispute,
@@ -23,7 +22,6 @@ test.beforeEach(async ({ request }) => {
 
 test('stub run streams trace events and pauses at the dispute', async ({ page }) => {
   await openDashboard(page)
-  await navigateTo(page, 'Agents')
 
   // Before the run: idle indicator and no recorded events.
   await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
@@ -50,7 +48,6 @@ test('stub run streams trace events and pauses at the dispute', async ({ page })
 
 test('reset returns the dashboard to the original scenario state', async ({ page }) => {
   await openDashboard(page)
-  await navigateTo(page, 'Agents')
   await startRun(page)
 
   // Reach the dispute pause, resolve it, then reset mid-run during planning.
@@ -58,7 +55,6 @@ test('reset returns the dashboard to the original scenario state', async ({ page
   await page.getByRole('button', { name: 'Reset' }).click()
 
   await expect(page.getByRole('dialog', { name: /dispute/i })).toBeHidden()
-  await navigateTo(page, 'Agents')
   await expect(page.getByText('0 events')).toBeVisible()
   await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
   await expect(stageReadout(page)).toHaveText('READY')
@@ -67,7 +63,6 @@ test('reset returns the dashboard to the original scenario state', async ({ page
 
 test('reset works while the dispute overlay is open', async ({ page }) => {
   await openDashboard(page)
-  await navigateTo(page, 'Agents')
   await startRun(page)
 
   // The workflow pauses at the dispute; the overlay must not intercept the
@@ -78,6 +73,5 @@ test('reset works while the dispute overlay is open', async ({ page }) => {
 
   await expect(page.getByRole('dialog', { name: /dispute/i })).toBeHidden()
   await expect(stageReadout(page)).toHaveText('READY')
-  await navigateTo(page, 'Agents')
   await expect(page.getByText('IDLE', { exact: true })).toBeVisible()
 })

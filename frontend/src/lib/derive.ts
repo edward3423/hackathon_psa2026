@@ -107,7 +107,11 @@ export function deriveAgentViews(
       if (view.handoffNotes.at(-1) !== note) view.handoffNotes.push(note)
     }
 
+    // Mirrors WorkflowRun.activities() in src/cascade/workflow.py. The two
+    // machines must agree: the polled activities and this live replay describe
+    // the same agent, and a viewer cannot tell which one produced the badge.
     switch (event.kind) {
+      case 'RUN_STARTED':
       case 'AGENT_STARTED':
         view.status = 'RUNNING'
         break
@@ -115,16 +119,20 @@ export function deriveAgentViews(
         if (view.status === 'WAITING') view.status = 'RUNNING'
         break
       case 'AGENT_COMPLETED':
+      case 'RUN_COMPLETED':
         view.status = 'COMPLETED'
         break
       case 'DISPUTE_OPENED':
+      case 'APPROVAL_REQUIRED':
         view.status = 'BLOCKED'
         break
       case 'HUMAN_DECISION':
-        if (view.status === 'BLOCKED') view.status = 'RUNNING'
+        view.status = 'RUNNING'
         break
       case 'ERROR':
-        if (event.error) view.status = 'FAILED'
+        // Only a run-ending error fails an agent. A degraded tool that fell back
+        // to a cached snapshot reports ERROR at its own stage and keeps working.
+        if (event.stage === 'FAILED') view.status = 'FAILED'
         break
       default:
         break

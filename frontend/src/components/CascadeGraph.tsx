@@ -1,15 +1,26 @@
-import { useMemo, type CSSProperties } from 'react'
-import { Background, ReactFlow, type Edge, type Node } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
+import { useMemo } from 'react'
 
-import type { ConnectionAnalysis, ConnectionStatus } from '../api/types'
-import { CARGO_LABEL, groupTotals, STATUS_LABEL } from '../lib/derive'
+import type { CargoType, ConnectionAnalysis, ConnectionStatus } from '../api/types'
+import { groupTotals, STATUS_LABEL } from '../lib/derive'
 
-const STATUS_COLOR: Record<ConnectionStatus, string> = {
-  SAFE: '#51b27c',
-  AT_RISK: '#d7a84a',
-  MISSED: '#e56b61',
-  RESOLVED: '#48a8b5',
+const GRAPH_CARGO_LABEL: Record<CargoType, string> = {
+  PHARMA_REEFER: 'Refrigerated medicine',
+  TIME_CRITICAL_MANUFACTURING: 'Time-critical manufacturing',
+  GENERAL_DRY: 'Standard dry cargo',
+}
+
+const STATUS_CLASS: Record<ConnectionStatus, string> = {
+  SAFE: 'safe',
+  AT_RISK: 'at-risk',
+  MISSED: 'missed',
+  RESOLVED: 'resolved',
+}
+
+const STATUS_ORDER: Record<ConnectionStatus, number> = {
+  MISSED: 0,
+  AT_RISK: 1,
+  RESOLVED: 2,
+  SAFE: 3,
 }
 
 interface CascadeGraphProps {
@@ -18,127 +29,45 @@ interface CascadeGraphProps {
   analysis: ConnectionAnalysis | null
 }
 
-function vesselNodeStyle(accent: string): CSSProperties {
-  return {
-    background: '#111c24',
-    color: '#e8eff3',
-    border: `1px solid ${accent}`,
-    borderRadius: 2,
-    fontSize: 12,
-    width: 172,
-    padding: '10px 12px',
-  }
-}
-
+/**
+ * A readable connection map rather than a force-fitted node diagram.
+ *
+ * The old canvas tried to fit all 23 cargo groups and their edges into one
+ * viewport. At desktop sizes that reduced labels to a few visible pixels and
+ * left most of the canvas empty. Grouping the same facts into one lane per
+ * onward vessel preserves the flow while keeping every label at normal size.
+ */
 export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGraphProps) {
-  const { nodes, edges } = useMemo(() => {
-    const nodes: Node[] = [
-      {
-        id: 'inbound',
-        position: { x: 0, y: 40 },
-        data: {
-          label: (
-            <div className="graph-vessel">
-              <span className="graph-node-kind">DELAYED INBOUND</span>
-              <strong>{inboundVessel}</strong>
-              <span className="graph-node-meta">+{delayHours} h late</span>
-            </div>
-          ),
-        },
-        sourcePosition: 'right',
-        targetPosition: 'left',
-        style: vesselNodeStyle('#d7a84a'),
-        draggable: false,
-      } as Node,
-    ]
-    const edges: Edge[] = []
-
-    if (!analysis) return { nodes, edges }
-
-    const vessels = [...new Set(analysis.groups.map((group) => group.onward_vessel))]
-    const groupGapY = 74
-    const totalGroupHeight = analysis.groups.length * groupGapY
-    const vesselGapY = Math.max(120, totalGroupHeight / Math.max(vessels.length, 1))
-
-    // Center the inbound node against the group column.
-    nodes[0].position = { x: 0, y: Math.max(0, totalGroupHeight / 2 - 30) }
-
-    vessels.forEach((vessel, index) => {
-      nodes.push({
-        id: `vessel:${vessel}`,
-        position: { x: 640, y: index * vesselGapY + 10 },
-        data: {
-          label: (
-            <div className="graph-vessel">
-              <span className="graph-node-kind">OUTBOUND</span>
-              <strong>{vessel}</strong>
-            </div>
-          ),
-        },
-        sourcePosition: 'right',
-        targetPosition: 'left',
-        style: vesselNodeStyle('#354652'),
-        draggable: false,
-      } as Node)
-    })
-
-    analysis.groups.forEach((group, index) => {
-      const id = `group:${group.onward_vessel}:${group.cargo_type}:${group.status}`
-      const color = STATUS_COLOR[group.status]
-      nodes.push({
-        id,
-        position: { x: 300, y: index * groupGapY },
-        data: {
-          label: (
-            <div className="graph-group">
-              <strong>
-                {group.container_count} x {CARGO_LABEL[group.cargo_type] ?? group.cargo_type}
-              </strong>
-              <span className="graph-status" style={{ color }}>
-                {STATUS_LABEL[group.status]}
-              </span>
-            </div>
-          ),
-        },
-        sourcePosition: 'right',
-        targetPosition: 'left',
-        style: {
-          background: '#15212a',
-          color: '#e8eff3',
-          border: `1px solid ${color}`,
-          borderRadius: 2,
-          fontSize: 11,
-          width: 196,
-          padding: '8px 10px',
-        },
-        draggable: false,
-      } as Node)
-
-      edges.push({
-        id: `in-${id}`,
-        source: 'inbound',
-        target: id,
-        style: { stroke: color, strokeWidth: 1.4 },
-      })
-      edges.push({
-        id: `out-${id}`,
-        source: id,
-        target: `vessel:${group.onward_vessel}`,
-        style: { stroke: color, strokeWidth: 1.4 },
-        animated: group.status === 'AT_RISK',
-      })
-    })
-
-    return { nodes, edges }
-  }, [inboundVessel, delayHours, analysis])
+  const lanes = useMemo(() => {
+    if (!analysis) return []
+    const byVessel = new Map<string, ConnectionAnalysis['groups']>()
+    for (const group of analysis.groups) {
+      const groups = byVessel.get(group.onward_vessel) ?? []
+      groups.push(group)
+      byVessel.set(group.onward_vessel, groups)
+    }
+    return [...byVessel.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([vessel, groups]) => ({
+        vessel,
+        groups: [...groups].sort(
+          (left, right) =>
+            STATUS_ORDER[left.status] - STATUS_ORDER[right.status] ||
+            left.cargo_type.localeCompare(right.cargo_type),
+        ),
+        total: groups.reduce((sum, group) => sum + group.container_count, 0),
+      }))
+  }, [analysis])
 
   const totals = analysis ? groupTotals(analysis) : null
+  const affected = totals ? totals.safe + totals.atRisk + totals.missed + totals.resolved : 0
 
   return (
     <section className="graph-panel" aria-labelledby="graph-title">
       <div className="panel-heading">
         <div>
           <h2 id="graph-title">Connection flows</h2>
+          <p className="panel-description">Grouped by onward vessel, cargo, and transfer risk.</p>
         </div>
         {totals && (
           <dl className="graph-totals">
@@ -162,29 +91,55 @@ export function CascadeGraph({ inboundVessel, delayHours, analysis }: CascadeGra
         )}
       </div>
 
-      <div className="graph-canvas">
-        <ReactFlow
-          key={analysis ? `flow-${analysis.groups.length}` : 'flow-empty'}
-          nodes={nodes}
-          edges={edges}
-          fitView
-          fitViewOptions={{ padding: 0.12 }}
-          nodesConnectable={false}
-          elementsSelectable={false}
-          panOnDrag
-          zoomOnScroll={false}
-          minZoom={0.4}
-          maxZoom={1.4}
-        >
-          <Background color="#25333d" gap={22} />
-        </ReactFlow>
-      </div>
+      <div className="connection-map">
+        <article className="connection-map__origin">
+          <span>Delayed inbound</span>
+          <strong>{inboundVessel}</strong>
+          <small>+{delayHours} hours late</small>
+          {analysis && <b>{affected} connecting containers</b>}
+        </article>
 
-      {!analysis && (
-        <p className="panel-placeholder">
-          Grouped container flows appear when connection analysis completes.
-        </p>
-      )}
+        {analysis ? (
+          <>
+            <div className="connection-map__handoff" aria-hidden="true">
+              <span />
+              <small>transfer to</small>
+              <span />
+            </div>
+            <div className="connection-map__lanes" aria-label="Connections grouped by onward vessel">
+              {lanes.map((lane) => (
+                <article className="connection-lane" key={lane.vessel}>
+                  <header>
+                    <div>
+                      <span>Onward vessel</span>
+                      <h3>{lane.vessel}</h3>
+                    </div>
+                    <strong>{lane.total}</strong>
+                  </header>
+                  <ul>
+                    {lane.groups.map((group) => (
+                      <li
+                        className={`connection-group connection-group--${STATUS_CLASS[group.status]}`}
+                        key={`${group.cargo_type}:${group.status}`}
+                      >
+                        <div>
+                          <strong>{group.container_count}</strong>
+                          <span>{GRAPH_CARGO_LABEL[group.cargo_type]}</span>
+                        </div>
+                        <em>{STATUS_LABEL[group.status]}</em>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="panel-placeholder">
+            Grouped container flows appear when connection analysis completes.
+          </p>
+        )}
+      </div>
     </section>
   )
 }

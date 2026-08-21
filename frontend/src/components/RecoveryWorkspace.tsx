@@ -23,7 +23,7 @@ import {
 } from 'recharts'
 
 import type { PlanArchetype, PlanComparison, PlanEvaluation } from '../api/types'
-import { formatMoney, titleCase } from '../lib/format'
+import { formatMoney, humanizeOperationalText, titleCase } from '../lib/format'
 
 interface RecoveryWorkspaceProps {
   comparison: PlanComparison | null
@@ -35,6 +35,17 @@ const SHORT_PLAN_NAME: Record<PlanArchetype, string> = {
   AGGRESSIVE_RUSH: 'Aggressive',
   STANDARD_REBOOK: 'Rebooking',
   OPTIMIZED_HYBRID: 'Hybrid',
+}
+
+function formatRecommendationRationale(value: string): string {
+  return humanizeOperationalText(value)
+    .replace(/costs (\d+(?:\.\d+)?)/g, (_, amount: string) =>
+      `costs ${formatMoney(Number(amount))}`,
+    )
+    .replace(/(\d+(?:\.\d+)?) percent/g, '$1%')
+    .replace(/(\d+) plan\(s\) were/g, (_, count: string) =>
+      `${count} ${count === '1' ? 'plan was' : 'plans were'}`,
+    )
 }
 
 function planRisk(evaluation: PlanEvaluation): 'HIGH' | 'MEDIUM' | 'LOW' {
@@ -99,6 +110,7 @@ function PlanCard({
         evaluation.feasible ? '' : ' is-infeasible'
       }`}
       aria-label={`Recovery plan: ${evaluation.plan.title}`}
+      data-tour={recommended ? 'plan-recommended' : undefined}
     >
       <header className="recovery-plan-header">
         <div>
@@ -140,8 +152,8 @@ function PlanCard({
         <div className="plan-rejections" role="note">
           <strong>Constraint violations</strong>
           <ul>
-            {evaluation.rejection_reasons?.map((reason) => (
-              <li key={reason}>{reason}</li>
+            {evaluation.rejection_reasons?.map((reason, index) => (
+              <li key={index}>{humanizeOperationalText(reason)}</li>
             ))}
           </ul>
         </div>
@@ -198,10 +210,10 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
                   <span>{action.target_sailing ?? action.onward_vessel}</span>
                 </div>
                 <p>
-                  {action.container_count} {titleCase(action.cargo_type)} containers from{' '}
+                  {action.container_count} {humanizeOperationalText(action.cargo_type)} containers from{' '}
                   {action.onward_vessel}.
                 </p>
-                <p className="action-rationale">{action.rationale}</p>
+                <p className="action-rationale">{humanizeOperationalText(action.rationale)}</p>
               </li>
             ))}
           </ol>
@@ -214,8 +226,8 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         <h3 id="plan-assumptions-title">Assumptions and warnings</h3>
         {(plan.assumptions?.length ?? 0) > 0 ? (
           <ul className="assumption-list">
-            {plan.assumptions?.map((assumption) => (
-              <li key={assumption}>{assumption}</li>
+            {plan.assumptions?.map((assumption, index) => (
+              <li key={index}>{humanizeOperationalText(assumption)}</li>
             ))}
           </ul>
         ) : (
@@ -223,8 +235,8 @@ function PlanDrawer({ evaluation, onClose }: { evaluation: PlanEvaluation; onClo
         )}
         {(evaluation.rejection_reasons?.length ?? 0) > 0 && (
           <ul className="warning-list">
-            {evaluation.rejection_reasons?.map((reason) => (
-              <li key={reason}>{reason}</li>
+            {evaluation.rejection_reasons?.map((reason, index) => (
+              <li key={index}>{humanizeOperationalText(reason)}</li>
             ))}
           </ul>
         )}
@@ -294,7 +306,7 @@ export function RecoveryWorkspace({
         </span>
       </header>
 
-      <div className="deterministic-notice" role="note">
+      <div className="deterministic-notice" role="note" data-tour="deterministic-notice">
         <ShieldCheck aria-hidden="true" size={20} />
         <div>
           <strong>Deterministic Plan Evaluation</strong>
@@ -302,11 +314,16 @@ export function RecoveryWorkspace({
             AI agents propose actions. Deterministic Python engines calculate every numerical
             outcome and enforce physical constraints.
           </p>
+          <p>
+            Every figure on this page is what a plan is projected to achieve. The Connections and
+            Reefers pages report the pre-recovery baseline it is measured against, so the two sets
+            of numbers are not expected to match.
+          </p>
         </div>
         <span className="calculated-badge">Calculated by deterministic engine</span>
       </div>
 
-      <div className="recovery-plan-grid">
+      <div className="recovery-plan-grid" data-tour="plan-cards">
         {comparison.evaluations.map((evaluation) => (
           <PlanCard
             key={evaluation.plan.archetype}
@@ -321,9 +338,11 @@ export function RecoveryWorkspace({
         ))}
       </div>
 
-      <p className="recommendation-rationale">{comparison.rationale}</p>
+      <p className="recommendation-rationale">
+        {formatRecommendationRationale(comparison.rationale)}
+      </p>
 
-      <section className="plan-comparison-panel" aria-labelledby="comparison-title">
+      <section className="plan-comparison-panel" aria-labelledby="comparison-title" data-tour="plan-tradeoffs">
         <header className="panel-heading">
           <div>
             <h3 id="comparison-title">Operational trade-offs</h3>
@@ -338,8 +357,8 @@ export function RecoveryWorkspace({
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
               <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
-              <XAxis dataKey="plan" stroke="#8292a1" fontSize={11} />
-              <YAxis stroke="#8292a1" fontSize={11} width={34} />
+              <XAxis dataKey="plan" stroke="#8292a1" fontSize={12} />
+              <YAxis stroke="#8292a1" fontSize={12} width={34} />
               <Tooltip
                 contentStyle={{
                   background: '#111b24',
@@ -348,7 +367,7 @@ export function RecoveryWorkspace({
                   fontSize: 12,
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#a9b7c3' }} />
+              <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
               <Bar dataKey="Critical cargo protected" fill="#4ea3a8" isAnimationActive={false} />
               <Bar dataKey="Yard peak" fill="#c59a52" isAnimationActive={false} />
               <Bar dataKey="Missed connections" fill="#c86d68" isAnimationActive={false} />

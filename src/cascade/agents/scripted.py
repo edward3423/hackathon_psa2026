@@ -6,17 +6,27 @@ tool results, so nothing displayed is invented here.
 
 import re
 from dataclasses import dataclass
+from datetime import date, timedelta
 from typing import Any
 
 from cascade.agents.base import AgentSummary, PlanBriefing, WorkflowStep
 from cascade.contracts import (
     CargoType,
+    Confidence,
     ConnectionStatus,
+    DecisionSource,
+    FleetDecision,
+    FleetDecisionType,
+    FleetPolicyView,
+    FleetStrategy,
     PlanAction,
     PlanArchetype,
+    QueueDiscipline,
     RecoveryActionType,
     RecoveryPlan,
 )
+from cascade.engine.fleet.berths import LEVER_COOLDOWN_DAYS, MAX_SURGE_LEVEL
+from cascade.engine.fleet.policies import decision_is_satisfied
 
 _TEMPLATES: dict[WorkflowStep, tuple[str, list[str]]] = {
     WorkflowStep.RUN_STARTED: (
@@ -318,3 +328,219 @@ class ScriptedBrain:
                 + [f"Revised after deterministic rejection: {rejection_reasons[0]}"],
             }
         )
+
+
+# ---------------------------------------------------------------------------
+# Act 2: the scored fleet brain.
+#
+# ScriptedFleetBrain is the DEFAULT and the SCORED configuration of the crisis
+# benchmark: the headline result must be reproducible by anyone, offline, with
+# no API key and no model. The live brains exist for the narrative, not for the
+# number.
+# ---------------------------------------------------------------------------
+
+# Thresholds on the 3-day rolling mean wait (days) and on the end-of-day queue
+# length (vessels). Tuned on the synthetic congested window in
+# tests/test_fleet_policies.py, deliberately round and few: a rule set fitted
+# tightly to one arrival stream would not survive the robustness sweep.
+#
+# Capacity is pulled early because it is the slowest lever - a tranche ordered
+# today lands 10-14 days later - while the surge and prioritisation levers act
+# the moment the engine accepts them, so they can afford to wait for a real
+# breach and to stand down promptly.
+FLEET_RESERVE_WAIT_DAYS = 3.0
+FLEET_SURGE_FULL_WAIT_DAYS = 4.0
+FLEET_SURGE_PARTIAL_WAIT_DAYS = 2.5
+FLEET_SURGE_STAND_DOWN_WAIT_DAYS = 1.5
+FLEET_BACKLOG_SWITCH_VESSELS = 25
+FLEET_BACKLOG_CLEAR_VESSELS = 8
+FLEET_FAST_CONNECTION_ON_WAIT_DAYS = 1.5
+FLEET_FAST_CONNECTION_OFF_WAIT_DAYS = 0.75
+
+
+class ScriptedFleetBrain:
+    """Deterministic weekly fleet strategy. No model, no randomness, no clock.
+
+    The rules, in the order they are considered (the menu allows at most four
+    decisions per epoch, and there are exactly four levers):
+
+    1. **Capacity.** Rolling wait at or above ``FLEET_RESERVE_WAIT_DAYS`` with a
+       tranche still available and none already scheduled: activate the next
+       tranche in the engine's order. One at a time - a second tranche is only
+       considered at a later epoch, once the first has landed.
+    2. **Workforce surge.** Level 2 at or above ``FLEET_SURGE_FULL_WAIT_DAYS``,
+       at least level 1 at or above ``FLEET_SURGE_PARTIAL_WAIT_DAYS``, back to 0
+       below ``FLEET_SURGE_STAND_DOWN_WAIT_DAYS``. Between the stand-down and
+       partial thresholds the level is left where it is, so the lever does not
+       oscillate around a single number.
+    3. **Queue discipline.** ``PRIORITY_DISCHARGE`` above
+       ``FLEET_BACKLOG_SWITCH_VESSELS`` waiting vessels, back to ``FCFS`` at or
+       below ``FLEET_BACKLOG_CLEAR_VESSELS``. Shortest-call-first is what drains
+       a backlog; ``CONNECTION_WEIGHTED`` was measured on the synthetic
+       congested window and made the peak rolling wait worse, because ordering
+       by connection volume is close to largest-call-first and holds the whole
+       queue behind the biggest ships.
+    4. **Fast connection mode.** On at or above
+       ``FLEET_FAST_CONNECTION_ON_WAIT_DAYS``, off below
+       ``FLEET_FAST_CONNECTION_OFF_WAIT_DAYS``.
+
+    If no rule fires the answer is ``HOLD``, not filler. The brain also drops
+    any decision the view shows is already satisfied, and any lever still
+    inside the engine's ``LEVER_COOLDOWN_DAYS`` window, so it does not emit
+    decisions it knows the engine will reject.
+    """
+
+    #: Constant: this brain never falls back, because it never calls anything.
+    last_decision_source: DecisionSource = DecisionSource.SCRIPTED
+
+    def __init__(self) -> None:
+        self._last_decided: dict[FleetDecisionType, date] = {}
+
+    def assess_week(self, view: FleetPolicyView) -> FleetStrategy:
+        rolling = view.history[-1].rolling_wait_days if view.history else 0.0
+        backlog = view.history[-1].queue_length if view.history else 0
+        proposed = [
+            *self._capacity(view, rolling),
+            *self._surge(view, rolling),
+            *self._discipline(view, backlog),
+            *self._fast_connection(view, rolling),
+        ]
+        decisions = [
+            decision
+            for decision in proposed
+            if not decision_is_satisfied(decision, view) and not self._in_cooldown(decision, view)
+        ]
+        for decision in decisions:
+            self._last_decided[decision.type] = view.today
+        if not decisions:
+            return FleetStrategy(
+                decisions=[self._hold(view, rolling, backlog)],
+                summary=(
+                    f"Rolling 3-day wait {rolling:.2f} days with {backlog} vessels waiting: "
+                    "inside normal operating limits, every lever stays where it is."
+                ),
+                confidence=Confidence.HIGH,
+            )
+        return FleetStrategy(
+            decisions=decisions,
+            summary=(
+                f"Rolling 3-day wait {rolling:.2f} days with {backlog} vessels waiting on "
+                f"{view.active_berths} active berths: moving {len(decisions)} lever(s)."
+            ),
+            confidence=Confidence.HIGH,
+        )
+
+    # --- rules -------------------------------------------------------------
+
+    def _capacity(self, view: FleetPolicyView, rolling: float) -> list[FleetDecision]:
+        if rolling < FLEET_RESERVE_WAIT_DAYS:
+            return []
+        if view.pending_activations or not view.reserves_available:
+            return []
+        tranche = view.reserves_available[0]
+        return [
+            FleetDecision(
+                type=FleetDecisionType.ACTIVATE_RESERVE_BERTHS,
+                tranche_id=tranche.tranche_id,
+                rationale=(
+                    f"Rolling 3-day wait is {rolling:.2f} days, past the "
+                    f"{FLEET_RESERVE_WAIT_DAYS:.1f}-day capacity trigger. Order tranche "
+                    f"{tranche.tranche_id} ({tranche.berths} berths) now: its "
+                    f"{tranche.activation_lead_days}-day activation lead means berths ordered "
+                    "today do nothing for today's queue."
+                ),
+            )
+        ]
+
+    def _surge(self, view: FleetPolicyView, rolling: float) -> list[FleetDecision]:
+        current = view.workforce_surge_level
+        if rolling >= FLEET_SURGE_FULL_WAIT_DAYS:
+            target = MAX_SURGE_LEVEL
+        elif rolling >= FLEET_SURGE_PARTIAL_WAIT_DAYS:
+            target = max(current, 1)
+        elif rolling < FLEET_SURGE_STAND_DOWN_WAIT_DAYS:
+            target = 0
+        else:
+            target = current
+        if target == current:
+            return []
+        verb = "Raise" if target > current else "Stand down"
+        return [
+            FleetDecision(
+                type=FleetDecisionType.WORKFORCE_SURGE,
+                surge_level=target,
+                rationale=(
+                    f"{verb} workforce surge from level {current} to level {target}: rolling "
+                    f"3-day wait is {rolling:.2f} days against a "
+                    f"{FLEET_SURGE_FULL_WAIT_DAYS:.1f}-day full-surge trigger and a "
+                    f"{FLEET_SURGE_STAND_DOWN_WAIT_DAYS:.1f}-day stand-down level."
+                ),
+            )
+        ]
+
+    def _discipline(self, view: FleetPolicyView, backlog: int) -> list[FleetDecision]:
+        current = view.queue_discipline
+        if backlog > FLEET_BACKLOG_SWITCH_VESSELS:
+            target = QueueDiscipline.PRIORITY_DISCHARGE
+            reason = (
+                f"{backlog} vessels waiting, past the {FLEET_BACKLOG_SWITCH_VESSELS}-vessel "
+                "backlog threshold. Discharge the shortest calls first so berths turn over and "
+                "the queue drains, instead of holding the whole queue behind the largest ships."
+            )
+        elif backlog <= FLEET_BACKLOG_CLEAR_VESSELS:
+            target = QueueDiscipline.FCFS
+            reason = (
+                f"Backlog down to {backlog} vessels, at or below the "
+                f"{FLEET_BACKLOG_CLEAR_VESSELS}-vessel clearance level. Return to first come, "
+                "first served."
+            )
+        else:
+            return []
+        if target is current:
+            return []
+        return [
+            FleetDecision(
+                type=FleetDecisionType.SET_QUEUE_DISCIPLINE, discipline=target, rationale=reason
+            )
+        ]
+
+    def _fast_connection(self, view: FleetPolicyView, rolling: float) -> list[FleetDecision]:
+        if rolling >= FLEET_FAST_CONNECTION_ON_WAIT_DAYS:
+            target = True
+        elif rolling < FLEET_FAST_CONNECTION_OFF_WAIT_DAYS:
+            target = False
+        else:
+            return []
+        if target is view.fast_connection_mode:
+            return []
+        state = "Enable" if target else "Stand down"
+        return [
+            FleetDecision(
+                type=FleetDecisionType.FAST_CONNECTION_MODE,
+                enabled=target,
+                rationale=(
+                    f"{state} fast connection handling: rolling 3-day wait is {rolling:.2f} "
+                    f"days against a {FLEET_FAST_CONNECTION_ON_WAIT_DAYS:.1f}-day congestion "
+                    "trigger."
+                ),
+            )
+        ]
+
+    def _hold(self, view: FleetPolicyView, rolling: float, backlog: int) -> FleetDecision:
+        return FleetDecision(
+            type=FleetDecisionType.HOLD,
+            rationale=(
+                f"Hold the current posture: rolling 3-day wait {rolling:.2f} days, {backlog} "
+                f"vessels waiting, {view.active_berths} berths active, surge level "
+                f"{view.workforce_surge_level}, discipline {view.queue_discipline.value}."
+            ),
+        )
+
+    # --- cooldown ------------------------------------------------------------
+
+    def _in_cooldown(self, decision: FleetDecision, view: FleetPolicyView) -> bool:
+        """Whether this brain pulled the same lever too recently to try again."""
+        previous = self._last_decided.get(decision.type)
+        if previous is None:
+            return False
+        return view.today < previous + timedelta(days=LEVER_COOLDOWN_DAYS + 1)

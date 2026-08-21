@@ -721,6 +721,7 @@ class WorkflowRun:
             for evaluation in comparison.evaluations
             if evaluation.plan.archetype == approval.plan_archetype
         )
+        self.results.approved_plan = approved_plan.archetype
         await self._emit(
             kind=EventKind.HUMAN_DECISION,
             stage=WorkflowStage.EXECUTING,
@@ -943,6 +944,7 @@ class WorkflowRun:
                 None,
             )
             if approved_plan is not None:
+                self.results.approved_plan = approved_plan.archetype
                 actions = toolbox.build_actions(approved_plan)
                 receipts = toolbox.validate_actions(approved_plan, actions)
                 self.results.receipts = receipts

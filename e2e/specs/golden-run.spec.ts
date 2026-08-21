@@ -20,7 +20,6 @@ test.beforeEach(async ({ request }) => {
 
 test('golden run: parallel analysis, dispute resolution, three plans, approval, receipts', async ({ page }) => {
   await openDashboard(page)
-  await navigateTo(page, 'Agents')
   await startRun(page)
 
   // Parallel specialist work: Impact and Yard agent cards are both active

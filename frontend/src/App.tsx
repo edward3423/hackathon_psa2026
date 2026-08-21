@@ -21,8 +21,14 @@ import { Sidebar } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
 import { TraceDrawer } from './components/TraceDrawer'
 import { FALLBACK_SCENARIO, SCENARIO_PRESETS, type PageId } from './data/demo'
+import { useBenchmark } from './hooks/useBenchmark'
 import { useRunStream } from './hooks/useRunStream'
+import { useTour } from './tour/engine'
+import { TourOverlay } from './tour/TourOverlay'
 
+const BenchmarkPage = lazy(() =>
+  import('./components/BenchmarkPage').then((module) => ({ default: module.BenchmarkPage })),
+)
 const CascadeGraph = lazy(() =>
   import('./components/CascadeGraph').then((module) => ({ default: module.CascadeGraph })),
 )
@@ -45,6 +51,11 @@ const RecoveryWorkspace = lazy(() =>
 const ReplayPage = lazy(() =>
   import('./components/ReplayPage').then((module) => ({ default: module.ReplayPage })),
 )
+const SystemStatusPage = lazy(() =>
+  import('./components/SystemStatusPage').then((module) => ({
+    default: module.SystemStatusPage,
+  })),
+)
 const YardOperationsPage = lazy(() =>
   import('./components/YardOperationsPage').then((module) => ({
     default: module.YardOperationsPage,
@@ -56,10 +67,23 @@ const YardForecastPanel = lazy(() =>
   })),
 )
 
+const SYSTEM_MODE_BY_BRAIN = {
+  LIVE_STUB: 'SCRIPTED',
+  LIVE_GEMINI: 'GEMINI',
+  LIVE_CLAUDE: 'CLAUDE',
+} as const
+
+const BRAIN_MODE_BY_SYSTEM = {
+  SCRIPTED: 'LIVE_STUB',
+  GEMINI: 'LIVE_GEMINI',
+  CLAUDE: 'LIVE_CLAUDE',
+} as const
+
 function pageForStage(stage: WorkflowStage): PageId {
   if (stage === 'DISPUTE') return 'agents'
   if (stage === 'PLANNING' || stage === 'AWAITING_APPROVAL') return 'recovery'
   if (stage === 'EXECUTING' || stage === 'COMPLETE') return 'execution'
+  if (stage === 'FAILED') return 'system'
   return 'overview'
 }
 
@@ -86,6 +110,9 @@ function App() {
   const [cursorHour, setCursorHour] = useState(0)
 
   const stream = useRunStream()
+  // Act 2 keeps its own stream. The two never share state, so a benchmark
+  // cannot disturb the golden run and vice versa.
+  const benchmark = useBenchmark()
   const { events, workflow, run, stage, streaming, error, offline, transportState } = stream
 
   useEffect(() => {
@@ -108,7 +135,24 @@ function App() {
   const displayScenario = workflow?.scenario ?? scenario
   const results = workflow?.results ?? null
   const comparison = results?.plan_comparison ?? null
+  // The connection analysis and yard forecast the operational pages render are
+  // the pre-recovery baseline, and the Recovery page reports what the approved
+  // plan projects instead. Manual QA read the two as rival answers to the same
+  // question, so the pages that show the baseline are given the approved plan
+  // and made to say which is which.
+  const approvedEvaluation = useMemo(() => {
+    const archetype = results?.approved_plan
+    if (!archetype || !comparison) return null
+    return (
+      comparison.evaluations.find((evaluation) => evaluation.plan.archetype === archetype) ?? null
+    )
+  }, [comparison, results?.approved_plan])
   const offlineActive = offline || !backendConnected
+
+  // The guided tour drives real runs through the real controls, so every figure
+  // it puts on screen is genuinely computed. That makes the backend a hard
+  // requirement rather than a preference.
+  const tour = useTour({ enabled: !offlineActive })
 
   const selectedPreset = useMemo(() => {
     const preset =
@@ -199,6 +243,18 @@ function App() {
     }
   }
 
+  const startTour = async () => {
+    if (!tour.available) {
+      tour.start()
+      return
+    }
+    // The opening card must describe the state behind it. Starting over a
+    // completed run showed old IDs, completed agents, and COMPLETE while the
+    // narration introduced a disruption that had supposedly just arrived.
+    await resetRun()
+    tour.start()
+  }
+
   const selectScenario = (scenarioId: string) => {
     const preset = SCENARIO_PRESETS.find((candidate) => candidate.id === scenarioId)
     if (!preset) return
@@ -230,6 +286,7 @@ function App() {
             />
             <ConnectionsPage
               analysis={results?.connection_analysis ?? null}
+              approved={approvedEvaluation}
               inboundVessel={displayScenario.alert.vessel_name}
               offline={offlineActive}
             />
@@ -261,11 +318,6 @@ function App() {
       case 'recovery':
         return (
           <div className="recovery-page-stack">
-            <MetricsPanel
-              analysis={results?.connection_analysis ?? null}
-              baselineYard={results?.baseline_yard ?? null}
-              sailings={results?.alternative_sailings ?? null}
-            />
             <RecoveryWorkspace
               comparison={comparison}
               selectedPlan={selectedPlan}
@@ -292,21 +344,53 @@ function App() {
             }
           />
         )
+      case 'benchmark':
+        return <BenchmarkPage benchmark={benchmark} />
+      case 'system':
+        return (
+          <SystemStatusPage
+            backendConnected={backendConnected}
+            sseConnected={transportState === 'CONNECTED' || transportState === 'ENDED'}
+            agentMode={SYSTEM_MODE_BY_BRAIN[brainMode]}
+            onAgentModeChange={(mode) => setBrainMode(BRAIN_MODE_BY_SYSTEM[mode])}
+          />
+        )
       case 'overview':
       default:
         return (
-          <OperationsOverview
-            scenario={displayScenario}
-            preset={selectedPreset}
-            stage={stage}
-            analysis={results?.connection_analysis ?? null}
-            baselineYard={results?.baseline_yard ?? null}
-            cursorHour={cursorHour}
-            onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
-          />
+          <div className="command-center-grid">
+            <OperationsOverview
+              scenario={displayScenario}
+              preset={selectedPreset}
+              controls={workflow?.scenario.controls ?? controls}
+              stage={stage}
+              analysis={results?.connection_analysis ?? null}
+              baselineYard={results?.baseline_yard ?? null}
+              cursorHour={cursorHour}
+              onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
+            />
+            <aside className="command-center-rail" aria-label="Run context">
+              <AgentActivityPanel
+                events={events}
+                activities={workflow?.activities}
+                streaming={streaming}
+              />
+              <MetricsPanel
+                analysis={results?.connection_analysis ?? null}
+                baselineYard={results?.baseline_yard ?? null}
+                sailings={results?.alternative_sailings ?? null}
+              />
+              <TraceDrawer events={events} />
+            </aside>
+          </div>
         )
     }
   }
+
+  // Act 2 is a different demonstration, not a different view of the Act 1 run.
+  // The vessel header, the scenario controls and the run scrubber all describe
+  // one delayed ship, so none of them belong over a five-month fleet replay.
+  const actTwo = activePage === 'benchmark'
 
   return (
     <div className={`app-shell${showApproval ? ' with-approval' : ''}`}>
@@ -330,23 +414,29 @@ function App() {
           offline={offlineActive}
           transportState={transportState}
           eventCount={events.length}
+          showRunContext={!actTwo}
+          subtitle={actTwo ? 'Red Sea 2024 blind replay benchmark' : undefined}
+          tourEnabled={tour.available}
+          onStartTour={() => void startTour()}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
         />
 
-        <ControlsBar
-          controls={controls}
-          brainMode={brainMode}
-          disabled={streaming}
-          onChange={setControls}
-          onBrainModeChange={setBrainMode}
-          onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
-          onStartReplay={() => startRun('DEMO_REPLAY')}
-          onReset={() => void resetRun()}
-          scenarioPresets={SCENARIO_PRESETS}
-          selectedScenarioId={selectedScenarioId}
-          onScenarioSelect={selectScenario}
-        />
+        {!actTwo && (
+          <ControlsBar
+            controls={controls}
+            brainMode={brainMode}
+            disabled={streaming}
+            onChange={setControls}
+            onBrainModeChange={setBrainMode}
+            onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
+            onStartReplay={() => startRun('DEMO_REPLAY')}
+            onReset={() => void resetRun()}
+            scenarioPresets={SCENARIO_PRESETS}
+            selectedScenarioId={selectedScenarioId}
+            onScenarioSelect={selectScenario}
+          />
+        )}
 
         {scenarioError && (
           <p className="offline-banner" role="status">
@@ -362,7 +452,9 @@ function App() {
         <main className="app-content" id="main-content">
           <Suspense fallback={<p className="page-loading">Loading workspace...</p>}>
             {renderPage()}
-            {activePage === 'overview' && (
+            {/* The timeline scrubs the 72 hours of one Act 1 vessel run. The Act 2
+                benchmark spans 153 days, so this control does not belong there. */}
+            {!actTwo && (
               <OperationsTimeline
                 cursorHour={cursorHour}
                 onCursorChange={setCursorHour}
@@ -390,6 +482,8 @@ function App() {
           onDecide={decideApproval}
         />
       )}
+
+      <TourOverlay tour={tour} />
     </div>
   )
 }

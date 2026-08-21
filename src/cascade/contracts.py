@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Annotated
 
@@ -430,6 +430,11 @@ class RunResults(ContractModel):
     planned_yard: YardForecast | None = None
     alternative_sailings: AlternativeSailingResult | None = None
     plan_comparison: PlanComparison | None = None
+    # Which plan the controller actually approved, so a reader of
+    # connection_analysis can be told it is the pre-recovery baseline and what
+    # the approved plan projects instead. Without it the two read as rival
+    # answers to the same question.
+    approved_plan: PlanArchetype | None = None
     dispatched_actions: list[MockedAction] = Field(default_factory=list)
     receipts: list[ActionReceipt] = Field(default_factory=list)
 
@@ -451,3 +456,489 @@ class ApprovalRequest(ContractModel):
 
 
 WorkflowState.model_rebuild()
+
+
+# ---------------------------------------------------------------------------
+# Act 2: Red Sea 2024 crisis benchmark (fleet scale).
+#
+# Everything below is additive. Act 1 contracts above are frozen: the fleet
+# benchmark never reuses or mutates WorldFixture, ScenarioState, EventKind, or
+# any single-vessel model. Where a concept has both a single-vessel and a fleet
+# form (events, decisions, results), the fleet form gets its own name.
+# ---------------------------------------------------------------------------
+
+# Several models below carry a field literally named `date`, which shadows the
+# imported type inside those class bodies. This alias keeps the type reachable.
+DateValue = date
+
+
+class FleetArm(StrEnum):
+    """One line on the benchmark chart."""
+
+    HISTORICAL = "HISTORICAL"
+    REACTIVE_BASELINE = "REACTIVE_BASELINE"
+    CASCADE_AGENTIC = "CASCADE_AGENTIC"
+    CASCADE_NO_EXTRA_CAPACITY = "CASCADE_NO_EXTRA_CAPACITY"
+
+
+class SeriesProvenance(StrEnum):
+    """How a displayed number came to exist. Never inferred, always carried."""
+
+    RECORDED = "RECORDED"
+    RECONSTRUCTED = "RECONSTRUCTED"
+    SIMULATED = "SIMULATED"
+
+
+class QueueDiscipline(StrEnum):
+    FCFS = "FCFS"
+    CONNECTION_WEIGHTED = "CONNECTION_WEIGHTED"
+    PRIORITY_DISCHARGE = "PRIORITY_DISCHARGE"
+
+
+class FleetDecisionType(StrEnum):
+    ACTIVATE_RESERVE_BERTHS = "ACTIVATE_RESERVE_BERTHS"
+    SET_QUEUE_DISCIPLINE = "SET_QUEUE_DISCIPLINE"
+    FAST_CONNECTION_MODE = "FAST_CONNECTION_MODE"
+    WORKFORCE_SURGE = "WORKFORCE_SURGE"
+    HOLD = "HOLD"
+
+
+class FleetBrainMode(StrEnum):
+    """Which brain supplies weekly strategy. SCRIPTED is the scored default."""
+
+    SCRIPTED = "SCRIPTED"
+    LIVE_GEMINI = "LIVE_GEMINI"
+    LIVE_CLAUDE = "LIVE_CLAUDE"
+
+
+class DecisionSource(StrEnum):
+    SCRIPTED = "SCRIPTED"
+    MODEL = "MODEL"
+    SCRIPTED_FALLBACK = "SCRIPTED_FALLBACK"
+
+
+class AuditVerdict(StrEnum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+
+
+# --- Arrival stream fixture -------------------------------------------------
+
+
+class DateWindow(ContractModel):
+    label: str
+    start: date
+    end: date
+
+
+class VesselArrival(ContractModel):
+    """One synthesised vessel call on a recorded arrival day.
+
+    Counts per day come from IMF PortWatch. Per-vessel sizes do not exist in
+    any public source and are synthesised from a seeded distribution fitted on
+    the calibration window only.
+    """
+
+    vessel_id: str
+    arrival: datetime
+    teu: Annotated[float, Field(gt=0)]
+    connection_teu: Annotated[float, Field(ge=0)]
+
+
+class ArrivalDay(ContractModel):
+    date: date
+    portcalls_container: Annotated[int, Field(ge=0)]
+    arrivals: list[VesselArrival]
+
+
+class CalibrationSlice(ContractModel):
+    """Pre-crisis days. The only slice the calibrator will accept."""
+
+    window: DateWindow
+    days: list[ArrivalDay]
+
+
+class BlindSlice(ContractModel):
+    """Crisis days. Reachable only through BlindFeed, never by the calibrator."""
+
+    window: DateWindow
+    days: list[ArrivalDay]
+
+
+class ArrivalStreamFixture(ContractModel):
+    seed: int
+    source: str
+    source_url: str
+    generated_by: str
+    calibration: CalibrationSlice
+    blind: BlindSlice
+    synthesis_notice: str
+
+
+# --- Ground truth -----------------------------------------------------------
+
+
+class GroundTruthAnchor(ContractModel):
+    key: str
+    label: str
+    value: float
+    unit: str
+    provenance: SeriesProvenance
+    source: str
+    source_date: date
+    url: str
+
+
+class HistoricalWaitPoint(ContractModel):
+    date: date
+    wait_days: Annotated[float, Field(ge=0)]
+
+
+class GroundTruthFixture(ContractModel):
+    anchors: list[GroundTruthAnchor]
+    historical_wait_curve: list[HistoricalWaitPoint]
+    historical_curve_provenance: SeriesProvenance = SeriesProvenance.RECONSTRUCTED
+    historical_curve_method: str
+    charter_rate_usd_per_day: Annotated[float, Field(ge=0)]
+    notice: str
+
+
+class FixtureManifest(ContractModel):
+    """SHA-256 of every crisis input, embedded in each BenchmarkResult."""
+
+    hashes: dict[str, str]
+    generated_by: str
+
+
+# --- World configuration ----------------------------------------------------
+
+
+class ReserveBerthTranche(ContractModel):
+    tranche_id: str
+    label: str
+    berths: Annotated[int, Field(gt=0)]
+    activation_lead_days: Annotated[int, Field(ge=0)]
+    available_from: date | None = None
+    basis: str
+
+
+class BerthPoolConfig(ContractModel):
+    active_berths: Annotated[int, Field(gt=0)]
+    reserve_tranches: list[ReserveBerthTranche] = Field(default_factory=list)
+
+
+class ServiceModelConfig(ContractModel):
+    """Vessel service time model. Fitted on the calibration window only."""
+
+    base_hours: Annotated[float, Field(ge=0)]
+    cranes_per_berth: Annotated[float, Field(gt=0)]
+    moves_per_crane_hour: Annotated[float, Field(gt=0)]
+    teu_per_move: Annotated[float, Field(gt=0)]
+    efficiency: Annotated[float, Field(gt=0)]
+    congestion_alpha: Annotated[float, Field(ge=0)]
+    congestion_queue_ref: Annotated[float, Field(gt=0)]
+    congestion_cap: Annotated[float, Field(ge=0)]
+    surge_alpha_factor: Annotated[float, Field(gt=0, le=1)]
+    surge_efficiency_gain: Annotated[float, Field(ge=0)]
+    fast_connection_speedup: Annotated[float, Field(gt=0, le=1)]
+
+
+class FleetWorldConfig(ContractModel):
+    """Parallel to WorldFixture, for the fleet scale. Never replaces it."""
+
+    seed: int
+    berths: BerthPoolConfig
+    service: ServiceModelConfig
+    arrival_jitter_hours: Annotated[float, Field(ge=0)] = 0.0
+    service_rate_multiplier: Annotated[float, Field(gt=0)] = 1.0
+    berth_delta: int = 0
+    activation_lead_override_days: Annotated[int | None, Field(ge=0)] = None
+
+
+# --- Policy interface -------------------------------------------------------
+
+
+class PendingActivation(ContractModel):
+    tranche_id: str
+    berths: Annotated[int, Field(gt=0)]
+    effective_date: date
+
+
+class DailyKpi(ContractModel):
+    date: date
+    day_index: Annotated[int, Field(ge=0)]
+    arrivals: Annotated[int, Field(ge=0)]
+    berthings: Annotated[int, Field(ge=0)]
+    departures: Annotated[int, Field(ge=0)]
+    queue_length: Annotated[int, Field(ge=0)]
+    mean_wait_days: Annotated[float, Field(ge=0)]
+    rolling_wait_days: Annotated[float, Field(ge=0)]
+    active_berths: Annotated[int, Field(ge=0)]
+    teu_waiting: Annotated[float, Field(ge=0)]
+    utilisation: Annotated[float, Field(ge=0)]
+
+
+class FleetPolicyView(ContractModel):
+    """Everything a policy is allowed to see at a decision epoch.
+
+    Deliberately contains no arrival feed, no fixture path, and no day beyond
+    `today`. A policy that wants the future has nowhere to get it.
+    """
+
+    today: date
+    day_index: Annotated[int, Field(ge=0)]
+    history: list[DailyKpi]
+    active_berths: Annotated[int, Field(ge=0)]
+    reserves_available: list[ReserveBerthTranche]
+    pending_activations: list[PendingActivation]
+    queue_discipline: QueueDiscipline
+    fast_connection_mode: bool
+    workforce_surge_level: Annotated[int, Field(ge=0, le=2)]
+
+
+class FleetDecision(ContractModel):
+    """One lever pull. Numeric effect is fixed by the engine, never by a model."""
+
+    type: FleetDecisionType
+    tranche_id: str | None = None
+    discipline: QueueDiscipline | None = None
+    enabled: bool | None = None
+    surge_level: Annotated[int | None, Field(ge=0, le=2)] = None
+    rationale: str
+
+
+class FleetStrategy(ContractModel):
+    decisions: Annotated[list[FleetDecision], Field(max_length=4)]
+    summary: str
+    confidence: Confidence
+
+
+class RecordedDecision(ContractModel):
+    date: date
+    day_index: Annotated[int, Field(ge=0)]
+    agent: AgentName
+    decision: FleetDecision
+    accepted: bool
+    rejection_reason: str | None = None
+    source: DecisionSource
+    effective_date: DateValue | None = None
+
+
+# --- Blind-mode audit -------------------------------------------------------
+
+
+class BlindAuditEntry(ContractModel):
+    day_index: Annotated[int, Field(ge=0)]
+    clock: datetime
+    requested_until: datetime
+    lookahead_seconds: float
+
+
+class BlindAuditSummary(ContractModel):
+    total_reads: Annotated[int, Field(ge=0)]
+    max_lookahead_seconds: float
+    violations: Annotated[int, Field(ge=0)]
+    verdict: AuditVerdict
+    worst_entry: BlindAuditEntry | None = None
+
+
+# --- Calibration ------------------------------------------------------------
+
+
+class CalibrationReport(ContractModel):
+    window: DateWindow
+    fitted: ServiceModelConfig
+    effective_berths: Annotated[int, Field(gt=0)]
+    observed_mean_daily_portcalls: float
+    simulated_mean_daily_portcalls: float
+    throughput_error_pct: float
+    simulated_mean_wait_days: float
+    simulated_mean_port_stay_hours: float
+    erlang_c_wait_days: float
+    utilisation: float
+    passed: bool
+    notes: list[str] = Field(default_factory=list)
+
+
+# --- Results ----------------------------------------------------------------
+
+
+class FleetMetrics(ContractModel):
+    peak_wait_days: Annotated[float, Field(ge=0)]
+    peak_wait_date: date
+    recovery_date: date | None = None
+    days_above_two_day_wait: Annotated[int, Field(ge=0)]
+    mean_wait_days: Annotated[float, Field(ge=0)]
+    mean_port_stay_hours: Annotated[float, Field(ge=0)]
+    port_stay_inflation_pct: float
+    vessels_served: Annotated[int, Field(ge=0)]
+    teu_served: Annotated[float, Field(ge=0)]
+    missed_connection_proxy: Annotated[int, Field(ge=0)]
+    wait_cost_usd: Annotated[float, Field(ge=0)]
+
+
+class ArmResult(ContractModel):
+    arm: FleetArm
+    label: str
+    provenance: SeriesProvenance
+    is_simulation: bool
+    daily: list[DailyKpi]
+    metrics: FleetMetrics
+    decisions: list[RecordedDecision] = Field(default_factory=list)
+    blind_audit: BlindAuditSummary | None = None
+    calibration: CalibrationReport | None = None
+    caveat: str | None = None
+
+
+class ArmComparison(ContractModel):
+    arm: FleetArm
+    versus: FleetArm
+    peak_wait_delta_days: float
+    peak_wait_reduction_pct: float
+    recovery_days_saved: float | None = None
+    mean_wait_delta_days: float
+    wait_cost_delta_usd: float
+    wins_on_peak: bool
+    wins_on_recovery: bool
+
+
+class AnchorComparison(ContractModel):
+    """A recorded scalar held next to what the baseline arm produced.
+
+    ``within_tolerance`` is context, not a grade. The simulation is driven by
+    Singapore's recorded arrival and volume series, and those series measure
+    throughput - which congestion suppresses - rather than the load that caused
+    it. The model therefore cannot be expected to reproduce the recorded crisis,
+    and these rows are published so the gap is visible instead of hidden. See
+    ``BenchmarkResult.notice``.
+    """
+
+    anchor_key: str
+    label: str
+    recorded_value: float
+    recorded_provenance: SeriesProvenance
+    simulated_value: float
+    unit: str
+    tolerance: float
+    within_tolerance: bool
+    #: Why the simulated figure sits where it does relative to the recorded one.
+    #: Always populated, including when the row happens to fall inside tolerance.
+    interpretation: str = ""
+
+
+class BenchmarkConfig(ContractModel):
+    seed: int
+    arms: Annotated[list[FleetArm], Field(min_length=1)]
+    world: FleetWorldConfig
+    brain: FleetBrainMode = FleetBrainMode.SCRIPTED
+    rolling_window_days: Annotated[int, Field(ge=1)] = 3
+    recovery_threshold_days: Annotated[float, Field(gt=0)] = 2.0
+    recovery_sustain_days: Annotated[int, Field(ge=1)] = 5
+
+
+class BenchmarkResult(ContractModel):
+    benchmark_id: str
+    config: BenchmarkConfig
+    calibration_window: DateWindow
+    blind_window: DateWindow
+    historical_arm_provenance: SeriesProvenance
+    arms: list[ArmResult]
+    comparisons: list[ArmComparison]
+    anchor_comparisons: list[AnchorComparison]
+    fixture_hashes: dict[str, str]
+    runtime_ms: Annotated[int, Field(ge=0)]
+    notice: str
+
+
+# --- Robustness sweep -------------------------------------------------------
+
+
+class SweepCell(ContractModel):
+    seed: int
+    variant: str
+    arm: FleetArm
+    peak_wait_days: float
+    recovery_day_index: int | None = None
+    #: Needed to score the cell, not merely to describe it. A ``None`` recovery
+    #: index means "never recovered" only if the arm was ever in breach; with a
+    #: zero count here it means there was nothing to recover from, which is the
+    #: best outcome rather than the worst. See ``benchmark.recovery_rank``.
+    days_above_two_day_wait: int = 0
+    mean_wait_days: float
+
+
+class SweepOutcome(ContractModel):
+    arm: FleetArm
+    versus: FleetArm
+    runs: Annotated[int, Field(ge=1)]
+    wins_on_peak: Annotated[int, Field(ge=0)]
+    wins_on_recovery: Annotated[int, Field(ge=0)]
+    win_rate_peak: Annotated[float, Field(ge=0, le=1)]
+    win_rate_recovery: Annotated[float, Field(ge=0, le=1)]
+    peak_delta_p10: float
+    peak_delta_p50: float
+    peak_delta_p90: float
+
+
+class SweepSummary(ContractModel):
+    seeds: list[int]
+    variants: list[str]
+    cells: list[SweepCell]
+    outcomes: list[SweepOutcome]
+    notice: str
+
+
+# --- Benchmark run and streaming --------------------------------------------
+
+
+class BenchmarkStage(StrEnum):
+    READY = "READY"
+    RUNNING = "RUNNING"
+    COMPLETE = "COMPLETE"
+    FAILED = "FAILED"
+
+
+class BenchmarkEventKind(StrEnum):
+    BENCHMARK_STARTED = "BENCHMARK_STARTED"
+    ARM_STARTED = "ARM_STARTED"
+    DAY_TICK = "DAY_TICK"
+    DECISION_TAKEN = "DECISION_TAKEN"
+    ARM_COMPLETED = "ARM_COMPLETED"
+    BENCHMARK_COMPLETED = "BENCHMARK_COMPLETED"
+    BENCHMARK_FAILED = "BENCHMARK_FAILED"
+
+
+class BenchmarkEvent(ContractModel):
+    event_id: str
+    sequence: Annotated[int, Field(ge=1)]
+    timestamp: datetime
+    kind: BenchmarkEventKind
+    arm: FleetArm | None = None
+    day: DailyKpi | None = None
+    decision: RecordedDecision | None = None
+    message: str
+    error: str | None = None
+
+
+class CreateBenchmarkRequest(ContractModel):
+    seed: int = 42
+    arms: list[FleetArm] | None = None
+    brain: FleetBrainMode = FleetBrainMode.SCRIPTED
+    playback_speed: Annotated[float, Field(gt=0, le=100)] = 1.0
+
+
+class BenchmarkCreated(ContractModel):
+    benchmark_id: str
+    stage: BenchmarkStage
+    events_url: str
+    playback_notice: str
+
+
+class BenchmarkState(ContractModel):
+    benchmark_id: str
+    stage: BenchmarkStage
+    config: BenchmarkConfig
+    events: list[BenchmarkEvent] = Field(default_factory=list)
+    result: BenchmarkResult | None = None
+    playback_notice: str
+    error: str | None = None

@@ -31,6 +31,26 @@ export type EventKind = components['schemas']['EventKind']
 
 export type ModelExchange = components['schemas']['ModelExchange']
 
+// Act 2: the Red Sea 2024 crisis benchmark. A parallel contract family; none of
+// the types above change shape because of it.
+export type FleetArm = components['schemas']['FleetArm']
+export type SeriesProvenance = components['schemas']['SeriesProvenance']
+export type DailyKpi = components['schemas']['DailyKpi']
+export type FleetMetrics = components['schemas']['FleetMetrics']
+export type FleetDecision = components['schemas']['FleetDecision']
+export type RecordedDecision = components['schemas']['RecordedDecision']
+export type BlindAuditSummary = components['schemas']['BlindAuditSummary']
+export type ArmResult = components['schemas']['ArmResult']
+export type ArmComparison = components['schemas']['ArmComparison']
+export type AnchorComparison = components['schemas']['AnchorComparison']
+export type BenchmarkResult = components['schemas']['BenchmarkResult']
+export type BenchmarkStage = components['schemas']['BenchmarkStage']
+export type BenchmarkState = components['schemas']['BenchmarkState']
+export type BenchmarkEvent = components['schemas']['BenchmarkEvent']
+export type BenchmarkEventKind = components['schemas']['BenchmarkEventKind']
+export type BenchmarkCreated = components['schemas']['BenchmarkCreated']
+export type CreateBenchmarkRequest = components['schemas']['CreateBenchmarkRequest']
+
 export type DisputeResolutionRequest = components['schemas']['DisputeResolutionRequest']
 export type ApprovalDecision = components['schemas']['ApprovalDecision']
 export type ApprovalRequest = components['schemas']['ApprovalRequest']

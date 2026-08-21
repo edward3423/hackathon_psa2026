@@ -17,8 +17,5 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
-  },
-  "dependencies": {
-    "mapbox-gl": "^3.28.1"
   }
 }

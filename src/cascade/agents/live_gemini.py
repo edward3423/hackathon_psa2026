@@ -19,19 +19,29 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from cascade.agents.base import (
+    FLEET_PROMPT_NAME,
     AgentBrain,
     AgentSummary,
     PlanBriefing,
     PlanProposalSet,
     PlanRevision,
     WorkflowStep,
+    fleet_strategy_is_well_formed,
+    fleet_strategy_message,
     load_prompt,
     proposal_message,
     revision_message,
     summary_message,
 )
-from cascade.agents.scripted import ScriptedBrain
-from cascade.contracts import AgentName, ModelExchange, RecoveryPlan
+from cascade.agents.scripted import ScriptedBrain, ScriptedFleetBrain
+from cascade.contracts import (
+    AgentName,
+    DecisionSource,
+    FleetPolicyView,
+    FleetStrategy,
+    ModelExchange,
+    RecoveryPlan,
+)
 
 MODEL = "gemini-3.5-flash"
 
@@ -166,6 +176,10 @@ class GeminiBrain:
         self.api_calls = 0
         self.exchanges: list[ModelExchange] = []
         self._client: Any = None
+        # Act 2 only: the deterministic brain this adapter falls back to, and
+        # the source label of the most recent fleet strategy epoch.
+        self._fleet_fallback = ScriptedFleetBrain()
+        self.last_decision_source: DecisionSource = DecisionSource.SCRIPTED
 
     @classmethod
     def create(cls) -> "GeminiBrain":
@@ -198,6 +212,33 @@ class GeminiBrain:
         message = revision_message(plan, rejection_reasons, briefing)
         return self._generate(AgentName.RECOVERY, message, PlanRevision).plan
 
+    # -- FleetBrain interface (Act 2) ------------------------------------------
+
+    def assess_week(self, view: FleetPolicyView) -> FleetStrategy:
+        """One fleet strategy epoch, with a visible scripted fallback.
+
+        Any failure at all - transport, quota, malformed JSON, schema
+        violation, or a decision missing the payload its menu entry requires -
+        hands the epoch to ``ScriptedFleetBrain`` and sets
+        ``last_decision_source`` to ``SCRIPTED_FALLBACK`` so the benchmark can
+        record what actually decided. The model is never given a second, softer
+        chance at the same epoch beyond the retry ``_generate`` already makes.
+        """
+        try:
+            strategy = self._generate(
+                AgentName.COORDINATOR,
+                fleet_strategy_message(view),
+                FleetStrategy,
+                prompt_name=FLEET_PROMPT_NAME,
+            )
+            if not fleet_strategy_is_well_formed(strategy):
+                raise ValueError("fleet strategy contains a decision without its required payload")
+        except Exception:
+            self.last_decision_source = DecisionSource.SCRIPTED_FALLBACK
+            return self._fleet_fallback.assess_week(view)
+        self.last_decision_source = DecisionSource.MODEL
+        return strategy
+
     # -- plumbing ---------------------------------------------------------------
 
     def _get_client(self) -> Any:
@@ -207,14 +248,25 @@ class GeminiBrain:
             self._client = genai.Client(api_key=self._api_key)
         return self._client
 
-    def _generate(self, agent: AgentName, message: str, schema: type[ModelT]) -> ModelT:
+    def _generate(
+        self,
+        agent: AgentName,
+        message: str,
+        schema: type[ModelT],
+        *,
+        prompt_name: str | None = None,
+    ) -> ModelT:
         # JSON mode plus local pydantic validation: the API's schema enforcement
         # rejects the strict (extra=forbid) contract schemas, so the schema is
         # stated in the versioned prompt and validated here, with one retry that
         # feeds the validation error back to the agent.
+        #
+        # `prompt_name` overrides the per-agent Act 1 prompt; it exists so the
+        # Act 2 fleet strategy epoch can reuse this whole call path with its own
+        # versioned prompt. Omitted, behaviour is exactly as before.
         from google.genai import types
 
-        system_instruction = load_prompt(PROMPT_NAMES[agent])
+        system_instruction = load_prompt(prompt_name or PROMPT_NAMES[agent])
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json",

@@ -1,7 +1,7 @@
 import { AlertTriangle, Snowflake, Warehouse } from 'lucide-react'
 
 import type { PlanArchetype, YardForecast } from '../api/types'
-import { formatDateTime, titleCase } from '../lib/format'
+import { formatDateTime, pluralize, titleCase } from '../lib/format'
 import { YardForecastPanel } from './YardForecastPanel'
 
 type YardBlock = YardForecast['blocks'][number]
@@ -182,6 +182,18 @@ function ReeferCapacityView({
         Shortage timing is measured from the start of the 72-hour forecast. The table uses the most
         severe backend shortage record returned for each block.
       </p>
+      {/*
+        A plan can report full critical-cargo protection on the Recovery page and
+        still leave plugs short here. The two measure different things, and manual
+        QA read them as rival answers, so the difference is stated rather than left
+        for the operator to reconcile.
+      */}
+      <p className="yard-cursor-context">
+        A plan is checked for feasibility against the plugs its own rushed powered reefers need.
+        Plug pressure elsewhere in the yard is a condition of the scenario, not a defect in the
+        plan, so a residual shortfall can remain in this table while the Recovery page reports
+        critical cargo fully protected.
+      </p>
       <div
         className="operations-table-region"
         role="region"
@@ -214,7 +226,7 @@ function ReeferCapacityView({
               let plannedResult = 'Not calculated'
               if (planned) {
                 plannedResult = plannedShortage
-                  ? `${shortageSize(plannedShortage)} plugs short from ${relativeHour(
+                  ? `${pluralize(shortageSize(plannedShortage), 'plug')} short from ${relativeHour(
                       plannedShortage.start_time,
                       startTimestamp,
                     )}`
@@ -236,7 +248,7 @@ function ReeferCapacityView({
                   <td>{baselineShortage?.available_plugs.toLocaleString() ?? 'Not reported'}</td>
                   <td>
                     {baselineShortage
-                      ? `${shortageSize(baselineShortage).toLocaleString()} plugs`
+                      ? pluralize(shortageSize(baselineShortage), 'plug')
                       : 'None reported'}
                   </td>
                   <td>{plannedResult}</td>

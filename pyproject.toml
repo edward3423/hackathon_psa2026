@@ -8,9 +8,7 @@ dependencies = [
     "fastapi>=0.116.1,<1.0.0",
     "google-adk>=2.0.0,<3.0.0",
     "pydantic>=2.11.7,<3.0.0",
-    "python-dotenv>=1.2.3",
     "uvicorn[standard]>=0.35.0,<1.0.0",
-    "websockets>=15.0.1",
 ]
 
 [dependency-groups]
@@ -29,10 +27,17 @@ build-backend = "hatchling.build"
 packages = ["src/cascade"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+# "." makes scripts/ importable, so a test can re-run a generator and compare
+# its output to the committed fixture instead of duplicating the generator.
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 filterwarnings = [
     "ignore:BaseAgentConfig is deprecated.*:DeprecationWarning",
+]
+# Marked, not deselected. `slow` tests run in the default suite; the marker
+# exists so a tight edit loop can say `-m "not slow"` deliberately.
+markers = [
+    "slow: pays for a full benchmark calibration (tens of seconds on a cold run)",
 ]
 
 [tool.ruff]
