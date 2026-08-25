@@ -353,6 +353,11 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         title: 'The result, and its limits',
         body: 'CASCADE cut the peak wait against a reactive baseline running the identical engine. The page says in the same breath that this is one pinned run and the robustness claim is the sweep win-rate.',
         until: () => anchorPresent('benchmark-headline'),
+        // The backend fits its calibration once per boot. The boot-time warmup
+        // normally has it cached long before the tour gets here, but if the
+        // recording started seconds after the backend did, the first benchmark
+        // still pays the fit - so this step waits it out instead of stalling.
+        timeoutMs: 120_000,
         dwellMs: 9000,
       },
       {

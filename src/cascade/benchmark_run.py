@@ -119,6 +119,18 @@ def config_from_request(request: CreateBenchmarkRequest) -> BenchmarkConfig:
 BenchmarkRunner = Callable[[BenchmarkConfig], BenchmarkResult]
 
 
+def warm_engine() -> None:
+    """Pay the engine's cold-start costs ahead of the first request.
+
+    The first calibration fit is a coordinate search costing tens of seconds
+    of CPU; every later benchmark reads it from the in-process cache. Calling
+    this at boot moves that wait off the first Run benchmark click.
+    """
+    from cascade.engine.fleet.benchmark import warm_calibration
+
+    warm_calibration(config_from_request(CreateBenchmarkRequest()).world)
+
+
 def default_runner(config: BenchmarkConfig) -> BenchmarkResult:
     """Import the engine lazily so the API module stays cheap to import."""
     from cascade.engine.fleet.benchmark import run_benchmark

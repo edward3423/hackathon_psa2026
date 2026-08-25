@@ -21,6 +21,7 @@ Three honesty rules are enforced here rather than asserted in prose:
 """
 
 import math
+import threading
 import time
 from datetime import date
 from typing import TYPE_CHECKING
@@ -428,6 +429,11 @@ _CALIBRATION_NEUTRAL: dict[str, object] = {
 #: invalidates it rather than silently serving a fit of the old data.
 _CALIBRATION_CACHE: dict[tuple[str, str], CalibrationReport] = {}
 
+#: Single-flight guard for the cache. The fit costs tens of seconds of CPU, so
+#: a benchmark started while the boot-time warmup is still fitting must wait
+#: for that fit rather than race it on a second core.
+_CALIBRATION_LOCK = threading.Lock()
+
 
 def _calibrate_cached(
     slice_: CalibrationSlice, world: FleetWorldConfig, hashes: dict[str, str]
@@ -435,11 +441,19 @@ def _calibrate_cached(
     """``calibrate``, memoised on the fixture hash and the world it fits."""
     base = world.model_copy(update=_CALIBRATION_NEUTRAL)
     key = (hashes.get(f"fixtures/{CRISIS_ARRIVALS_FILE}", ""), base.model_dump_json())
-    cached = _CALIBRATION_CACHE.get(key)
-    if cached is None:
-        cached = calibrate(slice_, base)
-        _CALIBRATION_CACHE[key] = cached
-    return cached
+    with _CALIBRATION_LOCK:
+        cached = _CALIBRATION_CACHE.get(key)
+        if cached is None:
+            cached = calibrate(slice_, base)
+            _CALIBRATION_CACHE[key] = cached
+        return cached
+
+
+def warm_calibration(world: FleetWorldConfig) -> None:
+    """Pay the one-off calibration fit before the first benchmark asks for it."""
+    arrivals = load_crisis_arrivals()
+    manifest = load_crisis_manifest()
+    _calibrate_cached(arrivals.calibration, world, manifest.hashes)
 
 
 def run_benchmark(config: BenchmarkConfig) -> BenchmarkResult:

@@ -1,6 +1,8 @@
 import json
 import os
+import threading
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
@@ -15,6 +17,7 @@ from cascade.benchmark_run import (
     BenchmarkRun,
     BenchmarkStore,
     created_response,
+    warm_engine,
 )
 from cascade.contracts import (
     ApprovalRequest,
@@ -37,10 +40,21 @@ KEEPALIVE_SECONDS = 15.0
 
 load_dotenv()
 
+
+@asynccontextmanager
+async def _lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # The first benchmark calibration fit costs tens of seconds of CPU. Pay it
+    # at boot, off the event loop, so the first Run benchmark click streams as
+    # fast as every later one. A daemon thread so shutdown never waits on it.
+    threading.Thread(target=warm_engine, name="benchmark-warmup", daemon=True).start()
+    yield
+
+
 app = FastAPI(
     title="CASCADE API",
     version=__version__,
     description="Synthetic disruption-recovery demonstration API.",
+    lifespan=_lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
