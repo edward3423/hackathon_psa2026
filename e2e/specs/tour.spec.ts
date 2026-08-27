@@ -131,7 +131,11 @@ test.describe('guided tour', () => {
     await transport.getByRole('button', { name: 'Pause tour' }).click()
 
     await expect(stageReadout(page)).toHaveText('READY')
-    await expect(page.locator('.run-id')).toHaveText('NOT STARTED')
+    // Proof the completed run was actually cleared, not just relabelled. The
+    // run id lives in the debug panel now, which the tour keeps shut, so this
+    // reads the trace count instead - a surface that is always visible, and a
+    // stronger signal than the identifier since it counts real events.
+    await expect(page.locator('.drawer-count')).toHaveText('0 events')
     await expect(page.getByText('Step 1 of 44')).toBeVisible()
   })
 

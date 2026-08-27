@@ -18,7 +18,10 @@ test.beforeEach(async ({ request }) => {
 test('timeout path: visible error, labeled cached fallback, MEDIUM confidence, approval required', async ({ page }) => {
   await openDashboard(page)
 
-  // Enable the controlled failure (defaults on; assert then keep on).
+  // Enable the controlled failure (defaults on; assert then keep on). The
+  // scenario controls moved into the backtick-toggled debug panel, so it has to
+  // be opened before the switch exists.
+  await page.getByRole('button', { name: 'Debug' }).click()
   const failureToggle = page.getByRole('checkbox', { name: /sailing lookup timeout/i })
   await failureToggle.check()
   await expect(failureToggle).toBeChecked()

@@ -1,4 +1,4 @@
-import { ArrowDown, GitFork } from 'lucide-react'
+import { GitFork } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 import type { AgentActivity, AgentName, TraceEvent } from '../api/types'
@@ -25,6 +25,7 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
   const node = (agent: AgentName) => {
     const view = views.find((candidate) => candidate.agent === agent)
     if (!view) return null
+    const tool = view.toolsCalled.at(-1)
     return (
       <button
         // Keyed here rather than at the call site, because the parallel branch
@@ -35,13 +36,14 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
         aria-pressed={selectedAgent === agent}
         onClick={() => setSelectedAgent(agent)}
       >
-        <span>{view.agent.replace(' Agent', '')}</span>
-        <strong>{view.status}</strong>
-        <small>
-          {view.toolsCalled.at(-1)
-            ? humanizeOperationalText(view.toolsCalled.at(-1) ?? '')
-            : 'No tool call'}
-        </small>
+        <span className="agent-topology__node-name">{view.agent.replace(' Agent', '')}</span>
+        <span className="agent-topology__node-state">{view.status}</span>
+        {/* A tool badge only when a tool was actually called. Printing
+            "no tool call" under all five idle nodes gave the loudest line on
+            the diagram to the least information on it. */}
+        {tool && (
+          <span className="agent-topology__node-tool">{humanizeOperationalText(tool)}</span>
+        )}
       </button>
     )
   }
@@ -69,7 +71,7 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
                 node(step)
               )}
               {index < FLOW.length - 1 && (
-                <ArrowDown className="agent-topology__connector" size={18} aria-hidden="true" />
+                <span className="agent-topology__connector" aria-hidden="true" />
               )}
             </div>
           ))}
@@ -83,13 +85,31 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
             </span>
           </header>
           <p>{humanizeOperationalText(selected.objective)}</p>
+          {/*
+            Before this agent has done anything there is nothing to tabulate, and
+            five rows reading "none recorded" filled half the card with the
+            absence of information. Say what will appear here instead.
+          */}
+          {selected.eventCount === 0 ? (
+            <div className="agent-topology__pending">
+              <p>
+                Nothing recorded yet. Once the coordinator hands off, this panel
+                reports the tool this agent called, the evidence it got back, the
+                assumptions it declared, how long it took, and who it hands to
+                next.
+              </p>
+              <p className="agent-topology__pending-hint">
+                Start a run from the Command Center to populate it.
+              </p>
+            </div>
+          ) : (
           <dl>
             <div>
               <dt>Active or latest tool</dt>
               <dd>
                 {selected.toolsCalled.at(-1)
                   ? humanizeOperationalText(selected.toolsCalled.at(-1) ?? '')
-                  : 'None recorded'}
+                  : 'No tool called yet'}
               </dd>
             </div>
             <div>
@@ -114,9 +134,10 @@ export function AgentTopology({ events, activities }: AgentTopologyProps) {
             </div>
             <div>
               <dt>Next handoff</dt>
-              <dd>{selected.nextHandoff ?? 'Not assigned'}</dd>
+              <dd>{selected.nextHandoff ?? 'Set on handoff'}</dd>
             </div>
           </dl>
+          )}
         </aside>
       </div>
     </section>

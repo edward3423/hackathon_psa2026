@@ -67,12 +67,17 @@ export const TOUR_CHAPTERS: TourChapter[] = [
       },
       {
         id: 'controls',
-        // Reset clears any earlier run, so every take starts from the same state.
-        click: 'control-reset',
+        /*
+         * Opens the debug panel, which is closed on load and after a reset. The
+         * tour no longer needs to click Reset here: startTour resets the run
+         * before the first bubble, and that reset is what guarantees the panel
+         * is shut, so this click always opens rather than toggling.
+         */
+        click: 'control-setup',
         anchor: 'controls-bar',
         title: 'The scenario is yours to change',
-        body: 'Six presets, an adjustable delay, a priority emphasis, a choice of agent brain, and a switch that makes a tool time out on purpose. The panel folds itself away once the run starts. The tour leaves every control at its default.',
-        until: () => stageReadout() === 'READY',
+        body: 'Behind a debug panel, on the backtick key: six presets, an adjustable delay, a priority emphasis, a choice of reasoning engine, and a switch that makes a tool time out on purpose. It is rigging rather than operator UI, so it stays out of the way. The tour leaves every control at its default.',
+        until: () => anchorPresent('controls-bar'),
         dwellMs: 5000,
       },
       {

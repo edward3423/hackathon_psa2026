@@ -33,6 +33,7 @@ export const TOUR_ANCHORS = {
   'controls-bar': 'controls-bar',
   'control-start': 'control-start',
   'control-reset': 'control-reset',
+  'control-setup': 'control-setup',
 
   'situation-card': 'situation-card',
   'workflow-rail': 'workflow-rail',

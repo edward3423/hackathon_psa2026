@@ -44,9 +44,13 @@ export function ControlsBar({
     <section
       className="control-strip"
       id="scenario-setup"
-      aria-label="Scenario controls"
+      aria-label="Debug panel"
       data-tour="controls-bar"
     >
+      <p className="control-strip__tag">
+        Debug panel
+        <small>scenario rigging, not operator controls. Press ` to hide.</small>
+      </p>
       <label className="control-field">
         Scenario
         <select
@@ -100,14 +104,14 @@ export function ControlsBar({
       </label>
 
       <label className="control-field">
-        Agent brain
+        Reasoning engine
         <select
-          aria-label="Agent brain"
+          aria-label="Reasoning engine"
           value={brainMode}
           disabled={disabled}
           onChange={(event) => onBrainModeChange(event.target.value as BrainMode)}
         >
-          <option value="LIVE_STUB">Scripted demo</option>
+          <option value="LIVE_STUB">Deterministic (offline)</option>
           <option value="LIVE_CLAUDE">Claude</option>
           <option value="LIVE_GEMINI">Gemini</option>
         </select>
@@ -129,7 +133,7 @@ export function ControlsBar({
           masthead. It is worth reading once per run, not once per glance. */}
       <dl className="control-identity">
         <div>
-          <dt>Run</dt>
+          <dt>Run ID</dt>
           <dd className="run-id">{run?.run_id ?? 'NOT STARTED'}</dd>
         </div>
         <div>
@@ -139,7 +143,7 @@ export function ControlsBar({
               ? 'Recorded replay'
               : run
                 ? spaced(run.mode).replace('LIVE ', '')
-                : 'Scripted simulation'}
+                : 'Deterministic, offline'}
           </dd>
         </div>
         <div>

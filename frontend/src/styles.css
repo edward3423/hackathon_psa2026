@@ -43,6 +43,30 @@
   --sev-warn: #3d3d3d;
   --sev-critical: #111111;
 
+  /*
+   * Semantic state, added on top of the structural encoding rather than
+   * replacing it. Status was legible but only by reading: five identical
+   * WAITING rows and two identical dark borders carried no signal at a glance,
+   * which wastes the strongest channel a dashboard has.
+   *
+   * Structure stays (outlined for attention, inverted for terminal states, the
+   * word always present), so nothing here is colour-alone. Every value is AA on
+   * paper, AA as text on its own 8% tint, and AA inverted with white on it -
+   * measured, not chosen: idle 6.2, active 6.6, done 6.9, attention 5.7,
+   * fail 6.3.
+   */
+  --state-idle: #5f5f5f;
+  --state-active: #0f3bff;
+  --state-done: #166534;
+  --state-attention: #8a5a00;
+  --state-fail: #b3261e;
+
+  --state-idle-tint: #f0efeb;
+  --state-active-tint: #eaecf8;
+  --state-done-tint: #ebefe7;
+  --state-attention-tint: #f4eee3;
+  --state-fail-tint: #f7eae6;
+
   /* Kept as aliases: 80-odd call sites read these names. */
   --bg: var(--paper);
   --sidebar: var(--paper);
@@ -365,14 +389,17 @@ time,
   background: var(--panel);
 }
 
+/* The current section was a 2px edge and a colour shift - too subtle for an app
+   with ten of them. Filled, weighted, and a 3px edge. */
 .operations-sidebar__navigation-button--active {
-  border-left-color: var(--accent);
+  border-left: 3px solid var(--state-active);
   color: var(--ink);
-  background: var(--panel);
+  background: var(--state-active-tint);
+  font-weight: 700;
 }
 
 .operations-sidebar__navigation-button--active svg {
-  color: var(--accent-strong);
+  color: var(--state-active);
 }
 
 .operations-sidebar--collapsed .operations-sidebar__navigation-button {
@@ -431,6 +458,46 @@ time,
   line-height: 1;
   letter-spacing: 0.16em;
   white-space: nowrap;
+}
+
+/* Attribution, sized to sit under the wordmark's weight rather than compete
+   with it. A dropped-in logo is capped at 20px tall so any aspect ratio works. */
+.masthead__attribution {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--rule-soft);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* 26px, not 20: the official mark is 120x63, so at 20px the wordmark inside it
+   renders around 9px and stops being readable. */
+.masthead__attribution img {
+  height: 26px;
+  width: auto;
+  max-width: 110px;
+}
+
+/* For the reversed asset, whose wordmark is white and would otherwise disappear
+   into the paper. The chip is ink so the mark's own red and blue stay true. */
+.masthead__attribution--on-dark img {
+  padding: 4px 7px;
+  background: var(--ink);
+}
+
+.masthead__attribution > span {
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.masthead__attribution small {
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
 }
 
 .replay-badge {
@@ -520,26 +587,40 @@ time,
 }
 
 .stage-dot.done::before {
-  border-color: var(--green);
-  background: var(--green);
+  border-color: var(--state-done);
+  background: var(--state-done);
 }
 
 .stage-dot.current::before {
-  width: 9px;
-  height: 9px;
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
+  width: 10px;
+  height: 10px;
+  border-color: var(--state-active);
+  background: var(--state-active);
 }
 
 .stage-dot.failed::before {
-  border-color: var(--red);
-  background: var(--red);
+  border-color: var(--state-fail);
+  background: var(--state-fail);
+}
+
+.run-state {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* The dots were mystery meat: seven circles with no stated subject. The count
+   names them, and the label removes the READY-versus-NOT-STARTED ambiguity. */
+.run-state > span {
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
 }
 
 .run-state strong {
-  color: var(--amber);
+  color: var(--state-active);
   font-size: var(--text-md);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -548,8 +629,13 @@ time,
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 2px;
   margin-left: auto;
+}
+
+/* A hairline separates the quiet cluster from the primary action. */
+.masthead__actions .primary-action {
+  margin-left: 10px;
 }
 
 .stream-state {
@@ -560,14 +646,16 @@ time,
   color: var(--muted);
 }
 
+/* Secondary by construction: smaller, quieter, and tight together, so the eye
+   reaches the primary action without having to discount four rivals first. */
 .ghost-action {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--muted);
+  color: var(--ink-faint);
   background: transparent;
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -591,6 +679,8 @@ time,
  * window the way the old nowrap row did. It is open at READY and folded away
  * once a run is streaming.
  */
+/* Reads as tooling, not as chrome: a tinted well with a dashed edge, tagged, so
+   nobody mistakes the scenario rigging for an operator control. */
 .control-strip {
   position: relative;
   z-index: 100;
@@ -599,8 +689,26 @@ time,
   align-items: end;
   gap: 10px var(--space-4);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
+  border-bottom: 2px dashed var(--rule-soft);
+  background: var(--panel-alt);
+}
+
+.control-strip__tag {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.control-strip__tag small {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 .control-field {
@@ -728,19 +836,27 @@ time,
 }
 
 /* The one control that stays solid: it has to be the loudest thing on screen. */
+/*
+ * The one saturated element in the masthead. Stripping the 2px edge and the
+ * offset shadow to thin the button row went too far: the app's main call to
+ * action became a flat black rectangle among four text buttons. It is now the
+ * only filled colour up there, a step taller, with a hard offset that returns
+ * on press.
+ */
+/* One layer. The offset shadow underneath was the neo-brutalist tell; the
+   button carries its own weight through fill and size instead. */
 .primary-action {
-  border-color: var(--ink);
+  min-height: 36px;
+  padding: 0 18px;
+  border-color: var(--state-active);
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-active);
+  letter-spacing: 0.01em;
 }
 
 .primary-action:hover:not(:disabled) {
   border-color: var(--accent-ink);
   background: var(--accent-ink);
-}
-
-.primary-action:active:not(:disabled) {
-  translate: 1px 1px;
 }
 
 /* Frosted. On the approval strip and the two dialogs there is real content
@@ -822,11 +938,22 @@ time,
   gap: 16px;
 }
 
+/* Titles were within a hair of their own metadata. A panel title now outranks
+   its labels by size and weight, which is what stops the eye searching. */
 .panel-heading h2,
 .page-section-header h2,
 .operations-overview h2,
 .connections-page h2 {
+  font-size: 1.1875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.panel-heading h3,
+.page-section-header h3,
+.operations-overview h3 {
   font-size: var(--text-lg);
+  font-weight: 750;
 }
 
 .panel-description,
@@ -989,12 +1116,21 @@ time,
   font-size: var(--text-sm);
 }
 
-.operations-overview__metric--warning dd {
-  color: var(--amber);
+/* The figure stays ink; the breach is named under it. */
+.operations-overview__metric-breach {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
-.operations-overview__metric--critical dd {
-  color: var(--red);
+.operations-overview__metric--warning .operations-overview__metric-breach {
+  color: var(--state-attention);
+}
+
+.operations-overview__metric--critical .operations-overview__metric-breach {
+  color: var(--state-fail);
 }
 
 .operations-overview__vessel-facts {
@@ -1281,23 +1417,23 @@ time,
    that inverts. */
 .operations-overview__risk--low em,
 .operations-overview__risk--low {
-  color: var(--sev-ok);
+  color: var(--state-done);
   font-weight: 600;
 }
 
 .operations-overview__risk--medium em,
 .operations-overview__risk--medium {
-  color: var(--sev-warn);
+  color: var(--state-attention);
   font-weight: 700;
 }
 
 .operations-overview__risk--high {
-  color: var(--ink);
+  color: var(--state-attention);
   font-weight: 800;
 }
 
 .operations-overview__risk--high em {
-  color: var(--ink);
+  color: var(--state-attention);
   font-weight: 800;
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -1307,12 +1443,12 @@ time,
 .operations-overview__risk--critical em {
   padding: 0 5px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
   font-weight: 800;
 }
 
 .operations-overview__risk--critical {
-  color: var(--ink);
+  color: var(--state-fail);
   font-weight: 800;
 }
 
@@ -1356,19 +1492,20 @@ time,
  * percentage sits in the block either way, so neither relies on the treatment.
  */
 .operations-overview__yard-block--warning {
-  border: var(--border) solid var(--ink);
+  border: var(--border) solid var(--state-attention);
+  background: var(--state-attention-tint);
 }
 
 .operations-overview__yard-block--warning strong,
 .operations-overview__yard-block--warning span {
-  color: var(--ink);
+  color: var(--state-attention);
   font-weight: 700;
 }
 
 .operations-overview__yard-block--critical {
-  border: var(--border) solid var(--ink);
+  border: var(--border) solid var(--state-fail);
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 .operations-overview__yard-block--critical strong,
@@ -1388,7 +1525,7 @@ time,
 .operations-overview__risk-legend .operations-overview__risk--critical {
   padding: 0 5px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 .operations-overview__risk-legend .operations-overview__risk--high {
@@ -1548,13 +1685,17 @@ time,
   line-height: 1.5;
 }
 
-/* Agent activity and trace */
+/*
+ * The same padding as the dashboard's own sections. At 14px against the main
+ * column's 16px, the text in the rail started two pixels inboard of the text
+ * beside it - not enough to name, enough to read as sloppy.
+ */
 .activity-panel,
 .metrics-panel,
 .trace-drawer,
 .graph-panel,
 .agent-topology {
-  padding: 14px;
+  padding: var(--space-4);
 }
 
 .live-indicator,
@@ -1585,12 +1726,12 @@ time,
 }
 
 .live-indicator.active {
-  color: var(--accent-strong);
+  color: var(--state-active);
 }
 
 .live-indicator.active::before {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--state-active);
+  background: var(--state-active);
 }
 
 /* One row per agent, hairline between. Five bordered cards used to fill the
@@ -1657,42 +1798,83 @@ time,
   border-radius: 50%;
 }
 
+/* One glance, not a read. The dot takes the state's fill, the word takes its
+   colour, and the row keeps the word either way. */
+.agent-status i {
+  background: currentColor;
+}
+
+.waiting .agent-status,
+.status-waiting {
+  color: var(--state-idle);
+}
+
+.waiting .agent-status i {
+  background: transparent;
+}
+
 .running .agent-status,
 .status-running {
-  color: var(--accent-strong);
+  color: var(--state-active);
 }
 
 .completed .agent-status,
 .status-completed {
-  color: var(--green);
+  color: var(--state-done);
 }
 
 .blocked .agent-status,
 .status-blocked {
-  color: var(--amber);
+  color: var(--state-attention);
 }
 
 .failed .agent-status,
 .status-failed {
-  color: var(--red);
+  color: var(--state-fail);
+}
+
+/* The left edge of the row repeats the state, so the rail reads as a column of
+   states before any word is read. */
+.agent-card {
+  padding-left: 10px;
+  border-left: 3px solid var(--state-idle-tint);
+}
+
+.agent-card.running {
+  border-left-color: var(--state-active);
+}
+
+.agent-card.completed {
+  border-left-color: var(--state-done);
+}
+
+.agent-card.blocked {
+  border-left-color: var(--state-attention);
+}
+
+.agent-card.failed {
+  border-left-color: var(--state-fail);
 }
 
 /* HIGH is quiet, LOW is loud: the chip that needs a human is the filled one. */
 .confidence-chip {
   padding: 1px 5px;
-  border: 1px solid var(--rule-soft);
-  color: var(--sev-ok);
+  border: 1px solid var(--state-done);
+  color: var(--state-done);
+  background: var(--state-done-tint);
 }
 
 .confidence-chip.medium {
-  border-color: var(--ink);
-  color: var(--ink);
+  border-color: var(--state-attention);
+  color: var(--state-attention);
+  background: var(--state-attention-tint);
 }
 
+/* LOW forces a dispute, so it keeps the inverted treatment and gains the hue. */
 .confidence-chip.low {
-  border-color: var(--ink);
+  border-color: var(--state-fail);
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 /* What it was asked to do, then what it reported. Clamped, because a rail
@@ -1803,14 +1985,15 @@ time,
   display: inline-block;
   padding: 2px 7px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 .operational-notice--warning h3 {
   display: inline-block;
   padding: 2px 7px;
-  border: var(--border) solid var(--ink);
-  color: var(--ink);
+  border: 1px solid var(--state-attention);
+  color: var(--state-attention);
+  background: var(--state-attention-tint);
 }
 
 .operational-notice p {
@@ -1825,6 +2008,9 @@ time,
   overflow: hidden;
 }
 
+/* The drawer has no padding of its own because the toggle is the whole row, so
+   the toggle carries the panel's horizontal padding and lines up with the two
+   panels stacked above it. */
 .drawer-toggle {
   width: 100%;
   min-height: 42px;
@@ -1832,7 +2018,7 @@ time,
   grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 12px;
-  padding: 9px 12px;
+  padding: 10px var(--space-4);
   border: 0;
   color: var(--muted-strong);
   background: transparent;
@@ -1959,41 +2145,112 @@ time,
   justify-items: center;
 }
 
+/*
+ * The diagram is the best idea on this page and it looked like five default
+ * bordered divs. Bigger nodes, the state as a filled chip, a 4px state edge so
+ * the column of states reads before any word does, and a drawn connector
+ * instead of an arrow glyph.
+ */
 .agent-topology__node {
-  width: min(100%, 260px);
+  width: min(100%, 300px);
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 4px 10px;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  color: var(--muted-strong);
-  background: var(--panel-alt);
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px 14px 12px 12px;
+  border: 1px solid var(--rule-soft);
+  border-left: 4px solid var(--state-idle);
+  color: var(--ink);
+  background: var(--panel);
   text-align: left;
 }
 
-.agent-topology__node[aria-pressed="true"] {
-  border-color: var(--accent);
-  color: var(--ink);
+.agent-topology__node-name {
+  font-size: var(--text-lg);
+  font-weight: 750;
+  letter-spacing: -0.01em;
 }
 
-.agent-topology__node span,
-.agent-topology__node strong {
-  font-size: var(--text-md);
+.agent-topology__node-state {
+  padding: 2px 7px;
+  color: var(--state-idle);
+  background: var(--state-idle-tint);
+  font-size: var(--text-xs);
+  font-weight: 750;
+  letter-spacing: 0.05em;
 }
 
-.agent-topology__node small {
+.agent-topology__node-tool {
   grid-column: 1 / -1;
   overflow: hidden;
-  color: var(--muted);
+  color: var(--ink-soft);
   font-family: var(--mono);
   font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.agent-topology__node.status-running {
+  border-left-color: var(--state-active);
+}
+
+.agent-topology__node.status-running .agent-topology__node-state {
+  color: var(--paper);
+  background: var(--state-active);
+}
+
+.agent-topology__node.status-completed {
+  border-left-color: var(--state-done);
+}
+
+.agent-topology__node.status-completed .agent-topology__node-state {
+  color: var(--state-done);
+  background: var(--state-done-tint);
+}
+
+.agent-topology__node.status-blocked {
+  border-left-color: var(--state-attention);
+}
+
+.agent-topology__node.status-blocked .agent-topology__node-state {
+  color: var(--paper);
+  background: var(--state-attention);
+}
+
+.agent-topology__node.status-failed {
+  border-left-color: var(--state-fail);
+}
+
+.agent-topology__node.status-failed .agent-topology__node-state {
+  color: var(--paper);
+  background: var(--state-fail);
+}
+
+/* Selected has to be obvious: it drives the whole right-hand panel. */
+.agent-topology__node[aria-pressed="true"] {
+  border-color: var(--ink);
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* A line with a head, drawn, rather than a text arrow. */
 .agent-topology__connector {
-  margin: 4px 0;
-  color: var(--line-strong);
+  position: relative;
+  width: 2px;
+  height: 26px;
+  margin: 6px 0;
+  background: var(--ink);
+}
+
+.agent-topology__connector::after {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  border-top: 7px solid var(--ink);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  translate: -50% 0;
+  content: "";
 }
 
 .agent-topology__parallel {
@@ -2015,9 +2272,29 @@ time,
   gap: 8px;
 }
 
+/* Spacing groups this, not a rule: the page already had a border for every
+   conceptual object and it was reading as boxes inside boxes. */
 .agent-topology__inspection {
-  padding-left: 18px;
-  border-left: 1px solid var(--line);
+  padding-left: 24px;
+}
+
+.agent-topology__pending {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1px dashed var(--rule-soft);
+  background: var(--panel-alt);
+}
+
+.agent-topology__pending p {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  line-height: 1.55;
+}
+
+.agent-topology__pending-hint {
+  margin-top: var(--space-2);
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
 }
 
 .agent-topology__inspection header {
@@ -2493,20 +2770,26 @@ time,
   letter-spacing: 0.04em;
 }
 
+.connection-status {
+  color: var(--state-done);
+}
+
 .connection-status--resolved {
-  border-color: var(--accent);
-  color: var(--accent-ink);
+  border-color: var(--state-active);
+  color: var(--state-active);
+  background: var(--state-active-tint);
 }
 
 .connection-status--at-risk {
-  border-color: var(--ink);
-  color: var(--ink);
+  border-color: var(--state-attention);
+  color: var(--state-attention);
+  background: var(--state-attention-tint);
 }
 
 .connection-status--missed {
-  border-color: var(--ink);
+  border-color: var(--state-fail);
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 .connections-table__empty {
@@ -3038,7 +3321,7 @@ time,
 
 .receipt-status.status-accepted,
 .receipt-card .status-accepted {
-  color: var(--sev-ok);
+  color: var(--state-done);
 }
 
 /* A rejected receipt is the exception in a list of accepted ones, so it is the
@@ -3047,7 +3330,7 @@ time,
 .receipt-card .status-rejected {
   padding: 1px 6px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--state-fail);
 }
 
 .receipt-detail {
@@ -3415,13 +3698,14 @@ time,
 }
 
 .status-healthy {
-  color: var(--sev-ok);
+  color: var(--state-done);
 }
 
 .status-isolated {
   padding: 1px 6px;
-  border: var(--border) solid var(--ink);
-  color: var(--ink);
+  border: 1px solid var(--state-attention);
+  color: var(--state-attention);
+  background: var(--state-attention-tint);
 }
 
 .agent-mode-options {

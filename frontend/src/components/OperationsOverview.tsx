@@ -168,15 +168,30 @@ export function OperationsOverview({
   const reeferDemand = reeferShortage?.required_plugs ?? preview.reeferDemand
   const reeferCapacity = reeferShortage?.available_plugs ?? preview.reeferCapacity
 
+  /*
+   * Five figures, all in ink. Four of the five used to be coloured, which turned
+   * the row into a rainbow and cost the colours their meaning: at-risk and
+   * missed are magnitudes, not states, and a big red number next to a big amber
+   * one reads as decoration.
+   *
+   * Colour is kept for the two that cross a threshold the engine actually
+   * enforces - 85 percent yard congestion and plug demand above physical plug
+   * capacity - and it marks the label rather than the figure, so the row still
+   * reads as one hierarchy.
+   */
   const headline = [
-    { label: 'Containers affected', value: affectedContainers.toLocaleString(), tone: '' },
-    { label: 'Connections at risk', value: atRiskContainers.toLocaleString(), tone: 'warning' },
-    { label: 'Expected misses', value: expectedMisses.toLocaleString(), tone: 'critical' },
-    { label: 'Yard peak', value: `${yardPeak}%`, tone: yardPeak >= 85 ? 'warning' : '' },
+    { label: 'Containers affected', value: affectedContainers.toLocaleString(), breach: '' },
+    { label: 'Connections at risk', value: atRiskContainers.toLocaleString(), breach: '' },
+    { label: 'Expected misses', value: expectedMisses.toLocaleString(), breach: '' },
+    {
+      label: 'Yard peak',
+      value: `${yardPeak}%`,
+      breach: yardPeak >= 100 ? 'critical' : yardPeak >= 85 ? 'warning' : '',
+    },
     {
       label: 'Reefer plugs',
       value: `${reeferDemand} / ${reeferCapacity}`,
-      tone: reeferDemand > reeferCapacity ? 'critical' : '',
+      breach: reeferDemand > reeferCapacity ? 'critical' : '',
     },
   ]
 
@@ -261,13 +276,20 @@ export function OperationsOverview({
             <div
               key={metric.label}
               className={
-                metric.tone
-                  ? `operations-overview__metric operations-overview__metric--${metric.tone}`
+                metric.breach
+                  ? `operations-overview__metric operations-overview__metric--${metric.breach}`
                   : 'operations-overview__metric'
               }
             >
               <dd>{metric.value}</dd>
-              <dt>{metric.label}</dt>
+              <dt>
+                {metric.label}
+                {metric.breach && (
+                  <span className="operations-overview__metric-breach">
+                    {metric.breach === 'critical' ? 'over capacity' : 'over threshold'}
+                  </span>
+                )}
+              </dt>
             </div>
           ))}
         </dl>

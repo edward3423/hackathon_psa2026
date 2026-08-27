@@ -1,0 +1,8 @@
+psa-logo.webp is PSA International's official mark, downloaded unmodified from
+https://www.globalpsa.com/wp-content/uploads/2026/04/PSA-Logo-Web-120px.webp
+(120x63, alpha, dark-text variant).
+
+It is PSA's trademark, not ours. It is used here as event attribution for a PSA
+Code Sprint submission. Confirm you have the right to redistribute it before
+committing this file to a public repository; the masthead falls back to a text
+lockup when VITE_PSA_LOGO is unset, so the app works without it.

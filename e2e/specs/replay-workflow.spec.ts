@@ -21,6 +21,9 @@ test('starting a run preserves the selected workspace', async ({ page }) => {
 
 test('a selected scenario can be followed as a live replay', async ({ page }) => {
   await openDashboard(page)
+  // The scenario controls moved into the backtick-toggled debug panel, so they
+  // have to be opened before they can be driven.
+  await page.getByRole('button', { name: 'Debug' }).click()
   await page.getByLabel('Scenario', { exact: true }).selectOption('moderate-delay')
 
   await startRun(page)

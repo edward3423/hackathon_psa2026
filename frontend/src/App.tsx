@@ -108,9 +108,31 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
   const [cursorHour, setCursorHour] = useState(0)
-  // Scenario setup is what you read before a run and noise during one, so the
-  // panel is open at READY and folds itself away when the events start.
-  const [setupOpen, setSetupOpen] = useState(true)
+  /*
+   * The scenario strip is demo rigging, not operator UI: presets, a delay
+   * slider, the reasoning engine, and the run's identity. It sat above the
+   * dashboard on every load and was most of what made the top of the screen
+   * read as a developer console. It is now a debug panel - closed by default,
+   * toggled with the backtick key or the Debug control in the masthead.
+   */
+  const [setupOpen, setSetupOpen] = useState(false)
+
+  /*
+   * Backtick toggles the debug panel. Ignored while a field has focus, so a
+   * backtick typed into the operator note stays a backtick, and ignored with
+   * modifiers so it cannot collide with a browser shortcut.
+   */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== '`' || event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, select, textarea, [contenteditable="true"]')) return
+      event.preventDefault()
+      setSetupOpen((current) => !current)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   const stream = useRunStream()
   // Act 2 keeps its own stream. The two never share state, so a benchmark
@@ -228,7 +250,10 @@ function App() {
   }
 
   const resetRun = async () => {
-    setSetupOpen(true)
+    // Closed, not reopened: the panel is debug tooling now, and closing it on
+    // reset also means the guided tour's click on the Debug control always
+    // opens rather than sometimes toggling shut.
+    setSetupOpen(false)
     setSelectedPlan(null)
     setResolvedDisputeIds(new Set())
     setDismissedDisputeEventIds(new Set())

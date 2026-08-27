@@ -3,6 +3,18 @@ import { History, Menu, Wifi, WifiOff } from 'lucide-react'
 import type { RunCreated, ScenarioState, WorkflowStage } from '../api/types'
 import { formatDateTime, spaced } from '../lib/format'
 
+/** Optional path to the official PSA mark; unset falls back to the text lockup. */
+const psaLogo: string | undefined = import.meta.env.VITE_PSA_LOGO
+
+/**
+ * Whether that asset has a white wordmark. PSA publishes the mark in both a
+ * reversed (white text) and a dark-text form; the reversed one is invisible on
+ * this paper-white masthead, so it gets an ink chip to sit on. Set only if you
+ * are using the reversed asset - a dark-text logo needs no chip and looks worse
+ * with one.
+ */
+const psaLogoOnDark: boolean = import.meta.env.VITE_PSA_LOGO_ON_DARK === '1'
+
 const STAGES: WorkflowStage[] = [
   'READY',
   'ASSESSING',
@@ -112,6 +124,35 @@ export function TopBar({
 
         <h1>CASCADE</h1>
 
+        {/*
+          The attribution slot. Deliberately not a drawn approximation of PSA's
+          logo - inventing another organisation's brand mark misrepresents it,
+          and it always looks like what it is. Worded as attribution rather than
+          a co-brand lockup, because this is a submission to PSA's event, not a
+          PSA product.
+
+          To use the official mark: put the file in frontend/public/ and set
+          VITE_PSA_LOGO=/psa-logo.svg in the repo-root .env. Gated on the
+          variable rather than on an onError fallback, because an <img> pointing
+          at a file that is not there logs a 404 on every page load.
+        */}
+        <span
+          className={`masthead__attribution${
+            psaLogo && psaLogoOnDark ? ' masthead__attribution--on-dark' : ''
+          }`}
+        >
+          {psaLogo ? (
+            <img src={psaLogo} alt="PSA" />
+          ) : (
+            <>
+              {/* No asset configured: a text lockup carries the attribution
+                  instead, so the masthead is never missing a slot. */}
+              <span>PSA</span>
+              <small>Code Sprint 2026</small>
+            </>
+          )}
+        </span>
+
         {run?.mode === 'DEMO_REPLAY' && (
           <span className="replay-badge" role="status">
             <History size={13} aria-hidden="true" />
@@ -166,7 +207,14 @@ export function TopBar({
               ))}
             </ol>
 
+            {/* The dots alone were undiscoverable - seven circles with no stated
+                subject. Naming the count gives them one, and it also removes the
+                READY-above-NOT-STARTED reading, because the pill now says which
+                of seven stages READY is. */}
             <p className="run-state" aria-live="polite" data-tour="run-state">
+              <span>
+                Stage {Math.max(1, stageIndex + 1)}/{STAGES.length}
+              </span>
               <strong>{spaced(stage)}</strong>
             </p>
           </>
@@ -212,12 +260,14 @@ export function TopBar({
               <button
                 type="button"
                 className="ghost-action"
+                data-tour="control-setup"
                 aria-expanded={setupOpen}
                 aria-controls="scenario-setup"
+                aria-keyshortcuts="`"
                 onClick={onToggleSetup}
-                title="Scenario controls and run identity"
+                title="Scenario controls and run identity. Shortcut: `"
               >
-                Setup
+                Debug
               </button>
               <button
                 type="button"
