@@ -1,4 +1,4 @@
-import { Bot, Menu, PlayCircle, Radio, ShieldCheck, Wifi, WifiOff } from 'lucide-react'
+import { History, Menu, Wifi, WifiOff } from 'lucide-react'
 
 import type { RunCreated, ScenarioState, WorkflowStage } from '../api/types'
 import { formatDateTime, spaced } from '../lib/format'
@@ -28,13 +28,12 @@ interface TopBarProps {
     | 'DISCONNECTED'
     | 'OFFLINE'
     | 'ENDED'
-  eventCount: number
   /**
-   * Everything below the masthead describes one single-vessel run: the vessel
-   * under disruption, its objective, the workflow stage rail and the run's
-   * transport state. Act 2 replays a fleet across five months and has none of
-   * those, so it asks for the masthead alone rather than being given an idle
-   * stage rail and a vessel it is not about.
+   * Everything except the brand describes one single-vessel run: the vessel
+   * under disruption, the stage it has reached and the controls that drive it.
+   * Act 2 replays a fleet across five months and has none of those, so it asks
+   * for the brand alone rather than being given an idle stage rail and a vessel
+   * it is not about.
    */
   showRunContext?: boolean
   /** What this page is, when it is not the single-vessel scenario. */
@@ -45,11 +44,25 @@ interface TopBarProps {
    * viewer more than a dead button would.
    */
   tourEnabled?: boolean
+  setupOpen?: boolean
   onStartTour?: () => void
+  onToggleSetup?: () => void
+  onStart?: () => void
+  onStartReplay?: () => void
+  onReset?: () => void
   onOpenNavigation: () => void
   onStageSelect?: (stage: WorkflowStage) => void
 }
 
+/*
+ * One row, and only what a viewer cannot work out from the page below it: which
+ * vessel is late, by how much, where the workflow has got to, and the controls
+ * that move it. The five-cell status grid, the objective sentence, the labelled
+ * seven-stage rail and two demo disclaimers that used to live here said the same
+ * things the Command Center says, and cost 290px of a 900px screen before any
+ * content began. Run identity moved into the setup panel, the objective and the
+ * labelled rail onto the dashboard, the disclaimer into the app footer.
+ */
 export function TopBar({
   scenario,
   run,
@@ -58,11 +71,15 @@ export function TopBar({
   streaming,
   offline,
   transportState,
-  eventCount,
   showRunContext = true,
   subtitle,
   tourEnabled = true,
+  setupOpen = false,
   onStartTour,
+  onToggleSetup,
+  onStart,
+  onStartReplay,
+  onReset,
   onOpenNavigation,
   onStageSelect,
 }: TopBarProps) {
@@ -70,57 +87,115 @@ export function TopBar({
   const connectionLabel = offline
     ? 'Offline demo'
     : transportState === 'CONNECTING'
-      ? 'SSE connecting'
+      ? 'Event stream connecting'
       : transportState === 'CONNECTED'
-        ? 'SSE connected'
+        ? 'Event stream connected'
         : transportState === 'RECONNECTING'
-          ? 'SSE reconnecting'
+          ? 'Event stream reconnecting'
           : transportState === 'DISCONNECTED'
-            ? 'SSE disconnected'
+            ? 'Event stream disconnected'
             : transportState === 'ENDED'
-              ? 'SSE complete'
-              : 'SSE ready'
-  const agentStatus =
-    stage === 'DISPUTE' || stage === 'AWAITING_APPROVAL'
-      ? 'Waiting for operator'
-      : stage === 'COMPLETE'
-        ? 'Run complete'
-        : stage === 'FAILED'
-          ? 'Attention required'
-          : streaming
-            ? 'Agents working'
-            : 'Ready'
+              ? 'Event stream complete'
+              : 'Event stream ready'
 
   return (
     <header className="top-bar">
-      {run?.mode === 'DEMO_REPLAY' && (
-        <div className="replay-banner" role="status">
-          <span className="replay-badge">DEMO REPLAY</span>
-          <span>Recorded synthetic run</span>
-        </div>
-      )}
-
-      <div className="masthead-row" data-tour="masthead">
+      <div className="masthead" data-tour="masthead">
         <button
           className="mobile-nav-trigger"
           type="button"
           aria-label="Open navigation"
           onClick={onOpenNavigation}
         >
-          <Menu size={19} aria-hidden="true" />
+          <Menu size={18} aria-hidden="true" />
         </button>
 
-        <div className="masthead-identity">
-          <div className="page-identity">
-            <h1>CASCADE</h1>
-            <p className="scenario-readout">{subtitle ?? scenario.name}</p>
-          </div>
+        <h1>CASCADE</h1>
+
+        {run?.mode === 'DEMO_REPLAY' && (
+          <span className="replay-badge" role="status">
+            <History size={13} aria-hidden="true" />
+            DEMO REPLAY
+          </span>
+        )}
+
+        {showRunContext ? (
+          <p className="situation" data-tour="disruption-strip">
+            <span className="alert-vessel">{scenario.alert.vessel_name}</span>
+            <span className="situation__figure">
+              <span>Delay</span>
+              <span>{delayHours} h</span>
+            </span>
+            <span className="situation__figure">
+              <span>Revised ETA</span>
+              <span>{formatDateTime(scenario.alert.revised_eta)}</span>
+            </span>
+          </p>
+        ) : (
+          <p className="situation situation--plain">{subtitle ?? scenario.name}</p>
+        )}
+
+        {showRunContext && (
+          <>
+            {/*
+              Seven dots and the name of the one the run is on. The old rail
+              spelled all seven labels across the full window width, directly
+              above the dashboard rail that spells the same seven in plainer
+              words. This is the glance; that one is the detail.
+            */}
+            <ol className="stage-track" aria-label="Workflow stages" data-tour="stage-track">
+              {STAGES.map((stageName, index) => (
+                <li key={stageName}>
+                  <button
+                    type="button"
+                    className={
+                      stage === 'FAILED'
+                        ? 'stage-dot failed'
+                        : index < stageIndex
+                          ? 'stage-dot done'
+                          : index === stageIndex
+                            ? 'stage-dot current'
+                            : 'stage-dot'
+                    }
+                    aria-label={spaced(stageName)}
+                    aria-current={index === stageIndex ? 'step' : undefined}
+                    title={spaced(stageName)}
+                    onClick={() => onStageSelect?.(stageName)}
+                  />
+                </li>
+              ))}
+            </ol>
+
+            <p className="run-state" aria-live="polite" data-tour="run-state">
+              <strong>{spaced(stage)}</strong>
+            </p>
+          </>
+        )}
+
+        <div className="masthead__actions">
+          {showRunContext && (
+            <span
+              className="stream-state"
+              role="img"
+              title={connectionLabel}
+              aria-label={connectionLabel}
+            >
+              {offline ? (
+                <WifiOff size={14} aria-hidden="true" />
+              ) : (
+                <Wifi size={14} aria-hidden="true" />
+              )}
+            </span>
+          )}
 
           {onStartTour && (
             <button
               type="button"
-              className={`tour-launch-button${tourEnabled ? '' : ' is-unavailable'}`}
+              className={`ghost-action${tourEnabled ? '' : ' is-unavailable'}`}
               data-tour="tour-launch"
+              /* The visible word is inside the accessible name, so the label
+                 still matches what a viewer would say out loud. */
+              aria-label="Start tour"
               onClick={onStartTour}
               title={
                 tourEnabled
@@ -128,125 +203,53 @@ export function TopBar({
                   : 'The guided tour needs the backend'
               }
             >
-              <PlayCircle size={16} aria-hidden="true" />
-              Start tour
+              Tour
             </button>
           )}
+
+          {showRunContext && (
+            <>
+              <button
+                type="button"
+                className="ghost-action"
+                aria-expanded={setupOpen}
+                aria-controls="scenario-setup"
+                onClick={onToggleSetup}
+                title="Scenario controls and run identity"
+              >
+                Setup
+              </button>
+              <button
+                type="button"
+                className="ghost-action"
+                data-tour="control-reset"
+                onClick={onReset}
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                className="ghost-action"
+                aria-label="Start demo replay"
+                title="Start demo replay"
+                disabled={streaming}
+                onClick={onStartReplay}
+              >
+                Replay
+              </button>
+              <button
+                type="button"
+                className="primary-action"
+                data-tour="control-start"
+                disabled={streaming}
+                onClick={onStart}
+              >
+                {streaming ? 'Working...' : 'Start run'}
+              </button>
+            </>
+          )}
         </div>
-
-        {showRunContext && (
-          <>
-            <div className="top-status-grid" aria-label="System status summary">
-              <div>
-                <span>Simulated port time</span>
-                <strong>{formatDateTime(scenario.alert.event_time)}</strong>
-              </div>
-              <div>
-                <span>Run ID</span>
-                <strong className="run-id">{run?.run_id ?? 'NOT STARTED'}</strong>
-              </div>
-              <div>
-                <span>Agent mode</span>
-                <strong>
-                  {run?.mode === 'DEMO_REPLAY'
-                    ? 'Recorded simulation'
-                    : run
-                      ? spaced(run.mode).replace('LIVE ', '')
-                      : 'Scripted simulation'}
-                </strong>
-              </div>
-              <div>
-                <span>Agent status</span>
-                <strong className="inline-status">
-                  <Bot size={14} aria-hidden="true" />
-                  {agentStatus}
-                </strong>
-              </div>
-              <div>
-                <span>Event stream</span>
-                <strong className="inline-status">
-                  {offline ? (
-                    <WifiOff size={14} aria-hidden="true" />
-                  ) : (
-                    <Wifi size={14} aria-hidden="true" />
-                  )}
-                  {connectionLabel}
-                </strong>
-              </div>
-            </div>
-
-            <div className="run-state" aria-live="polite" data-tour="run-state">
-              <span>Workflow</span>
-              <strong>{spaced(stage)}</strong>
-              <small>{eventCount} trace {eventCount === 1 ? 'record' : 'records'}</small>
-            </div>
-          </>
-        )}
       </div>
-
-      {showRunContext && (
-        <>
-          <div className="disruption-strip" role="status" data-tour="disruption-strip">
-            <div className="disruption-primary">
-              <Radio size={17} aria-hidden="true" />
-              <span>Active disruption</span>
-              <strong className="alert-vessel">{scenario.alert.vessel_name}</strong>
-            </div>
-            <dl className="alert-figures">
-              <div>
-                <dt>Delay</dt>
-                <dd>{delayHours} h</dd>
-              </div>
-              <div>
-                <dt>Revised ETA</dt>
-                <dd>{formatDateTime(scenario.alert.revised_eta)}</dd>
-              </div>
-              <div>
-                <dt>Port call</dt>
-                <dd>{scenario.alert.port_call}</dd>
-              </div>
-            </dl>
-            <div className="demo-assurance">
-              <ShieldCheck size={16} aria-hidden="true" />
-              <span>DEMO ENVIRONMENT</span>
-            </div>
-          </div>
-
-          <p className="objective-line">
-            <span>Objective</span>
-            {scenario.objective}
-          </p>
-
-          <ol className="stage-track" aria-label="Workflow stages" data-tour="stage-track">
-            {STAGES.map((stageName, index) => (
-              <li key={stageName}>
-                <button
-                  type="button"
-                  className={
-                    stage === 'FAILED'
-                      ? 'stage-step failed'
-                      : index < stageIndex
-                        ? 'stage-step done'
-                        : index === stageIndex
-                          ? 'stage-step current'
-                          : 'stage-step'
-                  }
-                  aria-current={index === stageIndex ? 'step' : undefined}
-                  onClick={() => onStageSelect?.(stageName)}
-                >
-                  <span className="stage-marker" aria-hidden="true" />
-                  {spaced(stageName)}
-                </button>
-              </li>
-            ))}
-          </ol>
-
-          {/* Act 1's notice, and true only of Act 1. The benchmark is driven by a
-              recorded arrival stream, so it carries its own provenance footer
-              rather than being described as synthetic here. */}
-          <p className="synthetic-notice">Synthetic data: {scenario.synthetic_notice}</p>
-        </>
-      )}
     </header>
   )
 }

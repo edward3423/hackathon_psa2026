@@ -253,20 +253,6 @@ export function ConnectionsPage({
         </aside>
       )}
 
-      <div className="connections-page__cargo-key" aria-label="Cargo priority order">
-        {(Object.entries(CARGO_DETAILS) as [CargoType, (typeof CARGO_DETAILS)[CargoType]][]).map(
-          ([cargoType, detail]) => (
-            <div className="cargo-key-item" key={cargoType}>
-              <detail.Icon aria-hidden="true" size={17} />
-              <span>
-                <strong>Priority {detail.priority}</strong>
-                {detail.label}
-              </span>
-            </div>
-          ),
-        )}
-      </div>
-
       <form className="connections-filters" aria-label="Connection filters" onSubmit={(event) => event.preventDefault()}>
         <div className="connections-filters__title">
           <Filter aria-hidden="true" size={16} />

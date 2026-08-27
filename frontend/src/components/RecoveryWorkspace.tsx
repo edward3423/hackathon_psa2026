@@ -23,6 +23,8 @@ import {
 } from 'recharts'
 
 import type { PlanArchetype, PlanComparison, PlanEvaluation } from '../api/types'
+import { axisProps, barSeries, gridProps, legendLabel, legendStyle, tooltipStyle } from '../lib/chartTheme'
+import { ChartTextures } from './ChartTextures'
 import { formatMoney, humanizeOperationalText, titleCase } from '../lib/format'
 
 interface RecoveryWorkspaceProps {
@@ -355,22 +357,22 @@ export function RecoveryWorkspace({
           aria-label="Comparison of critical cargo protection, yard peak occupancy, and missed connections"
         >
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
-              <XAxis dataKey="plan" stroke="#8292a1" fontSize={12} />
-              <YAxis stroke="#8292a1" fontSize={12} width={34} />
-              <Tooltip
-                contentStyle={{
-                  background: '#111b24',
-                  border: '1px solid #354655',
-                  color: '#e5edf3',
-                  fontSize: 12,
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
-              <Bar dataKey="Critical cargo protected" fill="#4ea3a8" isAnimationActive={false} />
-              <Bar dataKey="Yard peak" fill="#c59a52" isAnimationActive={false} />
-              <Bar dataKey="Missed connections" fill="#c86d68" isAnimationActive={false} />
+            {/* Solid, hatched, hollow. Three bars a reader can name in grayscale,
+                in print, and under forced-colors - the legend is the other half. */}
+            <BarChart
+              data={chartData}
+              margin={{ top: 12, right: 12, bottom: 4, left: 0 }}
+              barGap={2}
+            >
+              <ChartTextures />
+              <CartesianGrid {...gridProps} vertical={false} />
+              <XAxis dataKey="plan" {...axisProps} />
+              <YAxis {...axisProps} width={34} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgb(17 17 17 / 0.06)' }} />
+              <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
+              <Bar dataKey="Critical cargo protected" {...barSeries[0]} isAnimationActive={false} />
+              <Bar dataKey="Yard peak" {...barSeries[1]} isAnimationActive={false} />
+              <Bar dataKey="Missed connections" {...barSeries[2]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>

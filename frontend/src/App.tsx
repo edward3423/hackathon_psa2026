@@ -108,6 +108,9 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false)
   const [cursorHour, setCursorHour] = useState(0)
+  // Scenario setup is what you read before a run and noise during one, so the
+  // panel is open at READY and folds itself away when the events start.
+  const [setupOpen, setSetupOpen] = useState(true)
 
   const stream = useRunStream()
   // Act 2 keeps its own stream. The two never share state, so a benchmark
@@ -214,6 +217,7 @@ function App() {
   }
 
   const startRun = (mode?: RunMode) => {
+    setSetupOpen(false)
     setSelectedPlan(null)
     setResolvedDisputeIds(new Set())
     setDismissedDisputeEventIds(new Set())
@@ -224,6 +228,7 @@ function App() {
   }
 
   const resetRun = async () => {
+    setSetupOpen(true)
     setSelectedPlan(null)
     setResolvedDisputeIds(new Set())
     setDismissedDisputeEventIds(new Set())
@@ -413,25 +418,28 @@ function App() {
           streaming={streaming}
           offline={offlineActive}
           transportState={transportState}
-          eventCount={events.length}
           showRunContext={!actTwo}
           subtitle={actTwo ? 'Red Sea 2024 blind replay benchmark' : undefined}
           tourEnabled={tour.available}
+          setupOpen={setupOpen}
           onStartTour={() => void startTour()}
+          onToggleSetup={() => setSetupOpen((current) => !current)}
+          onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
+          onStartReplay={() => startRun('DEMO_REPLAY')}
+          onReset={() => void resetRun()}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
         />
 
-        {!actTwo && (
+        {!actTwo && setupOpen && (
           <ControlsBar
             controls={controls}
             brainMode={brainMode}
             disabled={streaming}
+            run={run}
+            portTime={displayScenario.alert.event_time}
             onChange={setControls}
             onBrainModeChange={setBrainMode}
-            onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
-            onStartReplay={() => startRun('DEMO_REPLAY')}
-            onReset={() => void resetRun()}
             scenarioPresets={SCENARIO_PRESETS}
             selectedScenarioId={selectedScenarioId}
             onScenarioSelect={selectScenario}
@@ -452,18 +460,36 @@ function App() {
         <main className="app-content" id="main-content">
           <Suspense fallback={<p className="page-loading">Loading workspace...</p>}>
             {renderPage()}
-            {/* The timeline scrubs the 72 hours of one Act 1 vessel run. The Act 2
-                benchmark spans 153 days, so this control does not belong there. */}
-            {!actTwo && (
+          </Suspense>
+
+          {/* Its own boundary. Sharing one with the page meant a lazily loaded
+              scrubber held the whole workspace behind "Loading workspace...",
+              including the Command Center, which loads nothing.
+
+              The timeline scrubs the 72 hours of one Act 1 vessel run. The Act 2
+              benchmark spans 153 days, so this control does not belong there. */}
+          {!actTwo && (
+            <Suspense fallback={null}>
               <OperationsTimeline
                 cursorHour={cursorHour}
                 onCursorChange={setCursorHour}
                 stage={stage}
                 events={events}
               />
-            )}
-          </Suspense>
+            </Suspense>
+          )}
         </main>
+
+        {/* The four demo disclaimers that used to sit in the sidebar footer, the
+            masthead, the header and the bottom of the dashboard, said once. Act 2
+            carries its own provenance footer and is not this scenario. */}
+        {!actTwo && (
+          <footer className="app-footer">
+            <span className="app-footer__badge">DEMO ENVIRONMENT</span>
+            <p>Synthetic data: {displayScenario.synthetic_notice}</p>
+            <p>Mocked actions only. No real terminal or carrier system is contacted.</p>
+          </footer>
+        )}
       </div>
 
       {showDispute && (

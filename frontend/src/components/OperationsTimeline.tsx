@@ -1,5 +1,4 @@
 import type { TraceEvent, WorkflowStage } from '../api/types'
-import { spaced } from '../lib/format'
 
 const TIMELINE_HOURS = [0, 6, 12, 24, 48, 72] as const
 
@@ -13,9 +12,7 @@ export interface OperationsTimelineProps {
 function nearestMilestoneIndex(cursorHour: number): number {
   return TIMELINE_HOURS.reduce<number>((nearestIndex, hour, index) => {
     const nearestHour = TIMELINE_HOURS[nearestIndex] ?? TIMELINE_HOURS[0]
-    return Math.abs(hour - cursorHour) < Math.abs(nearestHour - cursorHour)
-      ? index
-      : nearestIndex
+    return Math.abs(hour - cursorHour) < Math.abs(nearestHour - cursorHour) ? index : nearestIndex
   }, 0)
 }
 
@@ -43,73 +40,56 @@ function milestoneLabels(events: TraceEvent[], stage: WorkflowStage): string[] {
   ]
 }
 
+/*
+ * A scrubber, and the name of the hour it is on. This was a full panel: a
+ * heading, a sentence explaining what a scrubber is, the slider, six milestone
+ * buttons each carrying its own sentence, and a paragraph restating the stage
+ * and the trace count the masthead and the trace drawer already show. Nearly
+ * 200px of a control that moves one number.
+ */
 export function OperationsTimeline({
   cursorHour,
   onCursorChange,
-  stage,
   events,
+  stage,
 }: OperationsTimelineProps) {
   const selectedIndex = nearestMilestoneIndex(cursorHour)
   const selectedHour = TIMELINE_HOURS[selectedIndex]
   const labels = milestoneLabels(events, stage)
-  const latestEvent = events.reduce<TraceEvent | null>(
-    (latest, event) => (!latest || event.sequence > latest.sequence ? event : latest),
-    null,
-  )
 
   return (
-    <section className="operations-timeline" aria-labelledby="operations-timeline-title">
-      <header className="operations-timeline__header">
-        <div>
-          <h2 id="operations-timeline-title">72-hour operations timeline</h2>
-          <p>Move through the forecast horizon to inspect how port pressure changes over time.</p>
-        </div>
-        <output className="operations-timeline__selection" aria-live="polite">
-          H+{selectedHour}: {labels[selectedIndex]}
-        </output>
-      </header>
-
-      <div className="operations-timeline__scrubber">
-        <label htmlFor="operations-timeline-range">Forecast hour</label>
-        <input
-          id="operations-timeline-range"
-          type="range"
-          min={0}
-          max={TIMELINE_HOURS.length - 1}
-          step={1}
-          value={selectedIndex}
-          onChange={(event) => onCursorChange(TIMELINE_HOURS[Number(event.target.value)])}
-          aria-valuetext={`H plus ${selectedHour} hours, ${labels[selectedIndex]}`}
-        />
-      </div>
+    <section className="operations-timeline" aria-label="72-hour forecast scrubber">
+      <label htmlFor="operations-timeline-range">Forecast</label>
+      <input
+        id="operations-timeline-range"
+        type="range"
+        min={0}
+        max={TIMELINE_HOURS.length - 1}
+        step={1}
+        value={selectedIndex}
+        onChange={(event) => onCursorChange(TIMELINE_HOURS[Number(event.target.value)])}
+        aria-valuetext={`H plus ${selectedHour} hours, ${labels[selectedIndex]}`}
+      />
 
       <ol className="operations-timeline__milestones" aria-label="Forecast milestones">
-        {TIMELINE_HOURS.map((hour, index) => {
-          const selected = index === selectedIndex
-          return (
-            <li key={hour} className={selected ? 'is-current' : undefined}>
-              <button
-                type="button"
-                onClick={() => onCursorChange(hour)}
-                aria-current={selected ? 'step' : undefined}
-                aria-label={`H plus ${hour} hours: ${labels[index]}`}
-              >
-                <time>H+{hour}</time>
-                <span>{labels[index]}</span>
-              </button>
-            </li>
-          )
-        })}
+        {TIMELINE_HOURS.map((hour, index) => (
+          <li key={hour} className={index === selectedIndex ? 'is-current' : undefined}>
+            <button
+              type="button"
+              onClick={() => onCursorChange(hour)}
+              aria-current={index === selectedIndex ? 'step' : undefined}
+              aria-label={`H plus ${hour} hours: ${labels[index]}`}
+              title={labels[index]}
+            >
+              H+{hour}
+            </button>
+          </li>
+        ))}
       </ol>
 
-      <p className="operations-timeline__trace-context">
-        Current workflow: {spaced(stage).toLowerCase()}.
-        {latestEvent
-          ? ` ${events.length} trace ${events.length === 1 ? 'record' : 'records'} received. Latest: ${spaced(
-              latestEvent.kind,
-            ).toLowerCase()}${latestEvent.agent ? ` from ${latestEvent.agent}` : ''}.`
-          : ' No trace records have arrived yet.'}
-      </p>
+      <output className="operations-timeline__selection" aria-live="polite">
+        {labels[selectedIndex]}
+      </output>
     </section>
   )
 }

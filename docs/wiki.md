@@ -286,9 +286,114 @@ also appends its events to logs/runs/<run_id>.jsonl (gitignored; first line
 is a run_header with mode and controls) - read this file when debugging a
 stuck or failed run.
 
-UI theme: light minimalist (white panels, hairline borders, single teal
-accent --accent #0e7490, darkened status colors); chart/graph inline colors
-in CascadeGraph.tsx and YardForecastPanel.tsx match styles.css tokens.
+UI theme (revised 2026-08-27): light brutalist monochrome. Paper #fdfbf7,
+panels #ffffff, sunk fills #f2f0ea / #eceae3; ink #111111, ink-soft #3d3d3d,
+ink-faint #6b6b6b; block edges are 2px ink (--border/--rule), inner separators
+one #a3a094 hairline. Radius is 0 everywhere, the only shadow is
+--shadow-hard (4px 4px 0 ink) on the primary action and the drawers, and
+button presses shift rather than fade.
+
+One accent, --accent #0f3bff (--accent-ink #0a24b8 for text on light), spent
+only on: focus rings, the current stage dot and workflow marker, the active nav
+item, the selected plan / vessel / topology node / constraint, resolved
+connections, the live indicators, links and .text-action, form accent-color,
+the planned-yard and CASCADE benchmark series, and the planned routes on the
+map. Anything else that was teal in the dark theme is now ink.
+
+Severity carries no hue. --sev-ok #6b6b6b / --sev-warn #3d3d3d /
+--sev-critical #111111 is an ordered darkness ramp, and every status that
+matters adds a second channel: at-risk is outlined, missed and rejected and
+critical are inverted (paper on ink), HIGH risk is underlined 2px, confidence
+LOW is filled. Each already carries its own word, so nothing is colour-alone.
+
+Charts are monochrome and share frontend/src/lib/chartTheme.tsx: bars are
+solid / 45-degree hatch (components/ChartTextures.tsx) / hollow-with-2px-stroke;
+lines are differentiated by dash pattern with the accent reserved for the live
+series; the grid is a solid hairline (recharts dashes it by default) and legend
+labels wear an ink token, because recharts otherwise paints the hollow series'
+label white on white. deck.gl and mapbox use the light basemap, ink vessels and
+accent routes.
+
+Type scale --text-xs/sm/md/lg plus --text-figure for headline numbers; 12px is
+the hard floor and e2e/specs/qa-findings.spec.ts enforces it per page. Contrast
+was measured on the rendered DOM across all nine pages (669 text nodes, zero
+failures against WCAG AA), not inferred from the tokens.
+
+Terrain (revised 2026-08-27) is the one exception to monochrome, because land
+and water is categorical, not a highlight: --water #a9cbe4 / --water-edge
+#7aa9c9 and --land #d3e5c4 / --land-edge #9dc07f. Applied to the port
+schematic (the seaward column and its two zones are water, the terminal column
+is land, the berth line stays neutral concrete between them, and yard blocks are
+white objects standing on the land) and to the deck.gl map (canvas water, land
+polygons --land with a --land-edge coastline). The map's *frame* stays --panel:
+tinting it put the provenance notice on open water at 3.78:1.
+
+Chroma is set where the two actually read as blue and green - a first pass at
+chroma 22/25 was so restrained that neither registered as a colour - and no
+further. Measured: ink-soft 6.4:1 on water, 8.2:1 on land, accent route 4.0:1 on
+water. The pair is separated in lightness as well as hue (1.28:1) so it survives
+grayscale and deuteranopia, and every zone carries a text label, so colour is
+never the only channel. Routes on the map are drawn twice - an 8px white casing
+under the 4px accent line - because an accent-blue lane over blue water would
+otherwise separate by lightness alone.
+
+Two legend rules the same pass produced: a swatch must be the mark it stands for
+(the simulated-fleet key was --amber while the fleet is drawn in the accent), and
+the live key is hollow until aisState is actually 'live' - it was filled accent
+under the words AISSTREAM OFFLINE.
+
+Glass (revised 2026-08-27) is spent on the same principle as the accent: only
+where there is something behind it to blur. --glass 0.62 / --glass-strong 0.86
+white with --glass-blur, on the four surfaces that float over the page (the
+approval strip, the dispute overlay, the approval confirmation, the detail
+drawers) and on the controls that sit on them. The masthead and the in-page
+panels stay opaque, because a frosted panel on flat paper is decoration.
+
+Controls wear --hairline (1px) at --glass-edge, not --border (2px): the 2px ink
+edge plus the 4px offset shadow put five slabs in the masthead and two more in
+the approval strip. --border is now the edge of a *block* only. Hierarchy among
+actions is fill, not weight: primary is solid ink, secondary is frosted,
+destructive is frosted with a dashed edge, and only the four floating overlays
+plus the tour and map tooltips keep --shadow-hard.
+
+Both glass escape hatches are implemented and load-bearing:
+prefers-reduced-transparency and @supports not (backdrop-filter) collapse the
+tokens to the opaque panel colours. Worst case measured by compositing rather
+than assumed: ink text on --glass over pure black is 7.7:1, on --glass-strong
+14.0:1, so no placement can fall under AA.
+
+Stacking order, which an end-to-end sweep had to establish: top bar 50, setup
+strip 100, sidebar 60 at desktop but 120 while it is an overlay below 1050px
+with its backdrop at 110 - below that the strip's first control sat on top of
+the open rail and swallowed every click aimed at the navigation. Dispute veil
+90, connection drawer 130/140, approval confirmation 200, tour 300+.
+
+Two naming rules the same sweep produced: a decorative marker inside an
+interactive control must be aria-hidden (the replay dot's aria-label made the
+Replay nav button's accessible name "Replay Replay active" for the whole of a
+replay, and silently broke every name-based selector for it), and frontend/
+public/favicon.svg exists so a page load does not log a 404.
+
+Chrome is deliberately thin, and every figure is stated once (revised
+2026-08-27, replacing a header that occupied 290px of a 900px screen and
+repeated the delay four times and the stage five):
+- Masthead (TopBar.tsx), one row: wordmark, vessel + delay + revised ETA
+  (.situation, tour anchor disruption-strip), a seven-dot stage rail
+  (.stage-track) beside the stage name (.run-state), the stream icon, and
+  Tour / Setup / Reset / Replay / Start run. Run id, run mode and simulated
+  port time are in the setup panel, not the masthead.
+- Setup panel (ControlsBar.tsx): a wrapping grid of the five scenario
+  controls plus the run identity line. App.tsx opens it at READY and closes
+  it on start, so it cannot overflow and is absent while agents work.
+- Command Center (OperationsOverview.tsx): situation card (title, summary,
+  arrival change, objective, five headline figures), the one labelled
+  seven-step rail (also stage navigation), then the port schematic and the
+  protection order. The delay, the ETAs and the stage are not repeated here.
+- Rail: AgentActivityPanel one hairline row per agent (objective line, report
+  line, Show details), MetricsPanel as engine notices only (reefer shortage,
+  cached-sailing fallback), collapsed trace drawer.
+- One disclaimer, in the app footer: DEMO ENVIRONMENT, the synthetic-data
+  notice, and the mocked-actions sentence. Act 2 carries its own footer.
 
 Live capture (quota-aware): free-tier gemini-3.5-flash allows 20 requests
 per day, and a fully live golden run needs 15-21 calls. Recording uses

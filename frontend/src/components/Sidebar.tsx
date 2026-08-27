@@ -46,6 +46,12 @@ export interface SidebarProps {
   onCloseMobile?: () => void
 }
 
+/*
+ * Ten destinations and nothing else. The rail used to open with a two-line
+ * heading and close with four stacked badges - a replay chip, DEMO ENVIRONMENT,
+ * the wordmark, and "Synthetic Port Environment" - all of which the masthead or
+ * the app footer already says once.
+ */
 export function Sidebar({
   currentPage,
   collapsed,
@@ -70,81 +76,73 @@ export function Sidebar({
           mobileOpen ? ' operations-sidebar--mobile-open' : ''
         }`}
       >
-      <div className="operations-sidebar__header">
-        <div className="operations-sidebar__mark" aria-hidden="true">
-          <Ship size={20} strokeWidth={1.8} />
+        <div className="operations-sidebar__header">
+          <span className="operations-sidebar__mark" aria-hidden="true">
+            <Ship size={17} strokeWidth={1.8} />
+          </span>
+          <button
+            className="operations-sidebar__collapse-button"
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <PanelLeftOpen size={17} aria-hidden="true" />
+            ) : (
+              <PanelLeftClose size={17} aria-hidden="true" />
+            )}
+          </button>
         </div>
-        {!collapsed && (
-          <div className="operations-sidebar__heading">
-            <span>Port disruption</span>
-            <strong>Control room</strong>
-          </div>
-        )}
-        <button
-          className="operations-sidebar__collapse-button"
-          type="button"
-          onClick={onToggleCollapsed}
-          aria-label={collapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'}
-          aria-expanded={!collapsed}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <PanelLeftOpen size={18} aria-hidden="true" />
-          ) : (
-            <PanelLeftClose size={18} aria-hidden="true" />
-          )}
-        </button>
-      </div>
 
-      <nav className="operations-sidebar__navigation" aria-label="CASCADE sections">
-        <ul className="operations-sidebar__navigation-list" data-tour="nav-list">
-          {NAVIGATION_ITEMS.map((item) => {
-            const Icon = item.icon
-            const active = currentPage === item.id
+        <nav className="operations-sidebar__navigation" aria-label="CASCADE sections">
+          <ul className="operations-sidebar__navigation-list" data-tour="nav-list">
+            {NAVIGATION_ITEMS.map((item) => {
+              const Icon = item.icon
+              const active = currentPage === item.id
 
-            return (
-              <li key={item.id} className="operations-sidebar__navigation-item">
-                <button
-                  className={`operations-sidebar__navigation-button${
-                    active ? ' operations-sidebar__navigation-button--active' : ''
-                  }`}
-                  type="button"
-                  data-tour={`nav-${item.id}`}
-                  onClick={() => {
-                    onNavigate(item.id)
-                    onCloseMobile?.()
-                  }}
-                  aria-current={active ? 'page' : undefined}
-                  aria-label={collapsed ? item.label : undefined}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
-                  {!collapsed && <span>{item.label}</span>}
-                  {item.id === 'replay' && replayActive && (
-                    <span className="operations-sidebar__replay-dot" aria-label="Replay active">
-                      {!collapsed && 'LIVE'}
-                    </span>
-                  )}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-
-      <footer className="operations-sidebar__footer">
-        {replayActive && (
-          <div className="operations-sidebar__replay-status" role="status">
-            <History size={15} aria-hidden="true" />
-            {!collapsed && <span>DEMO REPLAY</span>}
-          </div>
-        )}
-        <div className="operations-sidebar__demo-badge">DEMO ENVIRONMENT</div>
-        <strong className="operations-sidebar__brand">CASCADE</strong>
-        {!collapsed && (
-          <span className="operations-sidebar__environment">Synthetic Port Environment</span>
-        )}
-      </footer>
+              return (
+                <li key={item.id} className="operations-sidebar__navigation-item">
+                  <button
+                    className={`operations-sidebar__navigation-button${
+                      active ? ' operations-sidebar__navigation-button--active' : ''
+                    }`}
+                    type="button"
+                    data-tour={`nav-${item.id}`}
+                    onClick={() => {
+                      onNavigate(item.id)
+                      onCloseMobile?.()
+                    }}
+                    aria-current={active ? 'page' : undefined}
+                    aria-label={collapsed ? item.label : undefined}
+                    /*
+                     * The dot is decorative. Labelling it made the button's
+                     * accessible name "Replay Replay active" for the whole of a
+                     * replay - clumsy to hear, and it silently broke any
+                     * name-based selector for this control. The state belongs in
+                     * the description, and the masthead's DEMO REPLAY badge
+                     * announces it once as a live status.
+                     */
+                    title={
+                      item.id === 'replay' && replayActive
+                        ? 'Replay active'
+                        : collapsed
+                          ? item.label
+                          : undefined
+                    }
+                  >
+                    <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                    {!collapsed && <span>{item.label}</span>}
+                    {item.id === 'replay' && replayActive && (
+                      <span className="operations-sidebar__replay-dot" aria-hidden="true" />
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
       </aside>
     </>
   )

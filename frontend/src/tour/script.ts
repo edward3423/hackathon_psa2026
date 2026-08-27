@@ -48,7 +48,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         id: 'masthead',
         anchor: 'masthead',
         title: 'One run, always in view',
-        body: 'The masthead never changes shape. Run identity, agent mode, stream health and workflow stage stay in the same five places for the whole demonstration.',
+        body: 'One row, and only what the page below it cannot say: which vessel is late, by how much, the arrival it now expects, and the stage the workflow has reached. Run identity sits in Setup.',
         dwellMs: 5000,
       },
       {
@@ -62,7 +62,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         id: 'stages',
         anchor: 'stage-track',
         title: 'Seven stages, two of them human',
-        body: 'DISPUTE and AWAITING APPROVAL are gates, not steps. The workflow stops at both and will not continue until a person decides.',
+        body: 'Seven dots, one per stage, filling left to right beside the stage the run is on. Two of them are gates: DISPUTE and AWAITING APPROVAL stop the workflow until a person decides.',
         dwellMs: 6000,
       },
       {
@@ -71,7 +71,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         click: 'control-reset',
         anchor: 'controls-bar',
         title: 'The scenario is yours to change',
-        body: 'Six presets, an adjustable delay, a priority emphasis, a choice of agent brain, and a switch that makes a tool time out on purpose. The tour leaves all of them at their defaults so every take is identical.',
+        body: 'Six presets, an adjustable delay, a priority emphasis, a choice of agent brain, and a switch that makes a tool time out on purpose. The panel folds itself away once the run starts. The tour leaves every control at its default.',
         until: () => stageReadout() === 'READY',
         dwellMs: 5000,
       },
@@ -149,7 +149,7 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         id: 'workflow-rail',
         anchor: 'workflow-rail',
         title: 'What ran, and in what order',
-        body: 'Impact and Yard ran in parallel, not in sequence. Both specialists were on the problem before either had finished, and the rail has already carried the run to the approval gate.',
+        body: 'The same seven stages the masthead shows as dots, named, and clickable: each one opens the page that holds its detail. Impact and Yard ran in parallel, not in sequence, and the rail has already carried the run to the approval gate.',
         dwellMs: 8000,
       },
       {
@@ -177,14 +177,14 @@ export const TOUR_CHAPTERS: TourChapter[] = [
         id: 'agents',
         anchor: 'agent-panel',
         title: 'Five specialists, each with a receipt',
-        body: 'Each card shows the agent, its status and the tool it called. Expand one and it names the arguments it passed and the evidence it got back.',
+        body: 'One line per agent: who it is, what it is doing, and what it last reported. Expand one and it names the objective it was given, the tools it called and the evidence it got back.',
         dwellMs: 8000,
       },
       {
         id: 'impact',
         anchor: 'impact-summary',
         title: 'Calculated, not narrated',
-        body: 'The agents decide what to look at. Deterministic Python computes every figure on this panel, so the same scenario produces the same numbers every time.',
+        body: 'The agents decide what to look at. Deterministic Python computes every figure on this page, and this panel is where it reports a physical limit the scenario breaks or a tool that had to be answered from cache.',
         dwellMs: 7000,
       },
       {

@@ -11,6 +11,16 @@ import {
 } from 'recharts'
 
 import type { PlanArchetype, YardForecast } from '../api/types'
+import {
+  axisProps,
+  CHART_ACCENT,
+  CHART_INK,
+  CHART_INK_SOFT,
+  gridProps,
+  legendLabel,
+  legendStyle,
+  tooltipStyle,
+} from '../lib/chartTheme'
 import { titleCase } from '../lib/format'
 
 interface YardForecastPanelProps {
@@ -82,48 +92,38 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
               </figcaption>
               <ResponsiveContainer width="100%" height={190}>
                 <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
-                  <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
+                  <CartesianGrid {...gridProps} vertical={false} />
                   <XAxis
                     dataKey="hour"
-                    stroke="#8292a1"
-                    fontSize={12}
+                    {...axisProps}
                     tickFormatter={(value: number) => `${value}h`}
                     interval="preserveStartEnd"
                   />
                   <YAxis
-                    stroke="#8292a1"
-                    fontSize={12}
+                    {...axisProps}
                     width={44}
                     domain={[0, Math.ceil(block.container_capacity * 1.1)]}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#111b24',
-                      border: '1px solid #354655',
-                      color: '#e5edf3',
-                      fontSize: 12,
-                    }}
-                    labelFormatter={(value) => `Hour ${value}`}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
+                  <Tooltip contentStyle={tooltipStyle} labelFormatter={(value) => `Hour ${value}`} />
+                  <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
                   <ReferenceLine
                     y={congestion}
-                    stroke="#c59a52"
-                    strokeDasharray="5 3"
+                    stroke={CHART_INK_SOFT}
+                    strokeDasharray="6 4"
                     label={{
                       value: '85% congested',
-                      fill: '#c59a52',
+                      fill: CHART_INK_SOFT,
                       fontSize: 12,
                       position: 'insideBottomRight',
                     }}
                   />
                   <ReferenceLine
                     y={block.container_capacity}
-                    stroke="#c86d68"
-                    strokeDasharray="5 3"
+                    stroke={CHART_INK}
+                    strokeWidth={2}
                     label={{
                       value: '100% capacity',
-                      fill: '#c86d68',
+                      fill: CHART_INK,
                       fontSize: 12,
                       position: 'insideTopLeft',
                       dy: -2,
@@ -133,8 +133,9 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                     type="monotone"
                     dataKey="baseline"
                     name="Baseline"
-                    stroke="#8292a1"
-                    strokeWidth={1.6}
+                    stroke={CHART_INK_SOFT}
+                    strokeWidth={2}
+                    strokeDasharray="7 4"
                     dot={false}
                     isAnimationActive={false}
                   />
@@ -143,8 +144,8 @@ export function YardForecastPanel({ baseline, planned, selectedPlan }: YardForec
                       type="monotone"
                       dataKey="planned"
                       name={selectedPlan ? titleCase(selectedPlan) : 'Planned'}
-                      stroke="#4ea3a8"
-                      strokeWidth={1.8}
+                      stroke={CHART_ACCENT}
+                      strokeWidth={2.5}
                       dot={false}
                       isAnimationActive={false}
                     />

@@ -34,7 +34,7 @@ export function MapboxVesselMap({
     <MapboxMap
       initialViewState={INITIAL_VIEW_STATE}
       mapboxAccessToken={accessToken}
-      mapStyle="mapbox://styles/mapbox/dark-v11"
+      mapStyle="mapbox://styles/mapbox/light-v11"
       projection={{ name: 'globe' }}
       attributionControl
       interactiveLayerIds={['live-ais-vessels-mapbox']}
@@ -123,10 +123,10 @@ export function MapboxVesselMap({
           id="live-ais-vessels-mapbox"
           type="circle"
           paint={{
-            'circle-color': '#5bbec7',
+            'circle-color': '#111111',
             'circle-opacity': 0.9,
             'circle-radius': 5,
-            'circle-stroke-color': '#e8fafb',
+            'circle-stroke-color': '#ffffff',
             'circle-stroke-width': 1,
           }}
         />

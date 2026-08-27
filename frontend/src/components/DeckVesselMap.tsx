@@ -160,26 +160,45 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
   const onHover = ({ object, x, y }: PickingInfo<VesselMarker>) => {
     setTooltip(object ? { ...object, x, y } : null)
   }
+  // Paper and ink on the map too. Live AIS traffic is ink; the planned routes
+  // and the vessels on them are the accent, because the route is the thing the
+  // page is asking you to look at.
   const liveVesselLayer = new ScatterplotLayer<VesselMarker>({
     id: 'live-ais-vessels',
     data: liveMarkers,
     getPosition: (vessel) => vessel.position,
     getRadius: 5,
     radiusUnits: 'pixels',
-    getFillColor: [91, 190, 199, 230],
-    getLineColor: [232, 250, 251, 255],
+    getFillColor: [17, 17, 17, 220],
+    getLineColor: [255, 255, 255, 255],
     lineWidthMinPixels: 1,
     stroked: true,
     pickable: true,
     onHover,
   })
   const vesselLayers = [
+    /*
+     * Two passes for one route: a white casing, then the line. Water is now
+     * pale blue and the accent route is blue, so without the casing the two
+     * would be separated by lightness alone. This is what every printed chart
+     * does with a shipping lane, and it costs one layer.
+     */
+    new PathLayer<PlannedVessel>({
+      id: 'optimized-routes-casing',
+      data: PLANNED_VESSELS,
+      getPath: (vessel) => vessel.path,
+      getColor: [255, 255, 255, 235],
+      getWidth: 8,
+      widthUnits: 'pixels',
+      jointRounded: true,
+      capRounded: true,
+    }),
     new PathLayer<PlannedVessel>({
       id: 'optimized-routes',
       data: PLANNED_VESSELS,
       getPath: (vessel) => vessel.path,
       getColor: (vessel) => [...vessel.color, 245],
-      getWidth: 5,
+      getWidth: 4,
       widthUnits: 'pixels',
       jointRounded: true,
       capRounded: true,
@@ -190,8 +209,8 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       getPosition: (vessel) => vessel.position,
       getRadius: 17,
       radiusUnits: 'pixels',
-      getFillColor: [244, 185, 66, 38],
-      getLineColor: [255, 224, 151, 180],
+      getFillColor: [15, 59, 255, 30],
+      getLineColor: [15, 59, 255, 130],
       lineWidthMinPixels: 1,
       stroked: true,
     }),
@@ -201,8 +220,8 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       getPosition: (vessel) => vessel.position,
       getRadius: 10,
       radiusUnits: 'pixels',
-      getFillColor: (vessel) => [...(vessel.color ?? [244, 185, 66]), 255],
-      getLineColor: [247, 250, 248, 255],
+      getFillColor: (vessel) => [...(vessel.color ?? [15, 59, 255]), 255],
+      getLineColor: [255, 255, 255, 255],
       lineWidthMinPixels: 3,
       stroked: true,
       pickable: true,
@@ -213,14 +232,14 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       data: plannedMarkers,
       getPosition: (vessel) => vessel.position,
       getText: (vessel) => vessel.name.replace(/^MV /, ''),
-      getColor: [247, 250, 248, 255],
+      getColor: [17, 17, 17, 255],
       getSize: 12,
       getPixelOffset: (vessel) => vessel.labelOffset ?? [0, -22],
       getTextAnchor: 'middle',
       getAlignmentBaseline: 'bottom',
       fontWeight: 700,
       fontSettings: { sdf: true, fontSize: 64, buffer: 4 },
-      outlineColor: [4, 11, 16, 255],
+      outlineColor: [255, 255, 255, 255],
       outlineWidth: 3,
       billboard: true,
       pickable: false,
@@ -233,8 +252,10 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
       data: FALLBACK_LAND,
       filled: true,
       stroked: true,
-      getFillColor: [35, 52, 58, 255],
-      getLineColor: [72, 90, 95, 170],
+      // --land / --land-edge. The canvas behind is --water, so the two
+      // together read as coast without a single label.
+      getFillColor: [211, 229, 196, 255],
+      getLineColor: [157, 192, 127, 230],
       lineWidthMinPixels: 0.5,
       wrapLongitude: true,
       pickable: false,
@@ -259,7 +280,13 @@ export function DeckVesselMap({ cursor, eventCount }: DeckVesselMapProps) {
             3 SIMULATED SHIPS + ROUTES
           </span>
           <span role="status" aria-live="polite">
-            <i className="deck-vessel-map__key deck-vessel-map__key--live" />
+            {/* The accent means live. Filling this dot while the stream is
+                offline contradicted the word beside it. */}
+            <i
+              className={`deck-vessel-map__key deck-vessel-map__key--live${
+                aisState === 'live' ? ' is-live' : ''
+              }`}
+            />
             AISSTREAM {aisState.toUpperCase()}
           </span>
           <span>

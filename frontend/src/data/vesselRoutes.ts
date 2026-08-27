@@ -53,7 +53,7 @@ export const PLANNED_VESSELS: PlannedVessel[] = [
     ],
     speedKnots: 16.2,
     plan: 'Cape reroute to Singapore',
-    color: [244, 185, 66],
+    color: [15, 59, 255],
   },
   {
     id: 'pacific-link',
@@ -61,7 +61,7 @@ export const PLANNED_VESSELS: PlannedVessel[] = [
     path: [[139.7, 35.4], [128.1, 25.3], [121.3, 14.4], [112.1, 4.8], [103.8, 1.25]],
     speedKnots: 14.8,
     plan: 'Protected onward connection',
-    color: [89, 204, 214],
+    color: [10, 36, 184],
   },
   {
     id: 'borneo-feeder',
@@ -69,6 +69,6 @@ export const PLANNED_VESSELS: PlannedVessel[] = [
     path: [[119.4, -5.1], [114.1, -2.5], [108.2, 0.2], [103.8, 1.25]],
     speedKnots: 11.6,
     plan: 'Feeder arrival re-sequenced',
-    color: [239, 124, 105],
+    color: [17, 17, 17],
   },
 ]

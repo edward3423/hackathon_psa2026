@@ -14,6 +14,16 @@ import {
 
 import type { AnchorComparison, ArmResult, BenchmarkResult, FleetArm } from '../api/types'
 import type { ArmSeries, BenchmarkStream } from '../hooks/useBenchmark'
+import {
+  axisProps,
+  CHART_ACCENT,
+  CHART_INK,
+  CHART_INK_SOFT,
+  gridProps,
+  legendLabel,
+  legendStyle,
+  tooltipStyle,
+} from '../lib/chartTheme'
 
 /**
  * Act 2. Three arms replay April-August 2024 from a blind arrival feed: the
@@ -22,11 +32,35 @@ import type { ArmSeries, BenchmarkStream } from '../hooks/useBenchmark'
  * formats and never derives a headline figure of its own.
  */
 
-const ARM_STYLE: Record<FleetArm, { label: string; colour: string; width: number }> = {
-  HISTORICAL: { label: 'Recorded 2024 (reconstructed)', colour: '#8292a1', width: 1.6 },
-  REACTIVE_BASELINE: { label: 'Reactive baseline', colour: '#c59a52', width: 1.6 },
-  CASCADE_AGENTIC: { label: 'CASCADE agentic', colour: '#4ea3a8', width: 2 },
-  CASCADE_NO_EXTRA_CAPACITY: { label: 'CASCADE without extra berths', colour: '#7f8fb0', width: 1.6 },
+/*
+ * Four arms on one monochrome chart, so identity is the dash pattern, not the
+ * hue. The accent is spent on the one arm the page is arguing about; the other
+ * three are ink at three dash lengths, and the swatch beside each tile draws the
+ * same pattern so the legend and the tiles agree.
+ */
+const ARM_STYLE: Record<
+  FleetArm,
+  { label: string; colour: string; width: number; dash?: string }
+> = {
+  HISTORICAL: {
+    label: 'Recorded 2024 (reconstructed)',
+    colour: CHART_INK_SOFT,
+    width: 2,
+    dash: '2 3',
+  },
+  REACTIVE_BASELINE: {
+    label: 'Reactive baseline',
+    colour: CHART_INK_SOFT,
+    width: 2,
+    dash: '7 4',
+  },
+  CASCADE_AGENTIC: { label: 'CASCADE agentic', colour: CHART_ACCENT, width: 2.5 },
+  CASCADE_NO_EXTRA_CAPACITY: {
+    label: 'CASCADE without extra berths',
+    colour: CHART_INK,
+    width: 2,
+    dash: '10 3 2 3',
+  },
 }
 
 const RECORDED_PEAK_DAYS = 7
@@ -157,7 +191,19 @@ function ArmTiles({ arm }: { arm: ArmResult }) {
   return (
     <article className="benchmark-arm-card" data-arm={arm.arm}>
       <header>
-        <span className="benchmark-arm-swatch" style={{ background: style.colour }} aria-hidden />
+        <span className="benchmark-arm-swatch" aria-hidden>
+          <svg width="22" height="10" viewBox="0 0 22 10">
+            <line
+              x1="0"
+              y1="5"
+              x2="22"
+              y2="5"
+              stroke={style.colour}
+              strokeWidth={style.width}
+              strokeDasharray={style.dash}
+            />
+          </svg>
+        </span>
         <h3>{arm.label || style.label}</h3>
         <span className={`benchmark-provenance benchmark-provenance--${arm.provenance.toLowerCase()}`}>
           {arm.provenance}
@@ -371,76 +417,81 @@ export function BenchmarkPage({ benchmark }: BenchmarkPageProps) {
           Three-day rolling mean wait from arrival to berth, in days. Recorded peak and the
           two-day recovery target are drawn for reference.
         </figcaption>
-        <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
-            <CartesianGrid stroke="#263746" strokeDasharray="2 4" />
-            <XAxis
-              dataKey="date"
-              stroke="#8292a1"
-              fontSize={12}
-              tickFormatter={shortDate}
-              minTickGap={36}
-            />
-            <YAxis
-              stroke="#8292a1"
-              fontSize={12}
-              width={44}
-              domain={[0, 8]}
-              tickFormatter={(value: number) => `${value}d`}
-            />
-            <Tooltip
-              contentStyle={{
-                background: '#111b24',
-                border: '1px solid #354655',
-                color: '#e5edf3',
-                fontSize: 12,
-              }}
-              labelFormatter={(value) => (typeof value === 'string' ? shortDate(value) : value)}
-              formatter={(value) => (typeof value === 'number' ? `${value.toFixed(2)} d` : '-')}
-            />
-            <Legend wrapperStyle={{ fontSize: 12, color: '#a9b7c3' }} />
-            <ReferenceLine
-              y={RECORDED_PEAK_DAYS}
-              stroke="#c86d68"
-              strokeDasharray="5 3"
-              label={{
-                value: 'recorded peak, late May',
-                fill: '#c86d68',
-                fontSize: 12,
-                position: 'insideTopLeft',
-                dy: -2,
-              }}
-            />
-            <ReferenceLine
-              y={RECOVERY_TARGET_DAYS}
-              stroke="#c59a52"
-              strokeDasharray="5 3"
-              label={{
-                value: 'recovery target',
-                fill: '#c59a52',
-                fontSize: 12,
-                position: 'insideBottomRight',
-              }}
-            />
-            {decisionDates.map((date) => (
-              <ReferenceLine key={date} x={date} stroke="#4ea3a8" strokeOpacity={0.35} />
-            ))}
-            {drawnArms.map((arm) => (
-              <Line
-                key={arm}
-                type="monotone"
-                dataKey={arm}
-                name={ARM_STYLE[arm].label}
-                stroke={ARM_STYLE[arm].colour}
-                strokeWidth={ARM_STYLE[arm].width}
-                strokeDasharray={arm === 'HISTORICAL' ? '4 3' : undefined}
-                dot={false}
-                isAnimationActive={false}
-                connectNulls
+        {/* Before a run there is no series, and an empty 320px plot frame reads as
+            a chart that failed rather than one nobody has asked for yet. The
+            figure itself stays mounted, because the guided tour anchors it. */}
+        {rows.length === 0 ? (
+          <p className="benchmark-chart__empty">
+            Run the benchmark to replay 153 days of arrivals through the three arms.
+          </p>
+        ) : (
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 4, left: 0 }}>
+              <CartesianGrid {...gridProps} vertical={false} />
+              <XAxis dataKey="date" {...axisProps} tickFormatter={shortDate} minTickGap={36} />
+              <YAxis
+                {...axisProps}
+                width={44}
+                domain={[0, 8]}
+                tickFormatter={(value: number) => `${value}d`}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              <Tooltip
+                contentStyle={tooltipStyle}
+                labelFormatter={(value) => (typeof value === 'string' ? shortDate(value) : value)}
+                formatter={(value) => (typeof value === 'number' ? `${value.toFixed(2)} d` : '-')}
+              />
+              <Legend wrapperStyle={legendStyle} formatter={legendLabel} />
+              <ReferenceLine
+                y={RECORDED_PEAK_DAYS}
+                stroke={CHART_INK}
+                strokeWidth={2}
+                label={{
+                  value: 'recorded peak, late May',
+                  fill: CHART_INK,
+                  fontSize: 12,
+                  position: 'insideTopLeft',
+                  dy: -2,
+                }}
+              />
+              <ReferenceLine
+                y={RECOVERY_TARGET_DAYS}
+                stroke={CHART_INK_SOFT}
+                strokeDasharray="6 4"
+                label={{
+                  value: 'recovery target',
+                  fill: CHART_INK_SOFT,
+                  fontSize: 12,
+                  position: 'insideBottomRight',
+                }}
+              />
+              {decisionDates.map((date) => (
+                /* Annotations, not the series: a dozen accent verticals competed
+                   with the one accent line they annotate. */
+                <ReferenceLine
+                  key={date}
+                  x={date}
+                  stroke={CHART_INK_SOFT}
+                  strokeDasharray="2 4"
+                  strokeOpacity={0.55}
+                />
+              ))}
+              {drawnArms.map((arm) => (
+                <Line
+                  key={arm}
+                  type="monotone"
+                  dataKey={arm}
+                  name={ARM_STYLE[arm].label}
+                  stroke={ARM_STYLE[arm].colour}
+                  strokeWidth={ARM_STYLE[arm].width}
+                  strokeDasharray={ARM_STYLE[arm].dash}
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls
+                />
+              ))}
+              </LineChart>
+          </ResponsiveContainer>
+        )}
       </figure>
 
       {result && (

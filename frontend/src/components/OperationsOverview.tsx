@@ -1,15 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Anchor,
-  ArrowRight,
-  Boxes,
-  Factory,
-  Ship,
-  Snowflake,
-  Warehouse,
-  X,
-  Zap,
-} from 'lucide-react'
+import { Anchor, Boxes, Factory, Ship, Snowflake, Warehouse, X, Zap } from 'lucide-react'
 
 import type {
   ConnectionAnalysis,
@@ -21,7 +11,8 @@ import type {
 import type { PortVessel, ScenarioPreset } from '../data/demo'
 import { PORT_VESSELS } from '../data/demo'
 import { scenarioPreview } from '../data/scenarioPreview.generated'
-import { formatDateTime, spaced } from '../lib/format'
+import { yardPeakPercent } from '../lib/derive'
+import { formatDateTime } from '../lib/format'
 
 interface WorkflowStep {
   id: string
@@ -33,10 +24,10 @@ interface WorkflowStep {
 const WORKFLOW_STEPS: WorkflowStep[] = [
   { id: 'alert', label: 'Alert', stage: 'READY', rank: 0 },
   { id: 'impact', label: 'Impact', stage: 'ASSESSING', rank: 1 },
-  { id: 'yard-forecast', label: 'Yard Forecast', stage: 'ASSESSING', rank: 1 },
-  { id: 'agent-analysis', label: 'Agent Analysis', stage: 'DISPUTE', rank: 2 },
-  { id: 'recovery-planning', label: 'Recovery Planning', stage: 'PLANNING', rank: 3 },
-  { id: 'human-approval', label: 'Human Approval', stage: 'AWAITING_APPROVAL', rank: 4 },
+  { id: 'yard-forecast', label: 'Yard forecast', stage: 'ASSESSING', rank: 1 },
+  { id: 'agent-analysis', label: 'Agent analysis', stage: 'DISPUTE', rank: 2 },
+  { id: 'recovery-planning', label: 'Planning', stage: 'PLANNING', rank: 3 },
+  { id: 'human-approval', label: 'Approval', stage: 'AWAITING_APPROVAL', rank: 4 },
   { id: 'execution', label: 'Execution', stage: 'EXECUTING', rank: 5 },
 ]
 
@@ -83,6 +74,13 @@ function riskStatus(vessel: PortVessel): string {
   return 'Connection monitored'
 }
 
+/*
+ * Five numbers, one rail, one picture, one ranking. The page used to carry a
+ * seven-metric strip, a second card restating the delay and both ETAs, a
+ * seven-step rail duplicating the masthead's, the schematic, the ranking with a
+ * paragraph under every row, and a closing disclaimer - with the delay stated
+ * four times and the workflow stage five times across the screen.
+ */
 export function OperationsOverview({
   scenario,
   preset,
@@ -101,9 +99,7 @@ export function OperationsOverview({
   const lastTriggerRef = useRef<HTMLButtonElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
 
-  const selectedVessel =
-    PORT_VESSELS.find((vessel) => vessel.id === selectedVesselId) ?? null
-  const inboundVessel = PORT_VESSELS.find((vessel) => vessel.role === 'INBOUND')
+  const selectedVessel = PORT_VESSELS.find((vessel) => vessel.id === selectedVesselId) ?? null
   const currentRank = STAGE_RANK[stage]
 
   // Before a run there is no analysis, so the panel shows what the engine will
@@ -128,21 +124,18 @@ export function OperationsOverview({
         priority: 1,
         label: 'Refrigerated medicine',
         count: counts.PHARMA_REEFER ?? 0,
-        description: 'Highest priority. Electrical plug capacity is protected first.',
         icon: Snowflake,
       },
       {
         priority: 2,
-        label: 'Time-critical manufacturing cargo',
+        label: 'Time-critical manufacturing',
         count: counts.TIME_CRITICAL_MANUFACTURING ?? 0,
-        description: 'Components needed to keep a production line moving.',
         icon: Factory,
       },
       {
         priority: 3,
         label: 'Standard dry cargo',
         count: counts.GENERAL_DRY ?? 0,
-        description: 'Cargo that can usually tolerate a longer onward delay.',
         icon: Boxes,
       },
     ]
@@ -168,19 +161,24 @@ export function OperationsOverview({
     })
   }, [baselineYard, cursorHour, preview.blocks])
 
-  const yardPeak = baselineYard
-    ? Math.round(
-        Math.max(
-          0,
-          ...baselineYard.blocks.map(
-            (block) => (block.peak_occupancy / block.container_capacity) * 100,
-          ),
-        ),
-      )
-    : preview.yardPeak
+  // The same helper the impact panel used, rather than a second copy of the
+  // arithmetic: a zero-capacity block made the inline version return NaN.
+  const yardPeak = baselineYard ? yardPeakPercent(baselineYard) : preview.yardPeak
   const reeferShortage = baselineYard?.reefer_shortages[0]
   const reeferDemand = reeferShortage?.required_plugs ?? preview.reeferDemand
   const reeferCapacity = reeferShortage?.available_plugs ?? preview.reeferCapacity
+
+  const headline = [
+    { label: 'Containers affected', value: affectedContainers.toLocaleString(), tone: '' },
+    { label: 'Connections at risk', value: atRiskContainers.toLocaleString(), tone: 'warning' },
+    { label: 'Expected misses', value: expectedMisses.toLocaleString(), tone: 'critical' },
+    { label: 'Yard peak', value: `${yardPeak}%`, tone: yardPeak >= 85 ? 'warning' : '' },
+    {
+      label: 'Reefer plugs',
+      value: `${reeferDemand} / ${reeferCapacity}`,
+      tone: reeferDemand > reeferCapacity ? 'critical' : '',
+    },
+  ]
 
   useEffect(() => {
     if (!selectedVessel) return
@@ -224,7 +222,7 @@ export function OperationsOverview({
       aria-pressed={selectedVesselId === vessel.id}
       aria-controls="overview-vessel-details"
     >
-      <Ship size={18} aria-hidden="true" />
+      <Ship size={16} aria-hidden="true" />
       <span className="operations-overview__vessel-text">
         <strong>{vessel.name}</strong>
         <span className="operations-overview__vessel-meta">
@@ -247,80 +245,31 @@ export function OperationsOverview({
         aria-labelledby="situation-title"
         data-tour="situation-card"
       >
-        <div className="operations-overview__section-heading">
-          <div>
-            <h2 id="situation-title">{preset.title}</h2>
-            <p>{preset.summary}</p>
-          </div>
-          <div className="operations-overview__active-status" role="status">
-            <AlertStatusIcon />
-            <span>Disruption active</span>
-          </div>
-        </div>
+        <h2 id="situation-title">{preset.title}</h2>
+        <p className="operations-overview__lede">{preset.summary}</p>
+        <p className="operations-overview__arrival">
+          <span>Arrival</span>
+          <time>{formatDateTime(scenario.alert.original_eta)}</time>
+          <span className="visually-hidden">to</span>
+          <span aria-hidden="true">-&gt;</span>
+          <time>{revisedEta(scenario.alert.original_eta, preset.delayHours)}</time>
+        </p>
+        <p className="operations-overview__objective">{scenario.objective}</p>
 
         <dl className="operations-overview__metrics">
-          <div className="operations-overview__metric operations-overview__metric--primary">
-            <dt>Vessel delay</dt>
-            <dd>+{preset.delayHours}h</dd>
-            <span>{scenario.alert.vessel_name}</span>
-          </div>
-          <div className="operations-overview__metric">
-            <dt>Containers affected</dt>
-            <dd>{affectedContainers.toLocaleString()}</dd>
-          </div>
-          <div className="operations-overview__metric operations-overview__metric--warning">
-            <dt>Connections at risk</dt>
-            <dd>{atRiskContainers.toLocaleString()}</dd>
-          </div>
-          <div className="operations-overview__metric operations-overview__metric--critical">
-            <dt>Expected misses</dt>
-            <dd>{expectedMisses.toLocaleString()}</dd>
-          </div>
-          <div className="operations-overview__metric operations-overview__metric--warning">
-            <dt>Yard peak occupancy</dt>
-            <dd>{yardPeak}%</dd>
-          </div>
-          <div className="operations-overview__metric">
-            <dt>Reefer plug demand</dt>
-            <dd>
-              {reeferDemand} / {reeferCapacity}
-            </dd>
-          </div>
-          <div className="operations-overview__metric operations-overview__metric--stage">
-            <dt>Current workflow stage</dt>
-            <dd>{spaced(stage)}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="operations-overview__disruption" aria-labelledby="disruption-title">
-        <div className="operations-overview__disruption-copy">
-          <h2 id="disruption-title">
-            Incoming vessel {scenario.alert.vessel_name} delayed
-          </h2>
-          <p>{scenario.description}</p>
-        </div>
-        <dl className="operations-overview__disruption-facts">
-          <div>
-            <dt>Original estimated arrival</dt>
-            <dd>{formatDateTime(scenario.alert.original_eta)}</dd>
-          </div>
-          <div>
-            <dt>Updated estimated arrival</dt>
-            <dd>{revisedEta(scenario.alert.original_eta, preset.delayHours)}</dd>
-          </div>
-          <div>
-            <dt>Delay</dt>
-            <dd>+{preset.delayHours} hours</dd>
-          </div>
-          <div>
-            <dt>Containers onboard</dt>
-            <dd>{inboundVessel?.containers.toLocaleString() ?? '1,284'}</dd>
-          </div>
-          <div>
-            <dt>Transshipment containers</dt>
-            <dd>{affectedContainers.toLocaleString()}</dd>
-          </div>
+          {headline.map((metric) => (
+            <div
+              key={metric.label}
+              className={
+                metric.tone
+                  ? `operations-overview__metric operations-overview__metric--${metric.tone}`
+                  : 'operations-overview__metric'
+              }
+            >
+              <dd>{metric.value}</dd>
+              <dt>{metric.label}</dt>
+            </div>
+          ))}
         </dl>
       </section>
 
@@ -329,18 +278,12 @@ export function OperationsOverview({
         aria-labelledby="workflow-title"
         data-tour="workflow-rail"
       >
-        <div className="operations-overview__section-heading">
-          <div>
-            <h2 id="workflow-title">Disruption response</h2>
-          </div>
-          <p>Select a stage to inspect its operational detail.</p>
-        </div>
+        <h2 id="workflow-title" className="visually-hidden">
+          Disruption response
+        </h2>
         <ol className="operations-overview__workflow-list">
-          {WORKFLOW_STEPS.map((step, index) => {
-            const current =
-              stage !== 'FAILED' &&
-              (step.stage === stage ||
-                (stage === 'ASSESSING' && step.stage === 'ASSESSING'))
+          {WORKFLOW_STEPS.map((step) => {
+            const current = stage !== 'FAILED' && step.stage === stage
             const complete = stage === 'COMPLETE' || step.rank < currentRank
 
             return (
@@ -355,18 +298,11 @@ export function OperationsOverview({
                   className="operations-overview__workflow-button"
                   onClick={() => onStageSelect?.(step.stage)}
                   aria-current={current ? 'step' : undefined}
-                  aria-label={`${step.label}, ${complete ? 'completed' : current ? 'current' : 'upcoming'}`}
+                  aria-label={`${step.label}, ${complete ? 'completed' : current ? 'current' : 'upcoming'}. Open its detail.`}
                 >
                   <span className="operations-overview__workflow-marker" aria-hidden="true" />
                   <span>{step.label}</span>
                 </button>
-                {index < WORKFLOW_STEPS.length - 1 && (
-                  <ArrowRight
-                    className="operations-overview__workflow-connector"
-                    size={16}
-                    aria-hidden="true"
-                  />
-                )}
               </li>
             )
           })}
@@ -380,12 +316,14 @@ export function OperationsOverview({
           data-tour="port-schematic"
         >
           <div className="operations-overview__section-heading">
-            <div>
-              <h2 id="port-title">Port and yard schematic</h2>
-            </div>
+            <h2 id="port-title">Port and yard</h2>
             <div className="operations-overview__map-controls">
-              <span className="operations-overview__map-note">Hour +{cursorHour}</span>
-              <div className="operations-overview__layers" role="group" aria-label="Schematic layers">
+              <span className="operations-overview__map-note">H+{cursorHour}</span>
+              <div
+                className="operations-overview__layers"
+                role="group"
+                aria-label="Schematic layers"
+              >
                 {(Object.keys(layers) as Array<keyof typeof layers>).map((layer) => (
                   <button
                     type="button"
@@ -437,17 +375,14 @@ export function OperationsOverview({
                 })
               }
             >
-              <Anchor size={16} aria-hidden="true" />
+              <Anchor size={15} aria-hidden="true" />
               <span>Terminal 1 berth line</span>
             </button>
 
             <div className="operations-overview__terminal">
               <span className="operations-overview__zone-label">Terminal yard</span>
               {layers.yard && (
-                <div
-                  className="operations-overview__yard-blocks"
-                  aria-label="Synthetic yard blocks"
-                >
+                <div className="operations-overview__yard-blocks" aria-label="Synthetic yard blocks">
                   {yardBlocks.map((block) => (
                     <button
                       type="button"
@@ -471,9 +406,9 @@ export function OperationsOverview({
                         })
                       }
                     >
-                      <Warehouse size={15} aria-hidden="true" />
+                      <Warehouse size={14} aria-hidden="true" />
                       <strong>{block.id}</strong>
-                      <span>{block.occupancy}% forecast</span>
+                      <span>{block.occupancy}%</span>
                     </button>
                   ))}
                   {layers.reefers && (
@@ -492,9 +427,9 @@ export function OperationsOverview({
                         })
                       }
                     >
-                      <Zap size={15} aria-hidden="true" />
-                      <strong>Reefer racks</strong>
-                      <span>{reeferDemand} plugs forecast</span>
+                      <Zap size={14} aria-hidden="true" />
+                      <strong>Reefers</strong>
+                      <span>{reeferDemand} plugs</span>
                     </button>
                   )}
                 </div>
@@ -517,32 +452,25 @@ export function OperationsOverview({
           data-tour="cargo-order"
         >
           <div className="operations-overview__section-heading">
-            <div>
-              <h2 id="cargo-title">Protection order</h2>
-            </div>
+            <h2 id="cargo-title">Protection order</h2>
             <span>{affectedContainers.toLocaleString()} affected</span>
           </div>
-          <p className="operations-overview__cargo-explanation">
-            Priority determines which cargo CASCADE protects first when time or terminal capacity
-            is limited.
-          </p>
           <ol className="operations-overview__cargo-list">
             {cargoBreakdown.map((cargo) => {
               const Icon = cargo.icon
               return (
-                <li key={cargo.priority} className={`operations-overview__cargo-priority-${cargo.priority}`}>
-                  <div className="operations-overview__cargo-icon" aria-hidden="true">
-                    <Icon size={18} />
-                  </div>
-                  <div className="operations-overview__cargo-copy">
-                    <span>Priority {cargo.priority}</span>
+                <li
+                  key={cargo.priority}
+                  className={`operations-overview__cargo-priority-${cargo.priority}`}
+                >
+                  <Icon size={15} aria-hidden="true" />
+                  <span className="operations-overview__cargo-copy">
                     <strong>{cargo.label}</strong>
-                    <p>{cargo.description}</p>
-                  </div>
-                  <div className="operations-overview__cargo-count">
-                    <strong>{cargo.count.toLocaleString()}</strong>
-                    <span>containers</span>
-                  </div>
+                    <small>Priority {cargo.priority}</small>
+                  </span>
+                  <span className="operations-overview__cargo-count">
+                    {cargo.count.toLocaleString()}
+                  </span>
                   <progress
                     max={affectedContainers || 1}
                     value={cargo.count}
@@ -552,13 +480,10 @@ export function OperationsOverview({
               )
             })}
           </ol>
-          <div className="operations-overview__cargo-decision-note">
-            <Snowflake size={16} aria-hidden="true" />
-            <p>
-              Refrigerated medicine is driving the recovery decision because it needs electrical
-              plugs while waiting in the yard.
-            </p>
-          </div>
+          <p className="operations-overview__cargo-note">
+            Refrigerated medicine drives the recovery decision: it needs an electrical plug for
+            every hour it waits in the yard.
+          </p>
         </section>
       </div>
 
@@ -569,9 +494,7 @@ export function OperationsOverview({
           aria-labelledby="overview-vessel-title"
         >
           <div className="operations-overview__vessel-drawer-header">
-            <div>
-              <h2 id="overview-vessel-title">{selectedVessel.name}</h2>
-            </div>
+            <h2 id="overview-vessel-title">{selectedVessel.name}</h2>
             <button
               ref={closeButtonRef}
               type="button"
@@ -579,10 +502,12 @@ export function OperationsOverview({
               onClick={closeVesselDetails}
               aria-label="Close vessel details"
             >
-              <X size={18} aria-hidden="true" />
+              <X size={17} aria-hidden="true" />
             </button>
           </div>
-          <div className={`operations-overview__vessel-risk operations-overview__risk--${selectedVessel.risk.toLowerCase()}`}>
+          <div
+            className={`operations-overview__vessel-risk operations-overview__risk--${selectedVessel.risk.toLowerCase()}`}
+          >
             <span>{selectedVessel.risk} RISK</span>
             <strong>{riskStatus(selectedVessel)}</strong>
           </div>
@@ -616,10 +541,6 @@ export function OperationsOverview({
               <dd>{selectedVessel.connections.toLocaleString()}</dd>
             </div>
             <div>
-              <dt>Delay status</dt>
-              <dd>{riskStatus(selectedVessel)}</dd>
-            </div>
-            <div>
               <dt>Current risk</dt>
               <dd>{selectedVessel.risk}</dd>
             </div>
@@ -645,25 +566,15 @@ export function OperationsOverview({
               onClick={() => setSelectedInfrastructure(null)}
               aria-label="Close infrastructure details"
             >
-              <X size={18} aria-hidden="true" />
+              <X size={17} aria-hidden="true" />
             </button>
           </div>
           <div className="operations-overview__infrastructure-detail">
             <strong>{selectedInfrastructure.status}</strong>
             <p>{selectedInfrastructure.detail}</p>
-            <p>All capacity and timing values are synthetic or calculated for this demonstration.</p>
           </div>
         </aside>
       )}
-
-      <p className="operations-overview__safety-note">
-        CASCADE uses synthetic port data and mocked actions. It cannot affect real terminal
-        operations.
-      </p>
     </div>
   )
-}
-
-function AlertStatusIcon() {
-  return <Anchor size={16} aria-hidden="true" />
 }
