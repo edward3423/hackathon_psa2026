@@ -12,6 +12,7 @@ interface ControlsBarProps {
   portTime: string
   onChange: (controls: ScenarioControls) => void
   onBrainModeChange: (mode: BrainMode) => void
+  onStartReplay: () => void
   scenarioPresets: ScenarioPreset[]
   selectedScenarioId: string
   onScenarioSelect: (scenarioId: string) => void
@@ -36,6 +37,7 @@ export function ControlsBar({
   portTime,
   onChange,
   onBrainModeChange,
+  onStartReplay,
   scenarioPresets,
   selectedScenarioId,
   onScenarioSelect,
@@ -128,6 +130,16 @@ export function ControlsBar({
         />
         Simulate sailing lookup timeout
       </label>
+
+      {/* Playback is rigging too: the captured-run replay exists for the live
+          fallback, not for the audience, so its trigger lives with the rest of
+          the rigging rather than in the masthead. */}
+      <div className="control-field control-field--playback">
+        Playback
+        <button type="button" disabled={disabled} onClick={onStartReplay}>
+          Start demo replay
+        </button>
+      </div>
 
       {/* The run's identity, which used to occupy five permanent cells in the
           masthead. It is worth reading once per run, not once per glance. */}

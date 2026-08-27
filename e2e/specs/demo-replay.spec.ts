@@ -7,6 +7,7 @@ import {
   resetBackend,
   resolveReeferDispute,
   stageReadout,
+  startDemoReplay,
 } from './helpers'
 
 // PRD 9.20 honest Replay Mode: a previously captured valid run replays
@@ -23,7 +24,7 @@ test('replay mode: persistent DEMO REPLAY label and offline completion', async (
 
   await openDashboard(page)
 
-  await page.getByRole('button', { name: 'Start demo replay' }).click()
+  await startDemoReplay(page)
 
   // The DEMO REPLAY label is visible immediately and stays visible.
   const replayLabel = page.locator('.top-bar .replay-badge')

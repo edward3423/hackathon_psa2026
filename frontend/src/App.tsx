@@ -450,7 +450,6 @@ function App() {
           onStartTour={() => void startTour()}
           onToggleSetup={() => setSetupOpen((current) => !current)}
           onStart={() => startRun(brainMode === 'LIVE_STUB' ? undefined : brainMode)}
-          onStartReplay={() => startRun('DEMO_REPLAY')}
           onReset={() => void resetRun()}
           onOpenNavigation={() => setMobileNavigationOpen(true)}
           onStageSelect={(selectedStage) => setActivePage(pageForStage(selectedStage))}
@@ -462,6 +461,7 @@ function App() {
             brainMode={brainMode}
             disabled={streaming}
             run={run}
+            onStartReplay={() => startRun('DEMO_REPLAY')}
             portTime={displayScenario.alert.event_time}
             onChange={setControls}
             onBrainModeChange={setBrainMode}

@@ -60,7 +60,6 @@ interface TopBarProps {
   onStartTour?: () => void
   onToggleSetup?: () => void
   onStart?: () => void
-  onStartReplay?: () => void
   onReset?: () => void
   onOpenNavigation: () => void
   onStageSelect?: (stage: WorkflowStage) => void
@@ -90,7 +89,6 @@ export function TopBar({
   onStartTour,
   onToggleSetup,
   onStart,
-  onStartReplay,
   onReset,
   onOpenNavigation,
   onStageSelect,
@@ -276,16 +274,6 @@ export function TopBar({
                 onClick={onReset}
               >
                 Reset
-              </button>
-              <button
-                type="button"
-                className="ghost-action"
-                aria-label="Start demo replay"
-                title="Start demo replay"
-                disabled={streaming}
-                onClick={onStartReplay}
-              >
-                Replay
               </button>
               <button
                 type="button"

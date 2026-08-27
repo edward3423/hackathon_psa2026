@@ -19,6 +19,16 @@ export async function startRun(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Start run' }).click()
 }
 
+/**
+ * Start the recorded demo replay. Its trigger lives inside the backtick debug
+ * panel, so this walks the same two clicks a presenter would; the panel closes
+ * itself when the run starts.
+ */
+export async function startDemoReplay(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Debug' }).click()
+  await page.getByRole('button', { name: 'Start demo replay' }).click()
+}
+
 /** Move between the persistent mission-control workspaces. */
 export async function navigateTo(page: Page, label: string): Promise<void> {
   const navigation = page.getByRole('navigation', { name: 'CASCADE sections' })

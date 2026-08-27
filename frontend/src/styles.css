@@ -769,6 +769,25 @@ time,
   accent-color: var(--amber);
 }
 
+/* Dressed like the selects beside it, not like a masthead action: the replay
+   trigger is rigging with the same visual weight as the rest of the strip. */
+.control-field--playback button {
+  justify-self: start;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: var(--hairline) solid var(--glass-edge);
+  color: var(--ink);
+  background: var(--glass-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.control-field--playback button:hover:not(:disabled) {
+  border-color: var(--rule);
+  background: var(--glass-hover);
+}
+
 /* The run's identity, which used to hold five permanent cells in the masthead. */
 .control-identity {
   grid-column: 1 / -1;

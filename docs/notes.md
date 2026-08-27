@@ -49,7 +49,8 @@ run needs 15-21 calls.
 How it works:
 
 - New run mode `LIVE_CLAUDE` (contracts.RunMode), selectable in the UI via
-  the "Agent brain" dropdown, or via `POST /api/runs?mode=LIVE_CLAUDE`.
+  the "Reasoning engine" dropdown in the backtick-toggled debug panel, or
+  via `POST /api/runs?mode=LIVE_CLAUDE`.
 - `ClaudeBrain` (src/cascade/agents/local_claude.py) implements the same
   AgentBrain seam as `GeminiBrain`: identical versioned prompts, identical
   user messages (shared builders in agents/base.py), local pydantic

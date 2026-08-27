@@ -339,6 +339,9 @@ describe('CASCADE dashboard', () => {
 
   it('shows a persistent DEMO REPLAY label when a replay run starts', async () => {
     render(<App />)
+    // The replay trigger lives inside the backtick debug panel now, so the
+    // test walks the same two clicks a presenter would.
+    fireEvent.click(await screen.findByRole('button', { name: 'Debug' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Start demo replay' }))
     await waitFor(() => expect(FakeEventSource.instances).toHaveLength(1))
 

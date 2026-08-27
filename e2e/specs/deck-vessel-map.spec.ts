@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 
-import { navigateTo, openDashboard, resetBackend, resolveReeferDispute } from './helpers'
+import {
+  navigateTo,
+  openDashboard,
+  resetBackend,
+  resolveReeferDispute,
+  startDemoReplay,
+} from './helpers'
 
 test.beforeEach(async ({ request }) => {
   await resetBackend(request)
@@ -18,7 +24,7 @@ test('Deck.gl vessel map replays routes and reports AISStream state', async ({ p
   await expect(map.getByText(/MAPBOX (ACTIVE|LOADING)|LOCAL MAP FALLBACK/)).toBeVisible()
   await expect(map.locator('canvas')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Start demo replay' }).click()
+  await startDemoReplay(page)
   await resolveReeferDispute(page)
   await expect(page.getByRole('region', { name: 'Human approval' })).toBeVisible()
   await page.getByRole('button', { name: 'Restart' }).click()

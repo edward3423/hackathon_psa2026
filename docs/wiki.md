@@ -265,8 +265,9 @@ CLI is not on PATH; decision record in docs/notes.md) - the day-to-day live
 driver while the Gemini free tier stays at 20 requests/day. DEMO_REPLAY =
 replays
 fixtures/replay_events.json offline; approval interaction preserved; UI
-shows persistent exact-text "DEMO REPLAY". The UI "Agent brain" dropdown
-selects LIVE_STUB / LIVE_CLAUDE / LIVE_GEMINI for the Start run button.
+shows persistent exact-text "DEMO REPLAY". The UI "Reasoning engine"
+dropdown (in the backtick-toggled debug panel) selects LIVE_STUB /
+LIVE_CLAUDE / LIVE_GEMINI for the Start run button.
 Shared live-brain user messages live in agents/base.py
 (summary_message/proposal_message/revision_message) so Gemini and Claude
 send byte-identical requests.
