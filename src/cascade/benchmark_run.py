@@ -14,6 +14,7 @@ UI is expected to show it. Replay never impersonates live.
 """
 
 import asyncio
+import contextlib
 import json
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -168,8 +169,18 @@ class BenchmarkRun:
         self._task = asyncio.create_task(self._run_safely())
 
     def cancel(self) -> None:
-        if self._task is not None and not self._task.done():
-            self._task.cancel()
+        if self._task is None or self._task.done():
+            return
+        self._task.cancel()
+        # Mirrors WorkflowRun.cancel: a task cancelled before its first step
+        # never reaches _run_safely's finally, so mark it finished here too.
+        self.finished = True
+        with contextlib.suppress(RuntimeError):
+            asyncio.get_running_loop().create_task(self._notify_finished())
+
+    async def _notify_finished(self) -> None:
+        async with self._cond:
+            self._cond.notify_all()
 
     async def _run_safely(self) -> None:
         try:
@@ -307,6 +318,13 @@ def _decisions_by_day(
     return grouped
 
 
+# A benchmark occupies a worker thread for its whole simulation, so the active
+# bound is tighter than the workflow store's; retention only has to cover the
+# page that is still reading a finished result.
+MAX_ACTIVE_BENCHMARKS = 2
+MAX_RETAINED_BENCHMARKS = 16
+
+
 class BenchmarkStore:
     """In-memory benchmark registry. Deliberately separate from RunStore."""
 
@@ -315,7 +333,22 @@ class BenchmarkStore:
         self.runner = runner
         self.day_delay = day_delay
 
+    def _make_room(self) -> None:
+        # Same policy as RunStore._make_room: cancel the oldest active run
+        # instead of refusing the new one, then trim finished history.
+        active = [run_id for run_id, run in self._runs.items() if not run.finished]
+        for run_id in active[: max(0, len(active) - (MAX_ACTIVE_BENCHMARKS - 1))]:
+            self._runs.pop(run_id).cancel()
+        while len(self._runs) >= MAX_RETAINED_BENCHMARKS:
+            oldest_finished = next(
+                (run_id for run_id, run in self._runs.items() if run.finished), None
+            )
+            if oldest_finished is None:
+                break
+            del self._runs[oldest_finished]
+
     def create(self, request: CreateBenchmarkRequest) -> BenchmarkRun:
+        self._make_room()
         run = BenchmarkRun(
             benchmark_id=str(uuid4()),
             config=config_from_request(request),

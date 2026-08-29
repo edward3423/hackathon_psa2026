@@ -10,6 +10,7 @@ TraceEvent fields and RunResults.
 """
 
 import asyncio
+import contextlib
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -120,8 +121,20 @@ class WorkflowRun:
         self._task = asyncio.create_task(self._run_safely())
 
     def cancel(self) -> None:
-        if self._task is not None and not self._task.done():
-            self._task.cancel()
+        if self._task is None or self._task.done():
+            return
+        self._task.cancel()
+        # A task cancelled before its first scheduling step never enters its
+        # coroutine, so _run_safely's finally cannot mark it finished. Set the
+        # flag here and wake any stream waiting on it; when the task did start,
+        # its own finally does the same and both writes agree.
+        self.finished = True
+        with contextlib.suppress(RuntimeError):
+            asyncio.get_running_loop().create_task(self._notify_finished())
+
+    async def _notify_finished(self) -> None:
+        async with self._cond:
+            self._cond.notify_all()
 
     async def _run_safely(self) -> None:
         try:
@@ -995,6 +1008,14 @@ def default_brain_factory(mode: RunMode) -> AgentBrain:
     return ScriptedBrain()
 
 
+# The UI can watch exactly one run, so concurrent unfinished runs beyond a
+# handful are abandoned ones. Bounding them caps the asyncio tasks and, on the
+# live modes, the model calls a runaway client could start; bounding retention
+# caps the memory a long-lived process holds in traces.
+MAX_ACTIVE_RUNS = 4
+MAX_RETAINED_RUNS = 32
+
+
 class RunStore:
     """In-memory run registry with pluggable toolbox and brain seams."""
 
@@ -1009,7 +1030,28 @@ class RunStore:
         self.brain_factory = brain_factory
         self.event_delay = event_delay
 
+    def _make_room(self) -> None:
+        """Bound the registry before admitting a new run.
+
+        Cancelling the oldest active run rather than refusing the new one keeps
+        the demo unblockable: a presenter who abandons runs at a pause never
+        meets an error, while the store still cannot grow without limit. An
+        evicted run's open SSE stream ends cleanly, because cancellation marks
+        the run finished and the generator holds its own reference.
+        """
+        active = [run_id for run_id, run in self._runs.items() if not run.finished]
+        for run_id in active[: max(0, len(active) - (MAX_ACTIVE_RUNS - 1))]:
+            self._runs.pop(run_id).cancel()
+        while len(self._runs) >= MAX_RETAINED_RUNS:
+            oldest_finished = next(
+                (run_id for run_id, run in self._runs.items() if run.finished), None
+            )
+            if oldest_finished is None:
+                break
+            del self._runs[oldest_finished]
+
     def create(self, controls: ScenarioControls, mode: RunMode) -> WorkflowRun:
+        self._make_room()
         brain = self.brain_factory(mode)
         toolbox = FakeToolBox() if mode is RunMode.DEMO_REPLAY else self.toolbox_factory()
         run = WorkflowRun(

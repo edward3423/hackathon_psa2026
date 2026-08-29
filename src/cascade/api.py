@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -34,6 +34,7 @@ from cascade.contracts import (
     WorkflowStage,
     WorkflowState,
 )
+from cascade.guardrails import guard_mutations
 from cascade.workflow import ConflictError, RunStore, WorkflowRun, scenario_with_controls
 
 KEEPALIVE_SECONDS = 15.0
@@ -55,6 +56,9 @@ app = FastAPI(
     version=__version__,
     description="Synthetic disruption-recovery demonstration API.",
     lifespan=_lifespan,
+    # Every mutation in this API is a POST; the guard authenticates (opt-in)
+    # and rate-limits those while leaving reads and SSE streams untouched.
+    dependencies=[Depends(guard_mutations)],
 )
 app.add_middleware(
     CORSMiddleware,

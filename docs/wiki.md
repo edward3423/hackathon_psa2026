@@ -436,6 +436,46 @@ WorkflowState.results populated (ConnectionAnalysis, baseline_yard,
 planned_yard, AlternativeSailingResult, PlanComparison, dispatched_actions,
 receipts).
 
+## 8b. Security and scale posture
+
+Deliberate choices, then shipped guardrails (src/cascade/guardrails.py,
+tests/test_guardrails.py). The PRD (section 14) only required this topic as
+documentation; the guardrails go one step further because they were cheap
+and make the demo robust over a LAN or tunnel.
+
+Deliberate choices:
+
+- uvicorn binds loopback (127.0.0.1:8620) by default; CORS is a four-origin
+  localhost allowlist, GET/POST only, no credentials.
+- Execution is approval-gated and mocked; the dangerous surface of an
+  agentic system (real side effects) structurally does not exist.
+- All request bodies are pydantic contracts with extra="forbid" and bounded
+  fields; secrets live only in env vars and never appear in responses.
+- Single-process in-memory state is a decision, not an omission: one
+  demonstration user, one scenario at a time (PRD section 14).
+
+Shipped guardrails, all wired as one app-level FastAPI dependency
+(guard_mutations) that touches only POSTs, so reads and SSE streams are
+never gated:
+
+- Opt-in shared-secret auth: set CASCADE_API_TOKEN and every POST must
+  carry the same value in X-Cascade-Token; unset (default) changes nothing.
+- Per-client token-bucket rate limiting on all POSTs: burst 30, refill
+  1/s; tune with CASCADE_RATE_LIMIT_BURST / CASCADE_RATE_LIMIT_PER_SECOND,
+  disable with burst 0. Protects the live-model quota (Gemini free tier is
+  20 requests/day) from a runaway client.
+- Bounded stores: RunStore caps active runs at 4 (creating beyond the cap
+  cancels the oldest active run - abandoned by definition, since the UI
+  watches one run) and retains at most 32; BenchmarkStore caps active
+  benchmarks at 2 and retains 16. Cancelled runs are marked finished in
+  cancel() itself so an open SSE stream on an evicted run ends instead of
+  hanging.
+
+Known accepted surface: the dispute dialog accepts free-text constraints
+that flow into live-model prompts (prompt-injection surface). Accepted
+because tools are allowlisted and execution is mocked; a production build
+would treat that text as untrusted data (PRD section 14).
+
 ## 9. Testing map
 
 - tests/test_contracts.py, test_api.py, test_adk_shell.py - foundation.
