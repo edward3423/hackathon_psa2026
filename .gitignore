@@ -13,3 +13,11 @@ frontend/dist/
 playwright-report/
 test-results/
 logs/
+
+# Development-only tooling and planning material
+plan/
+.agents/
+.claude/
+.codegraph/
+AGENTS.md
+web_anti_aislop.md
